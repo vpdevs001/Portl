@@ -9,6 +9,7 @@
         "dotenv": "^17.4.2",
         "drizzle-orm": "^1.0.0-rc.4",
         "fastify": "^5.10.0",
+        "fastify-plugin": "^6.0.0",
         "pg": "^8.22.0",
       },
       "devDependencies": {

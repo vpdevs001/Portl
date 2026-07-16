@@ -1,0 +1,91 @@
+import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { societies, flats, users } from './identity.schema';
+import { complaintStatusEnum } from './enums';
+
+export const notices = pgTable('notices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  societyId: uuid('society_id')
+    .notNull()
+    .references(() => societies.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by')
+    .notNull()
+    .references(() => users.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+});
+
+export const polls = pgTable('polls', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  societyId: uuid('society_id')
+    .notNull()
+    .references(() => societies.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by')
+    .notNull()
+    .references(() => users.id),
+  question: text('question').notNull(),
+  startsAt: timestamp('starts_at').notNull(),
+  endsAt: timestamp('ends_at').notNull(),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+});
+
+export const pollOptions = pgTable('poll_options', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pollId: uuid('poll_id')
+    .notNull()
+    .references(() => polls.id, { onDelete: 'cascade' }),
+  optionText: varchar('option_text', { length: 255 }).notNull(),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+});
+
+export const pollVotes = pgTable('poll_votes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pollId: uuid('poll_id')
+    .notNull()
+    .references(() => polls.id, { onDelete: 'cascade' }),
+  pollOptionId: uuid('poll_option_id')
+    .notNull()
+    .references(() => pollOptions.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const complaints = pgTable('complaints', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  societyId: uuid('society_id')
+    .notNull()
+    .references(() => societies.id, { onDelete: 'cascade' }),
+  flatId: uuid('flat_id')
+    .notNull()
+    .references(() => flats.id, { onDelete: 'cascade' }),
+  raisedBy: uuid('raised_by')
+    .notNull()
+    .references(() => users.id),
+  category: varchar('category', { length: 100 }).notNull(),
+  description: text('description').notNull(),
+  status: complaintStatusEnum('status').notNull().default('open'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+});

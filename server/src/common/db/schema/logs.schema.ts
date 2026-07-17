@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { societies, users } from './identity.schema';
+import { user } from './auth.schema';
+import { societies } from './identity.schema';
 import { visitorRequests } from './visitors.schema';
 
 export const visitorEntryLogs = pgTable('visitor_entry_logs', {
@@ -9,8 +10,8 @@ export const visitorEntryLogs = pgTable('visitor_entry_logs', {
     .references(() => visitorRequests.id, { onDelete: 'cascade' }),
   entryTime: timestamp('entry_time'),
   exitTime: timestamp('exit_time'),
-  entryMarkedBy: uuid('entry_marked_by').references(() => users.id),
-  exitMarkedBy: uuid('exit_marked_by').references(() => users.id),
+  entryMarkedBy: uuid('entry_marked_by').references(() => user.id),
+  exitMarkedBy: uuid('exit_marked_by').references(() => user.id),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
@@ -23,11 +24,11 @@ export const residentEntryLogs = pgTable('resident_entry_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   entryTime: timestamp('entry_time'),
   exitTime: timestamp('exit_time'),
-  entryMarkedBy: uuid('entry_marked_by').references(() => users.id),
-  exitMarkedBy: uuid('exit_marked_by').references(() => users.id),
+  entryMarkedBy: uuid('entry_marked_by').references(() => user.id),
+  exitMarkedBy: uuid('exit_marked_by').references(() => user.id),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
@@ -60,8 +61,8 @@ export const staffEntryLogs = pgTable('staff_entry_logs', {
     .references(() => staffDirectory.id, { onDelete: 'cascade' }),
   entryTime: timestamp('entry_time'),
   exitTime: timestamp('exit_time'),
-  entryMarkedBy: uuid('entry_marked_by').references(() => users.id),
-  exitMarkedBy: uuid('exit_marked_by').references(() => users.id),
+  entryMarkedBy: uuid('entry_marked_by').references(() => user.id),
+  exitMarkedBy: uuid('exit_marked_by').references(() => user.id),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

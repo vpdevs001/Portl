@@ -35,7 +35,10 @@ export const ERROR_CODES = {
   ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
 
   // 500 – any other unhandled/unexpected error
-  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR'
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+
+  // 500 – the Better Auth request handler itself threw (auth.controller.ts)
+  AUTH_FAILURE: 'AUTH_FAILURE'
 } as const;
 
 /** Union type of every valid error code string. */

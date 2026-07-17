@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
     "@eslint/js": "^10.0.1",
     "@types/bun": "latest",
     "@types/node": "^26.1.1",
@@ -21,8 +22,11 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.6.23",
+    "@better-auth/expo": "^1.6.23",
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "13.0.2",
+    "better-auth": "^1.6.23",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^1.0.0-rc.4",
     "fastify": "^5.10.0",

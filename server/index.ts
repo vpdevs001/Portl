@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -10,16 +9,16 @@ import { sendError } from './src/common/http/app-response.ts';
 import { ERROR_CODES } from './src/common/errors/error-codes.ts';
 import { AppError } from './src/common/errors/app-error.ts';
 import { healthRoutes } from './src/modules/health/health.routes.ts';
-
-const PORT = Number(process.env.PORT) || 4000;
+import { authRoutes } from './src/modules/auth/auth.routes.ts';
+import env from './env.ts';
 
 async function buildServer() {
   // ── Logging: pino-pretty in dev, structured JSON in production ─────────────
   const app = Fastify({
     logger: {
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+      level: env.NODE_ENV === 'production' ? 'info' : 'debug',
       transport:
-        process.env.NODE_ENV === 'production'
+        env.NODE_ENV === 'production'
           ? undefined
           : {
               target: 'pino-pretty',
@@ -40,8 +39,13 @@ async function buildServer() {
   await app.register(helmet, { contentSecurityPolicy: false });
 
   // ── CORS ─────────────────────────────────────────────────────────────────────
-  // TODO: restrict origins via env allowlist before production (Chapter 17)
-  await app.register(cors, { origin: true });
+  const corsOrigins = process.env.CORS_?.split(',').map((origin) => origin.trim());
+  await app.register(cors, {
+    origin: corsOrigins?.length ? corsOrigins : true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  });
 
   // ── Global error handler (register before routes so it covers everything) ───
   await app.register(errorHandlerPlugin);
@@ -64,6 +68,7 @@ async function buildServer() {
 
   // ── Routes ────────────────────────────────────────────────────────────────────
   await app.register(healthRoutes);
+  await app.register(authRoutes);
 
   // TEMPORARY — verify AppError.notFound shape; remove after confirming.
   // Case 5b: business-logic 404 — route exists but resource lookup failed.
@@ -77,7 +82,7 @@ async function buildServer() {
 async function start() {
   const app = await buildServer();
   try {
-    await app.listen({ port: PORT, host: '0.0.0.0' });
+    await app.listen({ port: env.PORT, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);
     process.exit(1);

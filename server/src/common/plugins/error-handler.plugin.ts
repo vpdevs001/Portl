@@ -22,7 +22,7 @@ import { sendError } from '../http/app-response.ts';
  *   4. Fallback            – any other unhandled error → 500 with generic message
  */
 export default fp(async (app: FastifyInstance) => {
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error, _, reply) => {
     // ── 1. AppError ──────────────────────────────────────────────────────────
     if (error instanceof AppError) {
       return sendError(reply, error.statusCode, error.code, error.message, error.details);

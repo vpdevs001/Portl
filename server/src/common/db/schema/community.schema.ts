@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { societies, flats, users } from './identity.schema';
+import { user } from './auth.schema';
+import { societies, flats } from './identity.schema';
 import { complaintStatusEnum } from './enums';
 
 export const notices = pgTable('notices', {
@@ -9,7 +10,7 @@ export const notices = pgTable('notices', {
     .references(() => societies.id, { onDelete: 'cascade' }),
   createdBy: uuid('created_by')
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
 
@@ -27,7 +28,7 @@ export const polls = pgTable('polls', {
     .references(() => societies.id, { onDelete: 'cascade' }),
   createdBy: uuid('created_by')
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id),
   question: text('question').notNull(),
   startsAt: timestamp('starts_at').notNull(),
   endsAt: timestamp('ends_at').notNull(),
@@ -63,7 +64,7 @@ export const pollVotes = pgTable('poll_votes', {
     .references(() => pollOptions.id, { onDelete: 'cascade' }),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
 
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
@@ -78,7 +79,7 @@ export const complaints = pgTable('complaints', {
     .references(() => flats.id, { onDelete: 'cascade' }),
   raisedBy: uuid('raised_by')
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id),
   category: varchar('category', { length: 100 }).notNull(),
   description: text('description').notNull(),
   status: complaintStatusEnum('status').notNull().default('open'),

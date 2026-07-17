@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { societies, flats, users } from './identity.schema';
+import { user } from './auth.schema';
+import { societies, flats } from './identity.schema';
 import { approverTypeEnum, visitorSourceEnum, visitorStatusEnum, visitorTypeEnum } from './enums';
 
 export const visitorRequests = pgTable('visitor_requests', {
@@ -18,8 +19,8 @@ export const visitorRequests = pgTable('visitor_requests', {
   source: visitorSourceEnum('source').notNull(),
   createdBy: uuid('created_by')
     .notNull()
-    .references(() => users.id),
-  approvedBy: uuid('approved_by').references(() => users.id),
+    .references(() => user.id),
+  approvedBy: uuid('approved_by').references(() => user.id),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

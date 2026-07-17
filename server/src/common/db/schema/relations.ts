@@ -1,4 +1,5 @@
 import { defineRelations } from 'drizzle-orm';
+import * as auth from './auth.schema';
 import * as identity from './identity.schema';
 import * as visitors from './visitors.schema';
 import * as logs from './logs.schema';
@@ -7,6 +8,7 @@ import * as amenities from './amenities.schema';
 import * as payments from './payments.schema';
 
 const schema = {
+  ...auth,
   ...identity,
   ...visitors,
   ...logs,
@@ -16,12 +18,50 @@ const schema = {
 };
 
 export const relations = defineRelations(schema, (r) => ({
+  // ===== BETTER AUTH =====
+
+  user: {
+    sessions: r.many.session(),
+    accounts: r.many.account(),
+    society: r.one.societies({
+      from: r.user.societyId,
+      to: r.societies.id
+    }),
+    flat: r.one.flats({
+      from: r.user.flatId,
+      to: r.flats.id
+    }),
+    createdVisitorRequests: r.many.visitorRequests({
+      alias: 'visitorRequestCreator'
+    }),
+    approvedVisitorRequests: r.many.visitorRequests({
+      alias: 'visitorRequestApprover'
+    }),
+    residentEntryLogs: r.many.residentEntryLogs({
+      alias: 'residentEntryLogOwner'
+    })
+  },
+
+  session: {
+    user: r.one.user({
+      from: r.session.userId,
+      to: r.user.id
+    })
+  },
+
+  account: {
+    user: r.one.user({
+      from: r.account.userId,
+      to: r.user.id
+    })
+  },
+
   // ===== IDENTITY & STRUCTURE =====
 
   societies: {
     towers: r.many.towers(),
     flats: r.many.flats(),
-    users: r.many.users(),
+    users: r.many.user(),
     staffDirectory: r.many.staffDirectory(),
     notices: r.many.notices(),
     polls: r.many.polls(),
@@ -48,30 +88,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.flats.towerId,
       to: r.towers.id
     }),
-    users: r.many.users(),
+    users: r.many.user(),
     complaints: r.many.complaints(),
     amenityBookings: r.many.amenityBookings(),
     maintenanceDues: r.many.maintenanceDues()
-  },
-
-  users: {
-    society: r.one.societies({
-      from: r.users.societyId,
-      to: r.societies.id
-    }),
-    flat: r.one.flats({
-      from: r.users.flatId,
-      to: r.flats.id
-    }),
-    createdVisitorRequests: r.many.visitorRequests({
-      alias: 'visitorRequestCreator'
-    }),
-    approvedVisitorRequests: r.many.visitorRequests({
-      alias: 'visitorRequestApprover'
-    }),
-    residentEntryLogs: r.many.residentEntryLogs({
-      alias: 'residentEntryLogOwner'
-    })
   },
 
   // ===== VISITOR MANAGEMENT =====
@@ -85,14 +105,14 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.visitorRequests.flatId,
       to: r.flats.id
     }),
-    createdByUser: r.one.users({
+    createdByUser: r.one.user({
       from: r.visitorRequests.createdBy,
-      to: r.users.id,
+      to: r.user.id,
       alias: 'visitorRequestCreator'
     }),
-    approvedByUser: r.one.users({
+    approvedByUser: r.one.user({
       from: r.visitorRequests.approvedBy,
-      to: r.users.id,
+      to: r.user.id,
       alias: 'visitorRequestApprover'
     }),
     deliveryDetails: r.one.deliveryDetails(),
@@ -129,29 +149,29 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.visitorEntryLogs.visitorRequestId,
       to: r.visitorRequests.id
     }),
-    entryMarkedByUser: r.one.users({
+    entryMarkedByUser: r.one.user({
       from: r.visitorEntryLogs.entryMarkedBy,
-      to: r.users.id
+      to: r.user.id
     }),
-    exitMarkedByUser: r.one.users({
+    exitMarkedByUser: r.one.user({
       from: r.visitorEntryLogs.exitMarkedBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
   residentEntryLogs: {
-    user: r.one.users({
+    user: r.one.user({
       from: r.residentEntryLogs.userId,
-      to: r.users.id,
+      to: r.user.id,
       alias: 'residentEntryLogOwner'
     }),
-    entryMarkedByUser: r.one.users({
+    entryMarkedByUser: r.one.user({
       from: r.residentEntryLogs.entryMarkedBy,
-      to: r.users.id
+      to: r.user.id
     }),
-    exitMarkedByUser: r.one.users({
+    exitMarkedByUser: r.one.user({
       from: r.residentEntryLogs.exitMarkedBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -168,13 +188,13 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.staffEntryLogs.staffId,
       to: r.staffDirectory.id
     }),
-    entryMarkedByUser: r.one.users({
+    entryMarkedByUser: r.one.user({
       from: r.staffEntryLogs.entryMarkedBy,
-      to: r.users.id
+      to: r.user.id
     }),
-    exitMarkedByUser: r.one.users({
+    exitMarkedByUser: r.one.user({
       from: r.staffEntryLogs.exitMarkedBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -185,9 +205,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.notices.societyId,
       to: r.societies.id
     }),
-    createdByUser: r.one.users({
+    createdByUser: r.one.user({
       from: r.notices.createdBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -196,9 +216,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.polls.societyId,
       to: r.societies.id
     }),
-    createdByUser: r.one.users({
+    createdByUser: r.one.user({
       from: r.polls.createdBy,
-      to: r.users.id
+      to: r.user.id
     }),
     options: r.many.pollOptions(),
     votes: r.many.pollVotes()
@@ -221,9 +241,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.pollVotes.pollOptionId,
       to: r.pollOptions.id
     }),
-    user: r.one.users({
+    user: r.one.user({
       from: r.pollVotes.userId,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -236,9 +256,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.complaints.flatId,
       to: r.flats.id
     }),
-    raisedByUser: r.one.users({
+    raisedByUser: r.one.user({
       from: r.complaints.raisedBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -261,9 +281,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.amenityBookings.flatId,
       to: r.flats.id
     }),
-    bookedByUser: r.one.users({
+    bookedByUser: r.one.user({
       from: r.amenityBookings.bookedBy,
-      to: r.users.id
+      to: r.user.id
     })
   },
 
@@ -290,14 +310,14 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.paymentConfirmations.flatId,
       to: r.flats.id
     }),
-    raisedByUser: r.one.users({
+    raisedByUser: r.one.user({
       from: r.paymentConfirmations.raisedBy,
-      to: r.users.id,
+      to: r.user.id,
       alias: 'paymentConfirmationRaisedBy'
     }),
-    reviewedByUser: r.one.users({
+    reviewedByUser: r.one.user({
       from: r.paymentConfirmations.reviewedBy,
-      to: r.users.id,
+      to: r.user.id,
       alias: 'paymentConfirmationReviewedBy'
     })
   }

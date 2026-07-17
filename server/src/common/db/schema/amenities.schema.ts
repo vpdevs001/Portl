@@ -1,5 +1,6 @@
 import { integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { societies, flats, users } from './identity.schema';
+import { user } from './auth.schema';
+import { societies, flats } from './identity.schema';
 import { bookingStatusEnum } from './enums';
 
 export const amenities = pgTable('amenities', {
@@ -28,7 +29,7 @@ export const amenityBookings = pgTable('amenity_bookings', {
     .references(() => flats.id, { onDelete: 'cascade' }),
   bookedBy: uuid('booked_by')
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id),
   startTime: timestamp('start_time').notNull(),
   endTime: timestamp('end_time').notNull(),
   status: bookingStatusEnum('status').notNull().default('pending'),

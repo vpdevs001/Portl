@@ -1,4 +1,5 @@
 export * from './enums';
+export * from './auth.schema';
 export * from './identity.schema';
 export * from './visitors.schema';
 export * from './logs.schema';

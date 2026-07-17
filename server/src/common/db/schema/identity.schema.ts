@@ -1,5 +1,4 @@
-import { boolean, pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
-import { userRoleEnum } from './enums';
+import { pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
 
 export const societies = pgTable('societies', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -40,28 +39,6 @@ export const flats = pgTable('flats', {
     .references(() => towers.id, { onDelete: 'cascade' }),
   flatNumber: varchar('flat_number', { length: 20 }).notNull(),
   floor: integer('floor'),
-
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date())
-});
-
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  societyId: uuid('society_id')
-    .notNull()
-    .references(() => societies.id, { onDelete: 'cascade' }),
-  flatId: uuid('flat_id').references(() => flats.id, { onDelete: 'set null' }),
-  role: userRoleEnum('role').notNull(),
-  firstName: varchar('first_name', { length: 100 }).notNull(),
-  lastName: varchar('last_name', { length: 100 }),
-  email: varchar('email', { length: 255 }),
-  phone: varchar('phone', { length: 20 }).notNull(),
-  password: text('password').notNull(),
-  photo: text('photo'),
-  isActive: boolean('is_active').notNull().default(true),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

@@ -1,5 +1,6 @@
 import { date, numeric, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { societies, flats, users } from './identity.schema';
+import { user } from './auth.schema';
+import { societies, flats } from './identity.schema';
 import { dueStatusEnum, paymentConfirmationStatusEnum } from './enums';
 
 export const maintenanceDues = pgTable('maintenance_dues', {
@@ -32,12 +33,12 @@ export const paymentConfirmations = pgTable('payment_confirmations', {
     .references(() => flats.id, { onDelete: 'cascade' }),
   raisedBy: uuid('raised_by')
     .notNull()
-    .references(() => users.id),
+    .references(() => user.id),
   amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
   screenshot: text('screenshot').notNull(),
   upiRef: varchar('upi_ref', { length: 100 }),
   status: paymentConfirmationStatusEnum('status').notNull().default('pending'),
-  reviewedBy: uuid('reviewed_by').references(() => users.id),
+  reviewedBy: uuid('reviewed_by').references(() => user.id),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

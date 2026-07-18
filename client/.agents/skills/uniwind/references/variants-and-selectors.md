@@ -21,9 +21,15 @@ Platform variants in `@layer theme` for global values (use `@variant`, not `@med
 ```css
 @layer theme {
   :root {
-    @variant ios { --font-sans: 'SF Pro Text'; }
-    @variant android { --font-sans: 'Roboto-Regular'; }
-    @variant web { --font-sans: 'Inter'; }
+    @variant ios {
+      --font-sans: 'SF Pro Text';
+    }
+    @variant android {
+      --font-sans: 'Roboto-Regular';
+    }
+    @variant web {
+      --font-sans: 'Inter';
+    }
   }
 }
 ```
@@ -66,6 +72,7 @@ Style based on prop values using `data-[prop=value]:utility`:
 ```
 
 **Rules**:
+
 - Only equality selectors supported (`data-[prop=value]`)
 - No presence-only selectors (`data-[prop]` — not supported)
 - No `has-data-*` parent selectors (not supported in React Native)
@@ -98,6 +105,7 @@ Style based on prop values using `data-[prop=value]:utility`:
 ```
 
 Components with state support:
+
 - **Pressable**: `active:`, `disabled:`, `focus:`
 - **TextInput**: `active:`, `disabled:`, `focus:`
 - **Switch**: `disabled:`
@@ -108,14 +116,14 @@ Components with state support:
 
 Mobile-first — unprefixed styles apply to all sizes, prefixed styles apply at that breakpoint and above:
 
-| Prefix | Min Width | Typical Device |
-|--------|-----------|----------------|
-| (none) | 0px | All (mobile) |
-| `sm:` | 640px | Large phones |
-| `md:` | 768px | Tablets |
-| `lg:` | 1024px | Landscape tablets |
-| `xl:` | 1280px | Desktops |
-| `2xl:` | 1536px | Large desktops |
+| Prefix | Min Width | Typical Device    |
+| ------ | --------- | ----------------- |
+| (none) | 0px       | All (mobile)      |
+| `sm:`  | 640px     | Large phones      |
+| `md:`  | 768px     | Tablets           |
+| `lg:`  | 1024px    | Landscape tablets |
+| `xl:`  | 1280px    | Desktops          |
+| `2xl:` | 1536px    | Large desktops    |
 
 ```tsx
 // Responsive padding and typography
@@ -165,36 +173,36 @@ Usage: `xs:p-2 tablet:p-4 3xl:p-8`
 
 ### Padding
 
-| Class | Description |
-|-------|-------------|
-| `p-safe` | All sides |
-| `pt-safe` / `pb-safe` / `pl-safe` / `pr-safe` | Individual sides |
-| `ps-safe` / `pe-safe` | Logical start / end |
-| `px-safe` / `py-safe` | Horizontal / vertical |
+| Class                                         | Description           |
+| --------------------------------------------- | --------------------- |
+| `p-safe`                                      | All sides             |
+| `pt-safe` / `pb-safe` / `pl-safe` / `pr-safe` | Individual sides      |
+| `ps-safe` / `pe-safe`                         | Logical start / end   |
+| `px-safe` / `py-safe`                         | Horizontal / vertical |
 
 ### Margin
 
-| Class | Description |
-|-------|-------------|
-| `m-safe` | All sides |
-| `mt-safe` / `mb-safe` / `ml-safe` / `mr-safe` | Individual sides |
-| `ms-safe` / `me-safe` | Logical start / end |
-| `mx-safe` / `my-safe` | Horizontal / vertical |
+| Class                                         | Description           |
+| --------------------------------------------- | --------------------- |
+| `m-safe`                                      | All sides             |
+| `mt-safe` / `mb-safe` / `ml-safe` / `mr-safe` | Individual sides      |
+| `ms-safe` / `me-safe`                         | Logical start / end   |
+| `mx-safe` / `my-safe`                         | Horizontal / vertical |
 
 ### Positioning
 
-| Class | Description |
-|-------|-------------|
-| `inset-safe` | All sides |
-| `top-safe` / `bottom-safe` / `left-safe` / `right-safe` | Individual sides |
-| `start-safe` / `end-safe` | Logical start / end |
-| `x-safe` / `y-safe` | Horizontal / vertical inset |
+| Class                                                   | Description                 |
+| ------------------------------------------------------- | --------------------------- |
+| `inset-safe`                                            | All sides                   |
+| `top-safe` / `bottom-safe` / `left-safe` / `right-safe` | Individual sides            |
+| `start-safe` / `end-safe`                               | Logical start / end         |
+| `x-safe` / `y-safe`                                     | Horizontal / vertical inset |
 
 ### Compound Variants
 
-| Pattern | Behavior | Example |
-|---------|----------|---------|
-| `{prop}-safe-or-{value}` | `Math.max(inset, value)` — ensures minimum spacing | `pt-safe-or-4` |
+| Pattern                      | Behavior                                             | Example            |
+| ---------------------------- | ---------------------------------------------------- | ------------------ |
+| `{prop}-safe-or-{value}`     | `Math.max(inset, value)` — ensures minimum spacing   | `pt-safe-or-4`     |
 | `{prop}-safe-offset-{value}` | `inset + value` — adds extra spacing on top of inset | `pb-safe-offset-4` |
 
 ### Setup

@@ -8,185 +8,185 @@ All core React Native components support `className` out of the box. Some have a
 
 #### View
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 #### Text
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop                      | Maps to          | Prefix       |
+| ------------------------- | ---------------- | ------------ |
+| `className`               | `style`          | —            |
 | `selectionColorClassName` | `selectionColor` | ⚡ `accent-` |
 
 #### Pressable
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 Supports `active:`, `disabled:`, `focus:` state selectors.
 
 #### Image
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop                 | Maps to     | Prefix       |
+| -------------------- | ----------- | ------------ |
+| `className`          | `style`     | —            |
 | `tintColorClassName` | `tintColor` | ⚡ `accent-` |
 
 #### TextInput
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `cursorColorClassName` | `cursorColor` | ⚡ `accent-` |
-| `selectionColorClassName` | `selectionColor` | ⚡ `accent-` |
-| `placeholderTextColorClassName` | `placeholderTextColor` | ⚡ `accent-` |
-| `selectionHandleColorClassName` | `selectionHandleColor` | ⚡ `accent-` |
+| Prop                             | Maps to                           | Prefix       |
+| -------------------------------- | --------------------------------- | ------------ |
+| `className`                      | `style`                           | —            |
+| `cursorColorClassName`           | `cursorColor`                     | ⚡ `accent-` |
+| `selectionColorClassName`        | `selectionColor`                  | ⚡ `accent-` |
+| `placeholderTextColorClassName`  | `placeholderTextColor`            | ⚡ `accent-` |
+| `selectionHandleColorClassName`  | `selectionHandleColor`            | ⚡ `accent-` |
 | `underlineColorAndroidClassName` | `underlineColorAndroid` (Android) | ⚡ `accent-` |
 
 Supports `focus:`, `active:`, `disabled:` state selectors.
 
 #### ScrollView
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `contentContainerClassName` | `contentContainerStyle` | — |
-| `endFillColorClassName` | `endFillColor` | ⚡ `accent-` |
+| Prop                        | Maps to                 | Prefix       |
+| --------------------------- | ----------------------- | ------------ |
+| `className`                 | `style`                 | —            |
+| `contentContainerClassName` | `contentContainerStyle` | —            |
+| `endFillColorClassName`     | `endFillColor`          | ⚡ `accent-` |
 
 #### FlatList
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `contentContainerClassName` | `contentContainerStyle` | — |
-| `columnWrapperClassName` | `columnWrapperStyle` | — |
-| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | — |
-| `ListFooterComponentClassName` | `ListFooterComponentStyle` | — |
-| `endFillColorClassName` | `endFillColor` | ⚡ `accent-` |
+| Prop                           | Maps to                    | Prefix       |
+| ------------------------------ | -------------------------- | ------------ |
+| `className`                    | `style`                    | —            |
+| `contentContainerClassName`    | `contentContainerStyle`    | —            |
+| `columnWrapperClassName`       | `columnWrapperStyle`       | —            |
+| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | —            |
+| `ListFooterComponentClassName` | `ListFooterComponentStyle` | —            |
+| `endFillColorClassName`        | `endFillColor`             | ⚡ `accent-` |
 
 #### SectionList
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `contentContainerClassName` | `contentContainerStyle` | — |
-| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | — |
-| `ListFooterComponentClassName` | `ListFooterComponentStyle` | — |
-| `endFillColorClassName` | `endFillColor` | ⚡ `accent-` |
+| Prop                           | Maps to                    | Prefix       |
+| ------------------------------ | -------------------------- | ------------ |
+| `className`                    | `style`                    | —            |
+| `contentContainerClassName`    | `contentContainerStyle`    | —            |
+| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | —            |
+| `ListFooterComponentClassName` | `ListFooterComponentStyle` | —            |
+| `endFillColorClassName`        | `endFillColor`             | ⚡ `accent-` |
 
 #### VirtualizedList
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `contentContainerClassName` | `contentContainerStyle` | — |
-| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | — |
-| `ListFooterComponentClassName` | `ListFooterComponentStyle` | — |
-| `endFillColorClassName` | `endFillColor` | ⚡ `accent-` |
+| Prop                           | Maps to                    | Prefix       |
+| ------------------------------ | -------------------------- | ------------ |
+| `className`                    | `style`                    | —            |
+| `contentContainerClassName`    | `contentContainerStyle`    | —            |
+| `ListHeaderComponentClassName` | `ListHeaderComponentStyle` | —            |
+| `ListFooterComponentClassName` | `ListFooterComponentStyle` | —            |
+| `endFillColorClassName`        | `endFillColor`             | ⚡ `accent-` |
 
 #### Switch
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `thumbColorClassName` | `thumbColor` | ⚡ `accent-` |
-| `trackColorOnClassName` | `trackColor.true` (on) | ⚡ `accent-` |
-| `trackColorOffClassName` | `trackColor.false` (off) | ⚡ `accent-` |
+| Prop                           | Maps to                     | Prefix       |
+| ------------------------------ | --------------------------- | ------------ |
+| `thumbColorClassName`          | `thumbColor`                | ⚡ `accent-` |
+| `trackColorOnClassName`        | `trackColor.true` (on)      | ⚡ `accent-` |
+| `trackColorOffClassName`       | `trackColor.false` (off)    | ⚡ `accent-` |
 | `ios_backgroundColorClassName` | `ios_backgroundColor` (iOS) | ⚡ `accent-` |
 
 Note: Switch does NOT support `className` (`className?: never` in types). Use only the color-specific className props above. Supports `disabled:` state selector.
 
 #### ActivityIndicator
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop             | Maps to | Prefix       |
+| ---------------- | ------- | ------------ |
+| `className`      | `style` | —            |
 | `colorClassName` | `color` | ⚡ `accent-` |
 
 #### Button
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
+| Prop             | Maps to | Prefix       |
+| ---------------- | ------- | ------------ |
 | `colorClassName` | `color` | ⚡ `accent-` |
 
 Note: Button does not support `className` (no `style` prop on RN Button).
 
 #### Modal
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop                     | Maps to         | Prefix       |
+| ------------------------ | --------------- | ------------ |
+| `className`              | `style`         | —            |
 | `backdropColorClassName` | `backdropColor` | ⚡ `accent-` |
 
 #### RefreshControl
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `colorsClassName` | `colors` (Android) | ⚡ `accent-` |
-| `tintColorClassName` | `tintColor` (iOS) | ⚡ `accent-` |
-| `titleColorClassName` | `titleColor` (iOS) | ⚡ `accent-` |
+| Prop                               | Maps to                             | Prefix       |
+| ---------------------------------- | ----------------------------------- | ------------ |
+| `className`                        | `style`                             | —            |
+| `colorsClassName`                  | `colors` (Android)                  | ⚡ `accent-` |
+| `tintColorClassName`               | `tintColor` (iOS)                   | ⚡ `accent-` |
+| `titleColorClassName`              | `titleColor` (iOS)                  | ⚡ `accent-` |
 | `progressBackgroundColorClassName` | `progressBackgroundColor` (Android) | ⚡ `accent-` |
 
 #### ImageBackground
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `imageClassName` | `imageStyle` | — |
-| `tintColorClassName` | `tintColor` | ⚡ `accent-` |
+| Prop                 | Maps to      | Prefix       |
+| -------------------- | ------------ | ------------ |
+| `className`          | `style`      | —            |
+| `imageClassName`     | `imageStyle` | —            |
+| `tintColorClassName` | `tintColor`  | ⚡ `accent-` |
 
 #### SafeAreaView
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 #### KeyboardAvoidingView
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
-| `contentContainerClassName` | `contentContainerStyle` | — |
+| Prop                        | Maps to                 | Prefix |
+| --------------------------- | ----------------------- | ------ |
+| `className`                 | `style`                 | —      |
+| `contentContainerClassName` | `contentContainerStyle` | —      |
 
 #### InputAccessoryView
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop                       | Maps to           | Prefix       |
+| -------------------------- | ----------------- | ------------ |
+| `className`                | `style`           | —            |
 | `backgroundColorClassName` | `backgroundColor` | ⚡ `accent-` |
 
 #### TouchableHighlight
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop                     | Maps to         | Prefix       |
+| ------------------------ | --------------- | ------------ |
+| `className`              | `style`         | —            |
 | `underlayColorClassName` | `underlayColor` | ⚡ `accent-` |
 
 Supports `active:`, `disabled:` state selectors.
 
 #### TouchableOpacity
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 Supports `active:`, `disabled:` state selectors.
 
 #### TouchableNativeFeedback
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 Supports `active:`, `disabled:` state selectors.
 
 #### TouchableWithoutFeedback
 
-| Prop | Maps to | Prefix |
-|------|---------|--------|
-| `className` | `style` | — |
+| Prop        | Maps to | Prefix |
+| ----------- | ------- | ------ |
+| `className` | `style` | —      |
 
 Supports `active:`, `disabled:` state selectors.
 

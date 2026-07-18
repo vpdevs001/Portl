@@ -64,8 +64,12 @@ Variable naming: `--color-background` → `bg-background`, `text-background`.
 ```css
 @layer theme {
   :root {
-    @variant light { /* ... */ }
-    @variant dark { /* ... */ }
+    @variant light {
+      /* ... */
+    }
+    @variant dark {
+      /* ... */
+    }
     @variant ocean {
       --color-background: #0c4a6e;
       --color-foreground: #e0f2fe;
@@ -83,7 +87,7 @@ Variable naming: `--color-background` → `bg-background`, `text-background`.
 ```js
 module.exports = withUniwindConfig(config, {
   cssEntryFile: './global.css',
-  extraThemes: ['ocean'],
+  extraThemes: ['ocean']
 });
 ```
 
@@ -101,12 +105,12 @@ Uniwind.setTheme('ocean');
 import { Uniwind, useUniwind } from 'uniwind';
 
 // Imperative (no re-render)
-Uniwind.setTheme('dark');          // Force dark
-Uniwind.setTheme('light');         // Force light
-Uniwind.setTheme('system');        // Follow device (re-enables adaptive themes)
-Uniwind.setTheme('ocean');         // Custom theme (must be in extraThemes)
-Uniwind.currentTheme;              // Current theme name
-Uniwind.hasAdaptiveThemes;         // true if following system
+Uniwind.setTheme('dark'); // Force dark
+Uniwind.setTheme('light'); // Force light
+Uniwind.setTheme('system'); // Follow device (re-enables adaptive themes)
+Uniwind.setTheme('ocean'); // Custom theme (must be in extraThemes)
+Uniwind.currentTheme; // Current theme name
+Uniwind.hasAdaptiveThemes; // true if following system
 
 // Reactive hook (re-renders on change)
 const { theme, hasAdaptiveThemes } = useUniwind();
@@ -130,7 +134,7 @@ export const ThemeSwitcher = () => {
   const themes = [
     { name: 'light', label: 'Light' },
     { name: 'dark', label: 'Dark' },
-    { name: 'system', label: 'System' },
+    { name: 'system', label: 'System' }
   ];
 
   return (
@@ -144,9 +148,9 @@ export const ThemeSwitcher = () => {
               activeTheme === t.name ? 'bg-primary' : 'bg-card border border-border'
             }`}
           >
-            <Text className={`text-sm ${
-              activeTheme === t.name ? 'text-white' : 'text-foreground'
-            }`}>
+            <Text
+              className={`text-sm ${activeTheme === t.name ? 'text-white' : 'text-foreground'}`}
+            >
               {t.label}
             </Text>
           </Pressable>
@@ -168,13 +172,13 @@ import { ScopedTheme } from 'uniwind';
   <PreviewCard />
 
   <ScopedTheme theme="dark">
-    <PreviewCard />  {/* Renders with dark theme */}
+    <PreviewCard /> {/* Renders with dark theme */}
   </ScopedTheme>
 
   <ScopedTheme theme="ocean">
-    <PreviewCard />  {/* Renders with ocean theme */}
+    <PreviewCard /> {/* Renders with ocean theme */}
   </ScopedTheme>
-</View>
+</View>;
 ```
 
 - Nearest `ScopedTheme` wins (nested scopes supported)
@@ -199,7 +203,7 @@ import { LayoutDirection } from 'uniwind';
   <LayoutDirection rtl={false}>
     <Text className="ltr:text-left rtl:text-right">Forced LTR subtree</Text>
   </LayoutDirection>
-</View>
+</View>;
 ```
 
 - Available from `uniwind@1.8.0`.
@@ -220,7 +224,7 @@ const primaryColor = useCSSVariable('--color-primary');
 const spacing = useCSSVariable('--spacing-4');
 
 // Multiple variables at once
-const [bg, fg] = useCSSVariable(['--color-background', '--color-foreground']) as [string, string]
+const [bg, fg] = useCSSVariable(['--color-background', '--color-foreground']) as [string, string];
 ```
 
 Use for: animations, chart libraries, third-party component configs, calculations with design tokens.
@@ -236,7 +240,10 @@ Read CSS variable values outside of React (event handlers, async callbacks, util
 import { Uniwind } from 'uniwind';
 
 const primary = Uniwind.getCSSVariable('--color-primary');
-const [bg, fg] = Uniwind.getCSSVariable(['--color-background', '--color-foreground']) as [string, string];
+const [bg, fg] = Uniwind.getCSSVariable(['--color-background', '--color-foreground']) as [
+  string,
+  string
+];
 ```
 
 Same value rules as `useCSSVariable` (variable must be used in a `className` or declared in `@theme static`). Same return type: `string | number | undefined`. Cast as needed.
@@ -250,7 +257,7 @@ Update theme variables at runtime (e.g., user-selected brand colors or API-drive
 ```tsx
 Uniwind.updateCSSVariables('light', {
   '--color-primary': '#ff6600',
-  '--color-background': '#fafafa',
+  '--color-background': '#fafafa'
 });
 ```
 

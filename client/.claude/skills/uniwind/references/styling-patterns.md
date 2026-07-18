@@ -17,6 +17,7 @@ export const LinearGradient = withUniwind(RNLinearGradient);
 ```
 
 `withUniwind` automatically maps:
+
 - `style` → `className`
 - `{name}Style` → `{name}ClassName`
 - `{name}Color` → `{name}ColorClassName` (with accent- prefix)
@@ -27,8 +28,8 @@ For custom prop mappings:
 const StyledProgressBar = withUniwind(ProgressBar, {
   width: {
     fromClassName: 'widthClassName',
-    styleProperty: 'width',
-  },
+    styleProperty: 'width'
+  }
 });
 ```
 
@@ -53,14 +54,14 @@ import { Image } from '@/components/styled';
 
 ```tsx
 // WRONG — View already supports className natively
-const StyledView = withUniwind(View);        // DO NOT DO THIS
-const StyledText = withUniwind(Text);        // DO NOT DO THIS
+const StyledView = withUniwind(View); // DO NOT DO THIS
+const StyledText = withUniwind(Text); // DO NOT DO THIS
 const StyledAnimatedView = withUniwind(Animated.View); // DO NOT DO THIS
 
 // CORRECT — only wrap third-party components
-const StyledExpoImage = withUniwind(ExpoImage);     // expo-image
-const StyledBlurView = withUniwind(BlurView);        // expo-blur
-const StyledMotiView = withUniwind(MotiView);        // moti
+const StyledExpoImage = withUniwind(ExpoImage); // expo-image
+const StyledBlurView = withUniwind(BlurView); // expo-blur
+const StyledMotiView = withUniwind(MotiView); // moti
 ```
 
 ### useResolveClassNames
@@ -74,17 +75,17 @@ const headerStyle = useResolveClassNames('bg-primary p-4');
 const cardStyle = useResolveClassNames('bg-card dark:bg-card rounded-lg shadow-sm');
 
 // React Navigation screen options
-<Stack.Navigator screenOptions={{ headerStyle, cardStyle }} />
+<Stack.Navigator screenOptions={{ headerStyle, cardStyle }} />;
 ```
 
 ### Comparison
 
-| Feature | withUniwind | useResolveClassNames |
-|---------|-------------|----------------------|
-| Setup | Once per component | Per usage |
-| Performance | Optimized | Slightly slower |
-| Best for | Reusable components | One-off, navigation config |
-| Syntax | `className="..."` | `style={...}` |
+| Feature     | withUniwind         | useResolveClassNames       |
+| ----------- | ------------------- | -------------------------- |
+| Setup       | Once per component  | Per usage                  |
+| Performance | Optimized           | Slightly slower            |
+| Best for    | Reusable components | One-off, navigation config |
+| Syntax      | `className="..."`   | `style={...}`              |
 
 ## Dynamic ClassNames
 
@@ -132,26 +133,24 @@ const button = tv({
       primary: 'bg-blue-500 text-white',
       secondary: 'bg-gray-500 text-white',
       danger: 'bg-red-500 text-white',
-      ghost: 'bg-transparent text-foreground border border-border',
+      ghost: 'bg-transparent text-foreground border border-border'
     },
     size: {
       sm: 'text-sm px-3 py-1.5',
       md: 'text-base px-4 py-2',
-      lg: 'text-lg px-6 py-3',
+      lg: 'text-lg px-6 py-3'
     },
     disabled: {
-      true: 'opacity-50',
-    },
+      true: 'opacity-50'
+    }
   },
-  compoundVariants: [
-    { color: 'primary', size: 'lg', class: 'bg-blue-600' },
-  ],
-  defaultVariants: { color: 'primary', size: 'md' },
+  compoundVariants: [{ color: 'primary', size: 'lg', class: 'bg-blue-600' }],
+  defaultVariants: { color: 'primary', size: 'md' }
 });
 
 <Pressable className={button({ color: 'primary', size: 'lg' })}>
   <Text className="text-white font-semibold">Click</Text>
-</Pressable>
+</Pressable>;
 ```
 
 ## cn Utility — Class Deduplication
@@ -231,6 +230,7 @@ import { View, Pressable } from 'react-native';
 ```
 
 Priority rules:
+
 - Important utility (`bg-red-500!`) overrides non-important utility (`bg-blue-500`) for the same property.
 - Important variants work normally: `active:bg-red-500!`, `ios:pt-12!`, `dark:text-white!`.
 - Inline `style` always wins, even over important className utilities: `<View className="bg-red-500!" style={{ backgroundColor: 'blue' }} />` renders blue.

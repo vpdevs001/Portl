@@ -13,7 +13,7 @@ function Layout() {
     <Stack.Navigator
       screenOptions={{
         headerStyle,
-        headerTitleStyle,
+        headerTitleStyle
       }}
     />
   );
@@ -42,6 +42,7 @@ Use semantic color tokens (`bg-primary`, `text-foreground`) for theme consistenc
 ## Supported vs Unsupported Classes
 
 React Native uses the Yoga layout engine. Key differences from web CSS:
+
 - **No CSS cascade/inheritance** — styles don't inherit from parents
 - **Flexbox by default** — all views use flexbox with `flexDirection: 'column'`
 - **Limited CSS properties** — no floats, grid, pseudo-elements
@@ -50,10 +51,10 @@ React Native uses the Yoga layout engine. Key differences from web CSS:
 
 Uniwind provides additional utility classes for React Native features not covered by standard Tailwind:
 
-| Class | Effect |
-|-------|--------|
-| `border-continuous` | Sets `borderCurve: 'continuous'` — smooth, superellipse corners (iOS) |
-| `border-circular` | Sets `borderCurve: 'circular'` — standard circular corners (iOS default) |
+| Class               | Effect                                                                   |
+| ------------------- | ------------------------------------------------------------------------ |
+| `border-continuous` | Sets `borderCurve: 'continuous'` — smooth, superellipse corners (iOS)    |
+| `border-circular`   | Sets `borderCurve: 'circular'` — standard circular corners (iOS default) |
 
 ```tsx
 // Smooth iOS-style rounded corners (like SwiftUI's .continuous)

@@ -1,7 +1,12 @@
 import { Stack } from 'expo-router';
+import { QueryProvider } from '@/components/providers/query-provider';
 
-import './global.css'
+import './global.css';
 
 export default function RootLayout() {
-  return <Stack />;
+  return (
+    <QueryProvider>
+      <Stack />
+    </QueryProvider>
+  );
 }

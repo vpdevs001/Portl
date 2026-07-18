@@ -28,11 +28,13 @@ Package: `"uniwind": "npm:uniwind-pro@latest"` in `package.json`.
 ### Installation
 
 1. Set dependency alias in `package.json`:
+
    ```json
    { "dependencies": { "uniwind": "npm:uniwind-pro@latest" } }
    ```
 
 2. Install peer dependencies:
+
    ```bash
    npm install react-native-nitro-modules react-native-reanimated react-native-worklets
    ```
@@ -40,16 +42,18 @@ Package: `"uniwind": "npm:uniwind-pro@latest"` in `package.json`.
 3. Authenticate: `npx uniwind-pro` (interactive — select "Login with GitHub")
 
 4. Add Babel plugin — APPEND `react-native-worklets/plugin` to your existing `plugins` array. Do NOT replace your presets (keep `babel-preset-expo` for Expo, or your bare-RN preset):
+
    ```js
    // babel.config.js
    module.exports = {
      // your existing presets and config — leave untouched
      plugins: [
        // ...other plugins
-       'react-native-worklets/plugin',
-     ],
+       'react-native-worklets/plugin'
+     ]
    };
    ```
+
    If you already use Reanimated, you may already have the worklets plugin configured.
 
 5. Whitelist postinstall if needed:
@@ -80,33 +84,33 @@ Pro does **NOT** work with Expo Go. Requires native rebuild.
 
 Custom keyframe animations beyond Tailwind defaults:
 
-| Class | Description |
-|-------|-------------|
-| `animate-wiggle` | Rotational wiggle |
-| `animate-shake` | Horizontal shake |
-| `animate-flash` | Opacity flash on/off |
-| `animate-rubber-band` | Elastic scale stretch |
-| `animate-swing` | Pendulum swing |
-| `animate-tada` | Scale + rotate attention seeker |
-| `animate-heartbeat` | Double-pulse heartbeat |
-| `animate-jello` | Rotational jello wobble |
-| `animate-float` | Gentle vertical float |
-| `animate-breathe` | Subtle breathing scale |
-| `animate-tilt` | Alternating tilt rotation |
-| `animate-glitch` | Rapid horizontal jitter |
+| Class                 | Description                     |
+| --------------------- | ------------------------------- |
+| `animate-wiggle`      | Rotational wiggle               |
+| `animate-shake`       | Horizontal shake                |
+| `animate-flash`       | Opacity flash on/off            |
+| `animate-rubber-band` | Elastic scale stretch           |
+| `animate-swing`       | Pendulum swing                  |
+| `animate-tada`        | Scale + rotate attention seeker |
+| `animate-heartbeat`   | Double-pulse heartbeat          |
+| `animate-jello`       | Rotational jello wobble         |
+| `animate-float`       | Gentle vertical float           |
+| `animate-breathe`     | Subtle breathing scale          |
+| `animate-tilt`        | Alternating tilt rotation       |
+| `animate-glitch`      | Rapid horizontal jitter         |
 
 Components auto-swap to Animated versions when animation classes detected:
 
-| Component | Animated Version |
-|-----------|------------------|
-| `View` | `Animated.View` |
-| `Text` | `Animated.Text` |
-| `Image` | `Animated.Image` |
+| Component         | Animated Version           |
+| ----------------- | -------------------------- |
+| `View`            | `Animated.View`            |
+| `Text`            | `Animated.Text`            |
+| `Image`           | `Animated.Image`           |
 | `ImageBackground` | `Animated.ImageBackground` |
-| `ScrollView` | `Animated.ScrollView` |
-| `FlatList` | `Animated.FlatList` |
-| `TextInput` | `Animated.TextInput` |
-| `Pressable` | `Animated.Pressable` |
+| `ScrollView`      | `Animated.ScrollView`      |
+| `FlatList`        | `Animated.FlatList`        |
+| `TextInput`       | `Animated.TextInput`       |
+| `Pressable`       | `Animated.Pressable`       |
 
 ### Entering & Exiting Animations
 
@@ -114,10 +118,18 @@ Drive Reanimated's entering/exiting animations via className — no Reanimated i
 
 ```tsx
 // Bounce in, bounce out
-{visible && <View className="size-20 bg-primary rounded-xl uw-entering-bounce-in uw-exiting-bounce-out" />}
+{
+  visible && (
+    <View className="size-20 bg-primary rounded-xl uw-entering-bounce-in uw-exiting-bounce-out" />
+  );
+}
 
 // Fade in slowly (1000ms)
-{visible && <View className="size-20 bg-primary rounded-xl uw-entering-fade-in uw-entering-duration-1000 uw-exiting-fade-out" />}
+{
+  visible && (
+    <View className="size-20 bg-primary rounded-xl uw-entering-fade-in uw-entering-duration-1000 uw-exiting-fade-out" />
+  );
+}
 ```
 
 **Entering presets**: `uw-entering-fade-in` `uw-entering-fade-in-right` `uw-entering-fade-in-left` `uw-entering-fade-in-up` `uw-entering-fade-in-down` `uw-entering-slide-in-right` `uw-entering-slide-in-left` `uw-entering-slide-in-up` `uw-entering-slide-in-down` `uw-entering-zoom-in` `uw-entering-zoom-in-rotate` `uw-entering-zoom-in-left` `uw-entering-zoom-in-right` `uw-entering-zoom-in-up` `uw-entering-zoom-in-down` `uw-entering-zoom-in-easy-up` `uw-entering-zoom-in-easy-down` `uw-entering-bounce-in` `uw-entering-bounce-in-down` `uw-entering-bounce-in-up` `uw-entering-bounce-in-left` `uw-entering-bounce-in-right` `uw-entering-flip-in-x-up` `uw-entering-flip-in-x-down` `uw-entering-flip-in-y-left` `uw-entering-flip-in-y-right` `uw-entering-flip-in-easy-x` `uw-entering-flip-in-easy-y` `uw-entering-stretch-in-x` `uw-entering-stretch-in-y` `uw-entering-rotate-in-down-left` `uw-entering-rotate-in-down-right` `uw-entering-rotate-in-up-left` `uw-entering-rotate-in-up-right` `uw-entering-roll-in-left` `uw-entering-roll-in-right` `uw-entering-pinwheel-in` `uw-entering-light-speed-in-right` `uw-entering-light-speed-in-left`
@@ -125,6 +137,7 @@ Drive Reanimated's entering/exiting animations via className — no Reanimated i
 **Exiting presets**: `uw-exiting-fade-out` `uw-exiting-fade-out-right` `uw-exiting-fade-out-left` `uw-exiting-fade-out-up` `uw-exiting-fade-out-down` `uw-exiting-slide-out-right` `uw-exiting-slide-out-left` `uw-exiting-slide-out-up` `uw-exiting-slide-out-down` `uw-exiting-zoom-out` `uw-exiting-zoom-out-rotate` `uw-exiting-zoom-out-left` `uw-exiting-zoom-out-right` `uw-exiting-zoom-out-up` `uw-exiting-zoom-out-down` `uw-exiting-zoom-out-easy-up` `uw-exiting-zoom-out-easy-down` `uw-exiting-bounce-out` `uw-exiting-bounce-out-down` `uw-exiting-bounce-out-up` `uw-exiting-bounce-out-left` `uw-exiting-bounce-out-right` `uw-exiting-flip-out-x-up` `uw-exiting-flip-out-x-down` `uw-exiting-flip-out-y-left` `uw-exiting-flip-out-y-right` `uw-exiting-flip-out-easy-x` `uw-exiting-flip-out-easy-y` `uw-exiting-stretch-out-x` `uw-exiting-stretch-out-y` `uw-exiting-rotate-out-down-left` `uw-exiting-rotate-out-down-right` `uw-exiting-rotate-out-up-left` `uw-exiting-rotate-out-up-right` `uw-exiting-roll-out-left` `uw-exiting-roll-out-right` `uw-exiting-pinwheel-out` `uw-exiting-light-speed-out-right` `uw-exiting-light-speed-out-left`
 
 **Animation modifiers** (pattern: `uw-{entering|exiting|layout}-{modifier}`):
+
 - Duration: `uw-{type}-duration-75` `uw-{type}-duration-100` ... `uw-{type}-duration-1000` or arbitrary `uw-{type}-duration-{ms}`
 - Delay: `uw-{type}-delay-75` ... `uw-{type}-delay-1000` or arbitrary `uw-{type}-delay-{ms}`
 - Easing: `uw-{type}-ease-linear` `uw-{type}-ease-in` `uw-{type}-ease-out` `uw-{type}-ease-in-out` `uw-{type}-ease-bounce`
@@ -136,19 +149,22 @@ Animate position/size changes when siblings are added or removed:
 
 ```tsx
 <View className="w-full gap-2">
-  {items.map(item => (
-    <View key={item.id} className={`h-14 ${item.color} rounded-xl uw-entering-fade-in uw-exiting-fade-out uw-layout-linear-transition`} />
+  {items.map((item) => (
+    <View
+      key={item.id}
+      className={`h-14 ${item.color} rounded-xl uw-entering-fade-in uw-exiting-fade-out uw-layout-linear-transition`}
+    />
   ))}
 </View>
 ```
 
-| Class | Description |
-|-------|-------------|
-| `uw-layout-linear-transition` | Smooth linear repositioning |
-| `uw-layout-fading-transition` | Fade during repositioning |
-| `uw-layout-jumping-transition` | Bouncy jump to new position |
-| `uw-layout-curved-transition` | Curved path repositioning |
-| `uw-layout-sequenced-transition` | Sequenced repositioning |
+| Class                             | Description                       |
+| --------------------------------- | --------------------------------- |
+| `uw-layout-linear-transition`     | Smooth linear repositioning       |
+| `uw-layout-fading-transition`     | Fade during repositioning         |
+| `uw-layout-jumping-transition`    | Bouncy jump to new position       |
+| `uw-layout-curved-transition`     | Curved path repositioning         |
+| `uw-layout-sequenced-transition`  | Sequenced repositioning           |
 | `uw-layout-entry-exit-transition` | Combined entry/exit during layout |
 
 ### Transitions
@@ -171,14 +187,14 @@ Smooth property changes when className or state changes:
 </Pressable>
 ```
 
-| Class | Properties |
-|-------|------------|
-| `transition-none` | No transition |
-| `transition-all` | All properties |
-| `transition-colors` | Background, border, text colors |
-| `transition-opacity` | Opacity |
-| `transition-shadow` | Box shadow |
-| `transition-transform` | Scale, rotate, translate |
+| Class                  | Properties                      |
+| ---------------------- | ------------------------------- |
+| `transition-none`      | No transition                   |
+| `transition-all`       | All properties                  |
+| `transition-colors`    | Background, border, text colors |
+| `transition-opacity`   | Opacity                         |
+| `transition-shadow`    | Box shadow                      |
+| `transition-transform` | Scale, rotate, translate        |
 
 Duration: `duration-75` `duration-100` `duration-150` `duration-200` `duration-300` `duration-500` `duration-700` `duration-1000`
 
@@ -222,9 +238,9 @@ Development-only API to observe what the C++ engine is doing — when components
 import { enableDiagnostics } from 'uniwind/diagnostics';
 
 enableDiagnostics({
-  reportMounts: true,    // log when components register with the shadow tree
-  reportUnmounts: true,  // log when components unregister
-  reportUpdates: true,   // log style updates with property-level detail
+  reportMounts: true, // log when components register with the shadow tree
+  reportUnmounts: true, // log when components unregister
+  reportUpdates: true // log style updates with property-level detail
 });
 ```
 
@@ -270,8 +286,8 @@ Default styles let Pro users define baseline styles for built-in React Native co
 module.exports = withUniwindConfig(config, {
   cssEntryFile: './global.css',
   experimental: {
-    defaultStyles: true,
-  },
+    defaultStyles: true
+  }
 });
 ```
 
@@ -290,6 +306,7 @@ Text {
 Effect: every `View` gets `border-color: var(--color-primary)`, every `Text` gets `font-family: Inter` and `font-size: 16px`, unless more specific styles override them.
 
 Rules:
+
 - Available only in Uniwind Pro `1.2.0+`
 - Disabled by default; enable `experimental.defaultStyles: true`
 - Experimental; may not work for every use case and may change in future releases
@@ -338,17 +355,17 @@ Uniwind.setTheme('light');
 
 Available presets:
 
-| Preset | Effect |
-|--------|--------|
-| `ThemeTransitionPreset.None` | Instant switch, no animation |
-| `ThemeTransitionPreset.Fade` | Crossfade between themes |
-| `ThemeTransitionPreset.SlideRightToLeft` | Slide new theme in from right |
-| `ThemeTransitionPreset.SlideLeftToRight` | Slide new theme in from left |
-| `ThemeTransitionPreset.CircleTopRight` | Circle mask expanding from top-right |
-| `ThemeTransitionPreset.CircleTopLeft` | Circle mask expanding from top-left |
+| Preset                                    | Effect                                  |
+| ----------------------------------------- | --------------------------------------- |
+| `ThemeTransitionPreset.None`              | Instant switch, no animation            |
+| `ThemeTransitionPreset.Fade`              | Crossfade between themes                |
+| `ThemeTransitionPreset.SlideRightToLeft`  | Slide new theme in from right           |
+| `ThemeTransitionPreset.SlideLeftToRight`  | Slide new theme in from left            |
+| `ThemeTransitionPreset.CircleTopRight`    | Circle mask expanding from top-right    |
+| `ThemeTransitionPreset.CircleTopLeft`     | Circle mask expanding from top-left     |
 | `ThemeTransitionPreset.CircleBottomRight` | Circle mask expanding from bottom-right |
-| `ThemeTransitionPreset.CircleBottomLeft` | Circle mask expanding from bottom-left |
-| `ThemeTransitionPreset.CircleCenter` | Circle mask expanding from center |
-| `ThemeTransitionPreset.Blur` | Blur out animation |
-| `ThemeTransitionPreset.BlurRightToLeft` | Directional blur from right to left |
-| `ThemeTransitionPreset.BlurLeftToRight` | Directional blur from left to right |
+| `ThemeTransitionPreset.CircleBottomLeft`  | Circle mask expanding from bottom-left  |
+| `ThemeTransitionPreset.CircleCenter`      | Circle mask expanding from center       |
+| `ThemeTransitionPreset.Blur`              | Blur out animation                      |
+| `ThemeTransitionPreset.BlurRightToLeft`   | Directional blur from right to left     |
+| `ThemeTransitionPreset.BlurLeftToRight`   | Directional blur from left to right     |

@@ -7,9 +7,15 @@ Uniwind provides CSS functions for device-aware and theme-aware styling. These c
 Returns the thinnest line width displayable on the device. Use for subtle borders and dividers.
 
 ```css
-@utility h-hairline { height: hairlineWidth(); }
-@utility border-hairline { border-width: hairlineWidth(); }
-@utility w-hairline { width: calc(hairlineWidth() * 10); }
+@utility h-hairline {
+  height: hairlineWidth();
+}
+@utility border-hairline {
+  border-width: hairlineWidth();
+}
+@utility w-hairline {
+  width: calc(hairlineWidth() * 10);
+}
 ```
 
 ```tsx
@@ -26,9 +32,15 @@ Multiplies a base value by the device's font scale accessibility setting. Ensure
 - **`fontScale(1.2)`** — larger scale
 
 ```css
-@utility text-sm-scaled { font-size: fontScale(0.9); }
-@utility text-base-scaled { font-size: fontScale(); }
-@utility text-lg-scaled { font-size: fontScale(1.2); }
+@utility text-sm-scaled {
+  font-size: fontScale(0.9);
+}
+@utility text-base-scaled {
+  font-size: fontScale();
+}
+@utility text-lg-scaled {
+  font-size: fontScale(1.2);
+}
 ```
 
 ```tsx
@@ -44,8 +56,12 @@ Multiplies a value by the device's pixel ratio. Creates pixel-perfect designs th
 - **`pixelRatio(2)`** — double the pixel ratio
 
 ```css
-@utility w-icon { width: pixelRatio(); }
-@utility w-avatar { width: pixelRatio(2); }
+@utility w-icon {
+  width: pixelRatio();
+}
+@utility w-avatar {
+  width: pixelRatio(2);
+}
 ```
 
 ```tsx
@@ -60,9 +76,15 @@ Returns different values based on the current theme mode. Automatically adapts w
 - Second parameter: value for dark theme
 
 ```css
-@utility bg-adaptive { background-color: light-dark(#ffffff, #1f2937); }
-@utility text-adaptive { color: light-dark(#111827, #f9fafb); }
-@utility border-adaptive { border-color: light-dark(#e5e7eb, #374151); }
+@utility bg-adaptive {
+  background-color: light-dark(#ffffff, #1f2937);
+}
+@utility text-adaptive {
+  color: light-dark(#111827, #f9fafb);
+}
+@utility border-adaptive {
+  border-color: light-dark(#e5e7eb, #374151);
+}
 ```
 
 ```tsx
@@ -129,11 +151,11 @@ You can combine custom CSS classes with Tailwind utilities in a single `classNam
 // WRONG — .container sets flex:1, and flex-1 also sets flex:1 (harmless but wasteful)
 // WRONG — .container sets width:100%, and w-full also sets width:100% (redundant)
 // DANGEROUS — .card-shadow sets border-radius:12px, and rounded-2xl sets border-radius:16px — CONFLICT!
-<View className="card-shadow rounded-2xl" />
+<View className="card-shadow rounded-2xl" />;
 
 // CORRECT — cn ensures rounded-2xl wins
 import { cn } from '@/lib/cn';
-<View className={cn('card-shadow', 'rounded-2xl')} />
+<View className={cn('card-shadow', 'rounded-2xl')} />;
 ```
 
 **Rule of thumb**: If your custom CSS class sets properties that might overlap with Tailwind utilities you'll also use, always wrap with `cn()`. See **cn Utility** section for full setup.
@@ -168,12 +190,12 @@ Create a utility whose value comes from a CSS variable injected at runtime via `
 Inject the real value at runtime (e.g., from react-navigation's layout event):
 
 ```tsx
-import { Uniwind } from 'uniwind'
+import { Uniwind } from 'uniwind';
 
 // e.g., inside a navigation layout listener
 Uniwind.updateCSSVariables(Uniwind.currentTheme, {
-  '--header-height': headerHeight,
-})
+  '--header-height': headerHeight
+});
 ```
 
 ```tsx
@@ -185,10 +207,16 @@ Uniwind.updateCSSVariables(Uniwind.currentTheme, {
 For styles that have no built-in Tailwind class:
 
 ```css
-@utility h-hairline { height: hairlineWidth(); }
-@utility text-scaled { font-size: fontScale(); }
+@utility h-hairline {
+  height: hairlineWidth();
+}
+@utility text-scaled {
+  font-size: fontScale();
+}
 @utility card-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 ```
 
@@ -258,9 +286,15 @@ Font name must **exactly match** the font file name (without extension).
 ```css
 @layer theme {
   :root {
-    @variant ios { --font-sans: 'SF Pro Text'; }
-    @variant android { --font-sans: 'Roboto-Regular'; }
-    @variant web { --font-sans: 'system-ui'; }
+    @variant ios {
+      --font-sans: 'SF Pro Text';
+    }
+    @variant android {
+      --font-sans: 'Roboto-Regular';
+    }
+    @variant web {
+      --font-sans: 'system-ui';
+    }
   }
 }
 ```
@@ -321,5 +355,5 @@ import { LinearGradient } from '@/components/styled';
 
 <LinearGradient className="rounded-xl p-4" colors={['#ff6b6b', '#4ecdc4']}>
   <Text className="text-white">Static gradient</Text>
-</LinearGradient>
+</LinearGradient>;
 ```

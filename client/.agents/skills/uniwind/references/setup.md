@@ -38,12 +38,12 @@ const config = getDefaultConfig(__dirname);
 
 // withUniwindConfig MUST be the OUTERMOST wrapper
 module.exports = withUniwindConfig(config, {
-  cssEntryFile: './global.css',           // Required — relative path from project root
-  polyfills: { rem: 16 },                // Optional — base rem value (default 16)
-  extraThemes: ['ocean', 'sunset'],       // Optional — custom themes beyond light/dark
-  dtsFile: './uniwind-types.d.ts',        // Optional — TypeScript types output path
-  debug: true,                            // Optional — log unsupported CSS in dev
-  isTV: false,                            // Optional — enable TV platform support
+  cssEntryFile: './global.css', // Required — relative path from project root
+  polyfills: { rem: 16 }, // Optional — base rem value (default 16)
+  extraThemes: ['ocean', 'sunset'], // Optional — custom themes beyond light/dark
+  dtsFile: './uniwind-types.d.ts', // Optional — TypeScript types output path
+  debug: true, // Optional — log unsupported CSS in dev
+  isTV: false // Optional — enable TV platform support
 });
 ```
 
@@ -73,9 +73,9 @@ export default defineConfig({
     tailwindcss(),
     uniwind({
       cssEntryFile: './src/global.css',
-      dtsFile: './src/uniwind-types.d.ts',
-    }),
-  ],
+      dtsFile: './src/uniwind-types.d.ts'
+    })
+  ]
 });
 ```
 
@@ -112,19 +112,34 @@ If `global.css` is in `app/` dir, add `@source` for sibling directories:
 ```json
 {
   "tailwindCSS.classAttributes": [
-    "class", "className", "headerClassName",
-    "contentContainerClassName", "columnWrapperClassName",
-    "endFillColorClassName", "imageClassName", "tintColorClassName",
-    "ios_backgroundColorClassName", "thumbColorClassName",
-    "trackColorOnClassName", "trackColorOffClassName",
-    "selectionColorClassName", "cursorColorClassName",
-    "underlineColorAndroidClassName", "placeholderTextColorClassName",
-    "selectionHandleColorClassName", "colorsClassName",
-    "progressBackgroundColorClassName", "titleColorClassName",
-    "underlayColorClassName", "colorClassName",
-    "backdropColorClassName", "backgroundColorClassName",
-    "statusBarBackgroundColorClassName", "drawerBackgroundColorClassName",
-    "ListFooterComponentClassName", "ListHeaderComponentClassName"
+    "class",
+    "className",
+    "headerClassName",
+    "contentContainerClassName",
+    "columnWrapperClassName",
+    "endFillColorClassName",
+    "imageClassName",
+    "tintColorClassName",
+    "ios_backgroundColorClassName",
+    "thumbColorClassName",
+    "trackColorOnClassName",
+    "trackColorOffClassName",
+    "selectionColorClassName",
+    "cursorColorClassName",
+    "underlineColorAndroidClassName",
+    "placeholderTextColorClassName",
+    "selectionHandleColorClassName",
+    "colorsClassName",
+    "progressBackgroundColorClassName",
+    "titleColorClassName",
+    "underlayColorClassName",
+    "colorClassName",
+    "backdropColorClassName",
+    "backgroundColorClassName",
+    "statusBarBackgroundColorClassName",
+    "drawerBackgroundColorClassName",
+    "ListFooterComponentClassName",
+    "ListHeaderComponentClassName"
   ],
   "tailwindCSS.classFunctions": ["useResolveClassNames"]
 }

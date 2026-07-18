@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+/* ---------------------------------------------------------------------- */
+/* Fonts — must match the font family names loaded via useFonts() in      */
+/* _layout.tsx (see src/constants/fonts.ts, FontFamily). React Native     */
+/* needs one family name per weight, no font-weight synthesis.            */
+/*                                                                        */
+/* Fraunces  — serif, display/headings. Where the "classy" feel lives.    */
+/* Manrope   — sans, body/UI copy. Warmer and less clinical than a        */
+/*             standard grotesk, still highly legible at small sizes.     */
+/* JetBrains Mono — numeric data: balances, account numbers, dates.       */
+/* ---------------------------------------------------------------------- */
+@theme {
+  --font-serif: 'Fraunces_500Medium';
+  --font-serif-semibold: 'Fraunces_600SemiBold';
+  --font-serif-bold: 'Fraunces_700Bold';
+  --font-serif-italic: 'Fraunces_500Medium_Italic';
+
+  --font-sans: 'Manrope_400Regular';
+  --font-sans-medium: 'Manrope_500Medium';
+  --font-sans-semibold: 'Manrope_600SemiBold';
+  --font-sans-bold: 'Manrope_700Bold';
+
+  --font-mono: 'JetBrainsMono_400Regular';
+  --font-mono-medium: 'JetBrainsMono_500Medium';
+  --font-mono-semibold: 'JetBrainsMono_600SemiBold';
+}
+
+/* ---------------------------------------------------------------------- */
+/* Colors — faint sage background + antique gold accent, deep forest in   */
+/* dark mode with a lifted champagne gold for contrast. Semantic tokens,  */
+/* adapts automatically via className (no dark: prefix needed). Mirrored  */
+/* as plain hex in src/constants/colors.ts for native props that can't    */
+/* take a className.                                                     */
+/* ---------------------------------------------------------------------- */
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #f5f7f2;
+      --color-surface: #ecf0e7;
+      --color-card: #fbfcf9;
+      --color-foreground: #14201a;
+      --color-foreground-secondary: #56635a;
+      --color-border: #dde4d6;
+      --color-muted: #93a08d;
+      --color-primary: #a9832e;
+      --color-primary-foreground: #241c0c;
+      --color-success: #2f7a4f;
+      --color-danger: #b23b30;
+      --color-warning: #c97a2b;
+    }
+    @variant dark {
+      --color-background: #0b120e;
+      --color-surface: #101913;
+      --color-card: #141f18;
+      --color-foreground: #edf1ea;
+      --color-foreground-secondary: #9aa79a;
+      --color-border: #23302a;
+      --color-muted: #5e6d64;
+      --color-primary: #d4af63;
+      --color-primary-foreground: #1a1409;
+      --color-success: #4caf75;
+      --color-danger: #e0685c;
+      --color-warning: #e0a354;
+    }
+  }
+}

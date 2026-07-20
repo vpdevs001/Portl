@@ -51,3 +51,13 @@ export const paymentConfirmationStatusEnum = pgEnum('payment_confirmation_status
   'approved',
   'rejected'
 ]);
+
+// ===== INVITATIONS =====
+
+export const inviteStatusEnum = pgEnum('invite_status', [
+  'pending',
+  'accepted',
+  'rejected',
+  'cancelled'
+]);
+

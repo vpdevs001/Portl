@@ -6,4 +6,6 @@ export * from './logs.schema';
 export * from './community.schema';
 export * from './amenities.schema';
 export * from './payments.schema';
+export * from './invites.schema';
 export * from './relations';
+

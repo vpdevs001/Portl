@@ -6,6 +6,7 @@ import * as logs from './logs.schema';
 import * as community from './community.schema';
 import * as amenities from './amenities.schema';
 import * as payments from './payments.schema';
+import * as invites from './invites.schema';
 
 const schema = {
   ...auth,
@@ -14,7 +15,8 @@ const schema = {
   ...logs,
   ...community,
   ...amenities,
-  ...payments
+  ...payments,
+  ...invites
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -39,6 +41,12 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     residentEntryLogs: r.many.residentEntryLogs({
       alias: 'residentEntryLogOwner'
+    }),
+    sentInvites: r.many.societyInvites({
+      alias: 'inviteSender'
+    }),
+    receivedInvites: r.many.societyInvites({
+      alias: 'inviteReceiver'
     })
   },
 
@@ -68,7 +76,8 @@ export const relations = defineRelations(schema, (r) => ({
     complaints: r.many.complaints(),
     amenities: r.many.amenities(),
     maintenanceDues: r.many.maintenanceDues(),
-    visitorRequests: r.many.visitorRequests()
+    visitorRequests: r.many.visitorRequests(),
+    invites: r.many.societyInvites()
   },
 
   towers: {
@@ -91,7 +100,8 @@ export const relations = defineRelations(schema, (r) => ({
     users: r.many.user(),
     complaints: r.many.complaints(),
     amenityBookings: r.many.amenityBookings(),
-    maintenanceDues: r.many.maintenanceDues()
+    maintenanceDues: r.many.maintenanceDues(),
+    invites: r.many.societyInvites()
   },
 
   // ===== VISITOR MANAGEMENT =====
@@ -319,6 +329,27 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.paymentConfirmations.reviewedBy,
       to: r.user.id,
       alias: 'paymentConfirmationReviewedBy'
+    })
+  },
+
+  societyInvites: {
+    society: r.one.societies({
+      from: r.societyInvites.societyId,
+      to: r.societies.id
+    }),
+    invitedUser: r.one.user({
+      from: r.societyInvites.invitedUserId,
+      to: r.user.id,
+      alias: 'inviteReceiver'
+    }),
+    invitedByUser: r.one.user({
+      from: r.societyInvites.invitedBy,
+      to: r.user.id,
+      alias: 'inviteSender'
+    }),
+    flat: r.one.flats({
+      from: r.societyInvites.flatId,
+      to: r.flats.id
     })
   }
 }));

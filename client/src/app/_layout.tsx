@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { ActivityIndicator, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { fontsToLoad } from '@/constants/fonts';
 import { authClient } from '@/lib/auth-client';
@@ -36,7 +37,7 @@ function RootNavigation() {
         }
       } else {
         if (!inAppGroup) {
-          router.replace('/(app)');
+          router.replace('/(app)/home');
         }
       }
     }
@@ -73,8 +74,10 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryProvider>
-      <RootNavigation />
-    </QueryProvider>
+    <SafeAreaProvider>
+      <QueryProvider>
+        <RootNavigation />
+      </QueryProvider>
+    </SafeAreaProvider>
   );
 }

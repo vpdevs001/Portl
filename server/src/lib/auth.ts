@@ -23,6 +23,12 @@ export const auth = betterAuth({
       generateId: false
     }
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google']
+    }
+  },
   user: {
     additionalFields: {
       societyId: {

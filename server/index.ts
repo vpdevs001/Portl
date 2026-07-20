@@ -4,13 +4,17 @@ import helmet from '@fastify/helmet';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 
 import dbPlugin from './src/common/plugins/db.plugin.ts';
+import sessionPlugin from './src/common/plugins/session.plugin.ts';
 import errorHandlerPlugin from './src/common/plugins/error-handler.plugin.ts';
+
 import { sendError } from './src/common/http/app-response.ts';
 import { ERROR_CODES } from './src/common/errors/error-codes.ts';
-import { AppError } from './src/common/errors/app-error.ts';
 import { healthRoutes } from './src/modules/health/health.routes.ts';
 import { authRoutes } from './src/modules/auth/auth.routes.ts';
+import { societyRoutes } from './src/modules/society/society.routes.ts';
+import { inviteRoutes } from './src/modules/invite/invite.routes.ts';
 import env from './env.ts';
+
 
 async function buildServer() {
   // ── Logging: pino-pretty in dev, structured JSON in production ─────────────
@@ -39,9 +43,8 @@ async function buildServer() {
   await app.register(helmet, { contentSecurityPolicy: false });
 
   // ── CORS ─────────────────────────────────────────────────────────────────────
-  const corsOrigins = process.env.CORS_?.split(',').map((origin) => origin.trim());
   await app.register(cors, {
-    origin: corsOrigins?.length ? corsOrigins : true,
+    origin: env.CORS_ORIGINS.length ? env.CORS_ORIGINS : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -52,6 +55,10 @@ async function buildServer() {
 
   // ── Database ─────────────────────────────────────────────────────────────────
   await app.register(dbPlugin);
+
+  // ── Session Hook ─────────────────────────────────────────────────────────────
+  await app.register(sessionPlugin);
+
 
   // ── Not Found handler ─────────────────────────────────────────────────────────
   // Case 5a: routing-layer 404 — no path/method combination is registered.
@@ -69,12 +76,9 @@ async function buildServer() {
   // ── Routes ────────────────────────────────────────────────────────────────────
   await app.register(healthRoutes);
   await app.register(authRoutes);
+  await app.register(societyRoutes);
+  await app.register(inviteRoutes);
 
-  // TEMPORARY — verify AppError.notFound shape; remove after confirming.
-  // Case 5b: business-logic 404 — route exists but resource lookup failed.
-  app.get('/test-not-found', async () => {
-    throw AppError.notFound('Test: resource not found');
-  });
 
   return app;
 }

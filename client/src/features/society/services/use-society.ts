@@ -1,50 +1,12 @@
+// TanStack Query hooks for the society feature.
+// Moved from src/hooks/use-society.ts — all import paths updated to the
+// new feature-folder layout.
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '../lib/api';
+import { apiRequest } from '@/lib/api';
+import type { Flat, Society, SocietyDetails, Tower, UserMember } from '../types/society.types';
 
-export interface Society {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SocietyDetails extends Society {
-  towers: Tower[];
-  flatCount: number;
-  memberCount: number;
-}
-
-export interface Tower {
-  id: string;
-  societyId: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Flat {
-  id: string;
-  societyId: string;
-  towerId: string;
-  flatNumber: string;
-  floor: number | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UserMember {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: 'resident' | 'security_guard' | 'society_admin' | null;
-  societyId: string | null;
-  flatId: string | null;
-}
+export type { Flat, Society, SocietyDetails, Tower, UserMember };
 
 export function useCreateSociety() {
   return useMutation({
@@ -54,10 +16,11 @@ export function useCreateSociety() {
       city: string;
       state: string;
       pincode: string;
-    }) => apiRequest<Society>('/api/societies', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
+    }) =>
+      apiRequest<Society>('/api/societies', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
     // NOTE: does not invalidate/refetch the session here — Better Auth's
     // useSession() is a nanostores atom, not a TanStack Query cache entry,
     // so queryClient.invalidateQueries has no effect on it. The screen that
@@ -77,10 +40,11 @@ export function useSocietyDetails() {
 export function useCreateTower() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name: string }) => apiRequest<Tower>('/api/societies/towers', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    }),
+    mutationFn: (data: { name: string }) =>
+      apiRequest<Tower>('/api/societies/towers', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['towers'] });
       queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
@@ -113,13 +77,15 @@ export function useCreateFlat() {
 export function useFlats(towerId?: string) {
   return useQuery({
     queryKey: ['flats', { towerId }],
-    queryFn: () => apiRequest<Flat[]>(`/api/societies/flats${towerId ? `?towerId=${towerId}` : ''}`)
+    queryFn: () =>
+      apiRequest<Flat[]>(`/api/societies/flats${towerId ? `?towerId=${towerId}` : ''}`)
   });
 }
 
 export function useSocietyMembers(role?: 'resident' | 'security_guard' | 'society_admin') {
   return useQuery({
     queryKey: ['members', { role }],
-    queryFn: () => apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
+    queryFn: () =>
+      apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
   });
 }

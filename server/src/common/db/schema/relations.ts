@@ -47,7 +47,8 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     receivedInvites: r.many.societyInvites({
       alias: 'inviteReceiver'
-    })
+    }),
+    pushTokens: r.many.pushTokens()
   },
 
   session: {
@@ -149,6 +150,13 @@ export const relations = defineRelations(schema, (r) => ({
     visitorRequest: r.one.visitorRequests({
       from: r.serviceStaffDetails.visitorRequestId,
       to: r.visitorRequests.id
+    })
+  },
+
+  pushTokens: {
+    user: r.one.user({
+      from: r.pushTokens.userId,
+      to: r.user.id
     })
   },
 

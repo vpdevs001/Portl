@@ -4,13 +4,21 @@ import { useSocietyDetails } from '@/features/society/services/use-society';
 import { authClient } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
-import { ActivityIndicator, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
+
+const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+  { value: 'system', label: 'System', icon: 'phone-portrait-outline' }
+];
 
 export function ProfileScreen() {
   const { data: session, isPending: isSessionPending } = authClient.useSession();
   const { data: society, isLoading: isSocietyLoading } = useSocietyDetails();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { preference, setPreference } = useThemePreference();
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -123,6 +131,44 @@ export function ProfileScreen() {
           ) : (
             <Text className="text-sm font-sans text-muted">No society data available</Text>
           )}
+        </View>
+
+        {/* Appearance */}
+        <View className="bg-card border border-border rounded-2xl p-6 mb-5 gap-3">
+          <View className="flex-row items-center gap-2 mb-1">
+            <Ionicons name="contrast-outline" size={14} color={theme.primary} />
+            <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
+              Appearance
+            </Text>
+          </View>
+
+          <View className="flex-row bg-surface border border-border/50 rounded-xl p-1 gap-1">
+            {APPEARANCE_OPTIONS.map((option) => {
+              const active = preference === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setPreference(option.value)}
+                  className={`flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg ${
+                    active ? 'bg-primary' : ''
+                  }`}
+                >
+                  <Ionicons
+                    name={option.icon as never}
+                    size={14}
+                    color={active ? theme.primaryForeground : theme.foregroundSecondary}
+                  />
+                  <Text
+                    className={`text-xs font-sans-bold ${
+                      active ? 'text-primary-foreground' : 'text-foreground-secondary'
+                    }`}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* Sign Out */}

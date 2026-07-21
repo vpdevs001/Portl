@@ -6,7 +6,8 @@ import {
   useRespondToVisitorRequest
 } from '@/features/visitors/hooks/use-visitors';
 import { VisitorResidentCard } from './VisitorResidentCard';
-import { ActivityIndicator, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 /**
  * AdminHome — the society_admin Home tab content.

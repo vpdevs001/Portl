@@ -7,13 +7,13 @@ import {
   ScrollView,
   Text,
   TextInput,
-  View,
-  useColorScheme
+  View
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { useFlats } from '@/features/society/services/use-society';
 import {

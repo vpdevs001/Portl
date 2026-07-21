@@ -113,6 +113,8 @@ npx expo install expo-secure-store expo-web-browser expo-linking \
 
 ⚠️ **Added out-of-band, not part of the original batch:** `@react-native-community/datetimepicker` — installed ad hoc for Chapter 8 (pre-approval validity windows) and now also used in Chapter 10 (notice expiry). Triggers its own native rebuild the first time it's added, same as anything else on this list — noting it here retroactively so the full native-module picture stays in one place rather than scattered across chapters.
 
+⚠️ **Added out-of-band:** `@react-native-async-storage/async-storage` — installed for the Appearance (light/dark/system) preference toggle on the Profile screen. Deliberately AsyncStorage rather than `expo-secure-store`: a display preference isn't sensitive, doesn't need Keychain/Keystore encryption, and SecureStore has a small per-key size ceiling that's the wrong fit even for trivially small values as a matter of using the right tool.
+
 ---
 
 ## Chapter 4 — Frontend Foundations ✅

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
 import { Screen } from '@/components/Screen';

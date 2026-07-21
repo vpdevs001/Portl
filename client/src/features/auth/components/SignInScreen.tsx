@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { authClient } from '@/lib/auth-client';
 import { Colors } from '@/constants/colors';

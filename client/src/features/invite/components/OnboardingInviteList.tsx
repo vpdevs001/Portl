@@ -4,7 +4,8 @@ import { authClient } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export function OnboardingInviteList() {
   const router = useRouter();

@@ -2,7 +2,8 @@ import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
 import { authClient } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Text, View, useColorScheme } from 'react-native';
+import { Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 /**
  * PollsScreen — shared screen for all roles.

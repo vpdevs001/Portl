@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { ThemeProvider } from '@/hooks/useColorScheme';
 import { fontsToLoad } from '@/constants/fonts';
 import { authClient } from '@/lib/auth-client';
 
@@ -75,9 +76,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <QueryProvider>
-        <RootNavigation />
-      </QueryProvider>
+      <ThemeProvider>
+        <QueryProvider>
+          <RootNavigation />
+        </QueryProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

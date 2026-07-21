@@ -13,8 +13,8 @@ import { healthRoutes } from './src/modules/health/health.routes.ts';
 import { authRoutes } from './src/modules/auth/auth.routes.ts';
 import { societyRoutes } from './src/modules/society/society.routes.ts';
 import { inviteRoutes } from './src/modules/invite/invite.routes.ts';
+import { visitorsRoutes } from './src/modules/visitors/visitors.routes.ts';
 import env from './env.ts';
-
 
 async function buildServer() {
   // ── Logging: pino-pretty in dev, structured JSON in production ─────────────
@@ -59,7 +59,6 @@ async function buildServer() {
   // ── Session Hook ─────────────────────────────────────────────────────────────
   await app.register(sessionPlugin);
 
-
   // ── Not Found handler ─────────────────────────────────────────────────────────
   // Case 5a: routing-layer 404 — no path/method combination is registered.
   // Uses code ROUTE_NOT_FOUND (distinct from NOT_FOUND which is a business-logic
@@ -78,7 +77,7 @@ async function buildServer() {
   await app.register(authRoutes);
   await app.register(societyRoutes);
   await app.register(inviteRoutes);
-
+  await app.register(visitorsRoutes);
 
   return app;
 }

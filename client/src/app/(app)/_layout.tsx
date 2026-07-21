@@ -3,11 +3,17 @@ import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function AppLayout() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
+
+  // Registers this device's Expo push token once per session — every
+  // screen under (app) is behind auth + society, so this is the right
+  // place for it (vs. the root layout, which also covers sign-in).
+  useNotifications();
 
   return (
     <Tabs
@@ -71,6 +77,7 @@ export default function AppLayout() {
           )
         }}
       />
+      <Tabs.Screen name="guard" options={{ href: null }} />
     </Tabs>
   );
 }

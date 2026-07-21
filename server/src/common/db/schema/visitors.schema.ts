@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, unique } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { approverTypeEnum, visitorSourceEnum, visitorStatusEnum, visitorTypeEnum } from './enums';
@@ -15,6 +15,10 @@ export const visitorRequests = pgTable('visitor_requests', {
   phone: varchar('phone', { length: 20 }),
   photo: text('photo'),
   purpose: text('purpose'),
+  // Non-cab vehicle plate (e.g. a delivery rider's bike). Cab plate numbers
+  // live on cabDetails.vehicleNumber instead — kept separate since a cab's
+  // plate is tied to the cab company/driver pairing, not the visit itself.
+  vehicleNumber: varchar('vehicle_number', { length: 30 }),
   status: visitorStatusEnum('status').notNull().default('pending'),
   source: visitorSourceEnum('source').notNull(),
   createdBy: uuid('created_by')
@@ -74,3 +78,27 @@ export const serviceStaffDetails = pgTable('service_staff_details', {
     .notNull()
     .$onUpdate(() => new Date())
 });
+
+// Pulled forward from Chapter 16 — this chapter (Visitor Management) is the
+// first thing that actually needs to send a push notification, so the
+// minimal token table + registration endpoint land here. Chapter 16 later
+// hardens this (expired-token cleanup, batching) rather than building it
+// from scratch.
+export const pushTokens = pgTable(
+  'push_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    expoPushToken: varchar('expo_push_token', { length: 255 }).notNull(),
+    deviceId: varchar('device_id', { length: 255 }),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date())
+  },
+  (table) => [unique('push_tokens_user_id_expo_push_token_unique').on(table.userId, table.expoPushToken)]
+);

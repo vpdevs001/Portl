@@ -1,67 +1,79 @@
 import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Text, View, useColorScheme } from 'react-native';
+import {
+  usePendingVisitors,
+  useRespondToVisitorRequest
+} from '@/features/visitors/hooks/use-visitors';
+import { VisitorResidentCard } from './VisitorResidentCard';
+import { ActivityIndicator, ScrollView, Text, View, useColorScheme } from 'react-native';
 
 /**
- * AdminHome — placeholder for the society_admin Home tab content.
+ * AdminHome — the society_admin Home tab content.
  *
- * Chapter 7 will replace this with a dashboard overview section featuring
- * key estate metrics (pending approvals, active visitors, flagged complaints),
- * plus a full-screen drawer navigator that expands to cover the tab bar when
- * the admin enters the wider console (residents list, flats, towers, staff
- * directory, dues, complaint resolution, amenities).
+ * Chapter 7 wires this to the live admin-routed visitor queue (requests
+ * with approverType = 'admin' — e.g. prospective flat buyers or anyone
+ * whose approval authority is the admin rather than a specific flat).
  *
- * IMPORTANT — drawer placement note for Chapter 7:
- * The admin console drawer must cover the full screen (tab bar hidden while
- * browsing) rather than rendering as a docked side panel underneath the
- * persistent tab bar. This is intentional — the admin console is a context
- * shift, not a tab-level sub-screen. The drawer navigator will be attached
- * here (or in a dedicated AdminConsoleDrawer component it renders) and will
- * use Expo Router's modal presentation or a custom animated overlay that
- * toggles tabBar visibility, NOT the default docked-drawer pattern.
+ * The full admin console (residents, flats, towers, staff directory, dues,
+ * complaint resolution, amenities) is intentionally deferred — that's a
+ * full-screen drawer that hides the tab bar while browsing, a context
+ * shift rather than a tab-level sub-screen, and lands in a later chapter.
  */
 export function AdminHome() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { data, isLoading } = usePendingVisitors();
+  const respond = useRespondToVisitorRequest();
 
   return (
     <Screen>
       <View className="flex-1 px-6 pt-8">
-        {/* Header */}
         <View className="mb-6">
           <Text className="text-2xl font-serif-bold text-foreground">Admin Dashboard</Text>
           <Text className="text-xs font-sans text-muted mt-1">
-            Society administration overview
+            Visitor requests routed to you
           </Text>
         </View>
 
-        {/* Placeholder body */}
-        <View className="flex-1 items-center justify-center gap-4 pb-20">
-          {/* Gold emblem */}
-          <View className="w-16 h-16 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
-            <Ionicons name="shield-checkmark" size={28} color={theme.primary} />
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
+            {!data || data.length === 0 ? (
+              <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[220px]">
+                <Ionicons name="shield-checkmark-outline" size={28} color={theme.primary} />
+                <Text className="text-base font-serif-semibold text-foreground mt-3">
+                  No pending approvals
+                </Text>
+                <Text className="text-sm font-sans text-foreground-secondary text-center mt-2 px-4">
+                  Admin-routed visitor requests — like prospective buyers — will appear here.
+                </Text>
+              </View>
+            ) : (
+              data.map((request) => (
+                <VisitorResidentCard
+                  key={request.id}
+                  request={request}
+                  onRespond={(id, status) => respond.mutate({ id, status })}
+                />
+              ))
+            )}
+          </ScrollView>
+        )}
 
-          <Text className="text-base font-serif-semibold text-foreground text-center">
-            Admin Dashboard
+        {/* Admin console note */}
+        <View className="mt-4 p-4 bg-surface border border-border/60 rounded-xl w-full">
+          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
+            Admin Console (Chapter TBD)
           </Text>
-          <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-            Chapter 7 builds this into a live dashboard overview — pending visitor approvals, estate
-            metrics, and quick actions.
+          <Text className="text-xs font-sans text-foreground-secondary leading-5">
+            The full admin console — residents, flats, towers, staff directory, dues, complaints,
+            amenities — will open as a full-screen drawer that hides the tab bar while browsing,
+            rather than a docked side panel.
           </Text>
-
-          {/* Admin console note */}
-          <View className="mt-4 p-4 bg-surface border border-border/60 rounded-xl w-full">
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Admin Console (Chapter TBD)
-            </Text>
-            <Text className="text-xs font-sans text-foreground-secondary leading-5">
-              The full admin console — residents, flats, towers, staff directory, dues, complaints,
-              amenities — will open as a full-screen drawer that hides the tab bar while browsing,
-              rather than a docked side panel.
-            </Text>
-          </View>
         </View>
       </View>
     </Screen>

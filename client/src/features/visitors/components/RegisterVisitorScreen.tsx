@@ -413,9 +413,7 @@ export function RegisterVisitorScreen() {
           </View>
         )}
 
-        {error ? (
-          <Text className="text-sm font-sans text-danger mb-4">{error}</Text>
-        ) : null}
+        {error ? <Text className="text-sm font-sans text-danger mb-4">{error}</Text> : null}
 
         <Pressable
           onPress={handleSubmit}
@@ -425,7 +423,9 @@ export function RegisterVisitorScreen() {
           {createRequest.isPending ? (
             <ActivityIndicator size="small" color={theme.primaryForeground} />
           ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Send for approval</Text>
+            <Text className="text-sm font-sans-bold text-primary-foreground">
+              Send for approval
+            </Text>
           )}
         </Pressable>
       </ScrollView>

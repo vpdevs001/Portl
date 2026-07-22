@@ -179,7 +179,9 @@ export function SetupFlatsScreen() {
           </View>
         ) : (
           <View className="p-6 bg-card border border-border border-dashed rounded-xl items-center justify-center">
-            <Text className="text-xs font-sans text-muted">No units registered in this tower yet</Text>
+            <Text className="text-xs font-sans text-muted">
+              No units registered in this tower yet
+            </Text>
           </View>
         )}
       </View>
@@ -189,7 +191,9 @@ export function SetupFlatsScreen() {
         onPress={handleNext}
         className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
       >
-        <Text className="text-primary-foreground font-sans-bold text-base">Next: Invite Members</Text>
+        <Text className="text-primary-foreground font-sans-bold text-base">
+          Next: Invite Members
+        </Text>
         <Ionicons name="arrow-forward" size={18} color={theme.primaryForeground} />
       </Pressable>
     </ScrollView>

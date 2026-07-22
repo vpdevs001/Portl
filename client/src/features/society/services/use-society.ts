@@ -77,15 +77,13 @@ export function useCreateFlat() {
 export function useFlats(towerId?: string) {
   return useQuery({
     queryKey: ['flats', { towerId }],
-    queryFn: () =>
-      apiRequest<Flat[]>(`/api/societies/flats${towerId ? `?towerId=${towerId}` : ''}`)
+    queryFn: () => apiRequest<Flat[]>(`/api/societies/flats${towerId ? `?towerId=${towerId}` : ''}`)
   });
 }
 
 export function useSocietyMembers(role?: 'resident' | 'security_guard' | 'society_admin') {
   return useQuery({
     queryKey: ['members', { role }],
-    queryFn: () =>
-      apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
+    queryFn: () => apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
   });
 }

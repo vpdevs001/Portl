@@ -146,7 +146,9 @@ export function CreateSocietyForm() {
         {isPending ? (
           <ActivityIndicator size="small" color="#1a1409" />
         ) : (
-          <Text className="text-primary-foreground font-sans-bold text-base">Create & Continue</Text>
+          <Text className="text-primary-foreground font-sans-bold text-base">
+            Create & Continue
+          </Text>
         )}
       </Pressable>
     </ScrollView>

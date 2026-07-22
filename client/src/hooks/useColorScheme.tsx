@@ -58,7 +58,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // 'system' mode, leave uniwind alone so it keeps following the OS
   // Appearance listener natively (including live changes).
   const content =
-    preference === 'system' ? children : <ScopedTheme theme={resolvedScheme}>{children}</ScopedTheme>;
+    preference === 'system' ? (
+      children
+    ) : (
+      <ScopedTheme theme={resolvedScheme}>{children}</ScopedTheme>
+    );
 
   return <ThemeContext.Provider value={value}>{content}</ThemeContext.Provider>;
 }

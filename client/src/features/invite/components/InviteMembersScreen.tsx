@@ -131,9 +131,7 @@ export function InviteMembersScreen() {
                       <Text className="text-sm font-sans-semibold text-foreground">{res.name}</Text>
                       <Text className="text-xs font-sans text-muted">{res.email}</Text>
                     </View>
-                    {active && (
-                      <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
-                    )}
+                    {active && <Ionicons name="checkmark-circle" size={18} color={theme.primary} />}
                   </Pressable>
                 );
               })
@@ -208,8 +206,7 @@ export function InviteMembersScreen() {
                   <ScrollView className="divide-y divide-border">
                     {flats.map((flat) => {
                       const active = selectedFlatId === flat.id;
-                      const towerName =
-                        towers?.find((t) => t.id === flat.towerId)?.name ?? 'Tower';
+                      const towerName = towers?.find((t) => t.id === flat.towerId)?.name ?? 'Tower';
                       return (
                         <Pressable
                           key={flat.id}
@@ -247,7 +244,9 @@ export function InviteMembersScreen() {
             ) : (
               <>
                 <Ionicons name="paper-plane" size={16} color={theme.primaryForeground} />
-                <Text className="text-primary-foreground font-sans-bold text-sm">Send Invitation</Text>
+                <Text className="text-primary-foreground font-sans-bold text-sm">
+                  Send Invitation
+                </Text>
               </>
             )}
           </Pressable>

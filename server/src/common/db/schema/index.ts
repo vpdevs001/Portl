@@ -8,4 +8,3 @@ export * from './amenities.schema';
 export * from './payments.schema';
 export * from './invites.schema';
 export * from './relations';
-

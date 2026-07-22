@@ -100,5 +100,7 @@ export const pushTokens = pgTable(
       .notNull()
       .$onUpdate(() => new Date())
   },
-  (table) => [unique('push_tokens_user_id_expo_push_token_unique').on(table.userId, table.expoPushToken)]
+  (table) => [
+    unique('push_tokens_user_id_expo_push_token_unique').on(table.userId, table.expoPushToken)
+  ]
 );

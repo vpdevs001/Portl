@@ -20,6 +20,7 @@ import {
   useCreateVisitorRequest,
   useUploadVisitorPhoto
 } from '@/features/visitors/hooks/use-visitors';
+import { DrawerButton } from '@/components/DrawerButton';
 
 type VisitorType = 'guest' | 'delivery' | 'cab' | 'service_staff' | 'admin_visitor';
 
@@ -173,7 +174,7 @@ export function RegisterVisitorScreen() {
             <Ionicons name="chevron-back" size={24} color={theme.foreground} />
           </Pressable>
           <Text className="text-lg font-serif-semibold text-foreground">Register visitor</Text>
-          <View className="w-6" />
+          <DrawerButton />
         </View>
 
         {/* Visitor type */}

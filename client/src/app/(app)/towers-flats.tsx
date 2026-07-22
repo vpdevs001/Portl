@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  TextInput,
+  useColorScheme
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Screen } from '@/components/Screen';
@@ -11,7 +19,7 @@ import {
   useSocietyDetails
 } from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { DrawerButton } from '@/components/DrawerButton';
 
 export default function TowersFlatsScreen() {
   const router = useRouter();
@@ -73,7 +81,7 @@ export default function TowersFlatsScreen() {
             <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
           </Pressable>
           <Text className="text-base font-serif-bold text-foreground">Estate Structure</Text>
-          <View className="w-16" />
+          <DrawerButton />
         </View>
 
         <ScrollView

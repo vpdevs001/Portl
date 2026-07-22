@@ -15,10 +15,7 @@ export type PushMessage = {
   data?: Record<string, unknown>;
 };
 
-export async function sendPushNotifications(
-  tokens: string[],
-  message: PushMessage
-): Promise<void> {
+export async function sendPushNotifications(tokens: string[], message: PushMessage): Promise<void> {
   const validTokens = [...new Set(tokens)].filter((token) => token.startsWith('ExponentPushToken'));
 
   if (validTokens.length === 0) {

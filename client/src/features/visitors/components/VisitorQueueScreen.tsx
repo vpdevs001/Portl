@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { Screen } from '@/components/Screen';
 import { usePendingVisitors } from '@/features/visitors/hooks/use-visitors';
 import { VisitorGuardQueue } from '@/features/home/components/VisitorGuardQueue';
+import { DrawerButton } from '@/components/DrawerButton';
 
 export function VisitorQueueScreen() {
   const router = useRouter();
@@ -21,14 +22,21 @@ export function VisitorQueueScreen() {
             <Ionicons name="chevron-back" size={24} color={theme.foreground} />
           </Pressable>
           <Text className="text-lg font-serif-semibold text-foreground">Visitor queue</Text>
-          <Pressable onPress={() => refetch()} hitSlop={12}>
-            <Ionicons
-              name="refresh"
-              size={20}
-              color={theme.foreground}
-              style={isRefetching ? { opacity: 0.4 } : undefined}
-            />
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => refetch()}
+              hitSlop={12}
+              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
+            >
+              <Ionicons
+                name="refresh"
+                size={18}
+                color={theme.foreground}
+                style={isRefetching ? { opacity: 0.4 } : undefined}
+              />
+            </Pressable>
+            <DrawerButton />
+          </View>
         </View>
 
         <VisitorGuardQueue

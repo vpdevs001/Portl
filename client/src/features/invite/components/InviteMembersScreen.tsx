@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { DrawerButton } from '@/components/DrawerButton';
 
 export function InviteMembersScreen() {
   const router = useRouter();
@@ -79,9 +80,22 @@ export function InviteMembersScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background px-6 py-12">
+    <ScrollView className="flex-1 bg-background px-6 pt-4 pb-12">
+      {/* Header Bar */}
+      <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/60">
+        <Pressable
+          onPress={() => router.back()}
+          className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border active:bg-surface"
+        >
+          <Ionicons name="arrow-back" size={16} color={theme.foreground} />
+          <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
+        </Pressable>
+        <Text className="text-base font-serif-bold text-foreground">Invite Management</Text>
+        <DrawerButton />
+      </View>
+
       {/* Hero */}
-      <View className="mb-8 mt-4">
+      <View className="mb-8 mt-2">
         <Text className="text-3xl font-serif-bold text-foreground mb-3">Invite Members</Text>
         <Text className="text-sm font-sans text-foreground-secondary leading-5">
           Search for residents or security guards by name or email, assign their roles, and issue

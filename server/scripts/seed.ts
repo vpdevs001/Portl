@@ -48,9 +48,27 @@ async function seed() {
   await db
     .insert(flats)
     .values([
-      { id: FLAT_A101_ID, societyId: SOCIETY_ID, towerId: TOWER_A_ID, flatNumber: 'A-101', floor: 1 },
-      { id: FLAT_A102_ID, societyId: SOCIETY_ID, towerId: TOWER_A_ID, flatNumber: 'A-102', floor: 1 },
-      { id: FLAT_B101_ID, societyId: SOCIETY_ID, towerId: TOWER_B_ID, flatNumber: 'B-101', floor: 1 }
+      {
+        id: FLAT_A101_ID,
+        societyId: SOCIETY_ID,
+        towerId: TOWER_A_ID,
+        flatNumber: 'A-101',
+        floor: 1
+      },
+      {
+        id: FLAT_A102_ID,
+        societyId: SOCIETY_ID,
+        towerId: TOWER_A_ID,
+        flatNumber: 'A-102',
+        floor: 1
+      },
+      {
+        id: FLAT_B101_ID,
+        societyId: SOCIETY_ID,
+        towerId: TOWER_B_ID,
+        flatNumber: 'B-101',
+        floor: 1
+      }
     ])
     .onConflictDoNothing();
 

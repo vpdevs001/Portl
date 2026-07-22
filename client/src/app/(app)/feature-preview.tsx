@@ -6,6 +6,7 @@ import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FEATURE_BLUEPRINTS } from '@/constants/feature-blueprints';
+import { DrawerButton } from '@/components/DrawerButton';
 
 export default function FeaturePreviewScreen() {
   const router = useRouter();
@@ -24,13 +25,16 @@ export default function FeaturePreviewScreen() {
       <View className="flex-1 px-6 pt-4">
         {/* Header Bar */}
         <View className="flex-row items-center justify-between py-4 border-b border-border/60 mb-4">
-          <Pressable
-            onPress={() => router.back()}
-            className="flex-row items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border active:bg-surface"
-          >
-            <Ionicons name="arrow-back" size={18} color={theme.foreground} />
-            <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => router.back()}
+              className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border active:bg-surface"
+            >
+              <Ionicons name="arrow-back" size={16} color={theme.foreground} />
+              <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
+            </Pressable>
+            <DrawerButton />
+          </View>
 
           <View className="flex-row items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30">
             <Ionicons

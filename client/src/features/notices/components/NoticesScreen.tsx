@@ -4,18 +4,8 @@ import { authClient } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Text, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { DrawerButton } from '@/components/DrawerButton';
 
-/**
- * NoticesScreen — shared screen for all roles.
- *
- * The tab is role-gated at the *action* level, not the screen level:
- *   - society_admin: sees a "Create Notice" affordance (Chapter 10)
- *   - resident / security_guard: sees the read-only notices feed (Chapter 10)
- *
- * This placeholder exists to prove the role-gating pattern is wired
- * correctly. The real empty state design and data fetching are Chapter 10's
- * work — do not design them here.
- */
 export function NoticesScreen() {
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user?.role === 'society_admin';
@@ -24,20 +14,23 @@ export function NoticesScreen() {
 
   return (
     <Screen>
-      <View className="flex-1 px-6 pt-8">
-        {/* Header */}
-        <View className="mb-6 flex-row justify-between items-center">
-          <View>
-            <Text className="text-2xl font-serif-bold text-foreground">Notices</Text>
-            <Text className="text-xs font-sans text-muted mt-1">Estate announcements</Text>
+      <View className="flex-1 px-6 pt-4">
+        {/* Top Header Bar with Drawer Button */}
+        <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-border/50">
+          <View className="flex-row items-center gap-3">
+            <DrawerButton />
+            <View>
+              <Text className="text-2xl font-serif-bold text-foreground">Notices</Text>
+              <Text className="text-xs font-sans text-muted">Estate announcements</Text>
+            </View>
           </View>
-          {/* Admin gets a visible but non-functional create affordance */}
+
+          {/* Admin gets a visible create affordance */}
           {isAdmin && (
             <View className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 flex-row items-center gap-1">
               <Ionicons name="add" size={14} color={theme.primary} />
               <View>
                 <Text className="text-xs font-sans-bold text-primary">Create Notice</Text>
-                <Text className="text-[9px] font-sans text-muted text-center">(Chapter 10)</Text>
               </View>
             </View>
           )}
@@ -55,8 +48,8 @@ export function NoticesScreen() {
                 No notices yet
               </Text>
               <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-                Create Notice (Chapter 10) — as society admin, you&apos;ll be able to publish
-                announcements to all residents and staff from here.
+                Publish society announcements and pin important updates for all residents and
+                guards.
               </Text>
             </>
           ) : (
@@ -65,7 +58,7 @@ export function NoticesScreen() {
                 No notices yet
               </Text>
               <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-                Notices feed (Chapter 10) — announcements from your society admin will appear here.
+                Official society notices published by your admin will appear here.
               </Text>
             </>
           )}

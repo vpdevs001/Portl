@@ -7,9 +7,7 @@ import { AppError } from '../errors/app-error';
 // confirmations, entry logs) — don't guess field shapes ahead of the schema
 // that actually backs them.
 type SocietyScopedResource =
-  | { societyId: string }
-  | { flat: { societyId: string } }
-  | { society: { societyId: string } };
+  { societyId: string } | { flat: { societyId: string } } | { society: { societyId: string } };
 
 export function assertBelongsToSociety<T extends SocietyScopedResource>(
   resource: T | null | undefined,

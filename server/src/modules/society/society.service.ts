@@ -136,7 +136,10 @@ export async function listFlats(societyId: string, towerId?: string) {
   });
 }
 
-export async function listMembers(societyId: string, role?: 'resident' | 'security_guard' | 'society_admin') {
+export async function listMembers(
+  societyId: string,
+  role?: 'resident' | 'security_guard' | 'society_admin'
+) {
   return await db.query.user.findMany({
     where: role ? { societyId, role } : { societyId },
     orderBy: { name: 'asc' }

@@ -60,4 +60,3 @@ export const inviteStatusEnum = pgEnum('invite_status', [
   'rejected',
   'cancelled'
 ]);
-

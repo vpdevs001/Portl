@@ -24,7 +24,11 @@ export async function searchUnassignedUsers(query: string, excludingUserId: stri
     .limit(20);
 }
 
-export async function createInvite(societyId: string, invitedByUserId: string, dto: CreateInviteInput) {
+export async function createInvite(
+  societyId: string,
+  invitedByUserId: string,
+  dto: CreateInviteInput
+) {
   // Re-verify the target user's societyId is still null
   const targetUser = await db.query.user.findFirst({
     where: { id: dto.userId }
@@ -76,7 +80,10 @@ export async function createInvite(societyId: string, invitedByUserId: string, d
   return newInvite;
 }
 
-export async function listSentInvites(societyId: string, status?: 'pending' | 'accepted' | 'rejected' | 'cancelled') {
+export async function listSentInvites(
+  societyId: string,
+  status?: 'pending' | 'accepted' | 'rejected' | 'cancelled'
+) {
   return await db.query.societyInvites.findMany({
     where: status ? { societyId, status } : { societyId },
     with: {
@@ -120,7 +127,11 @@ export async function listMyInvites(userId: string) {
   });
 }
 
-export async function respondToInvite(userId: string, inviteId: string, action: 'accept' | 'reject') {
+export async function respondToInvite(
+  userId: string,
+  inviteId: string,
+  action: 'accept' | 'reject'
+) {
   return await db.transaction(async (tx) => {
     const invite = await tx.query.societyInvites.findFirst({
       where: { id: inviteId, invitedUserId: userId }

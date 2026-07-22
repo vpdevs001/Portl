@@ -281,9 +281,7 @@ export async function logExit(societyId: string, userId: string, requestId: stri
       exitTime: new Date(),
       exitMarkedBy: userId
     })
-    .where(
-      and(eq(visitorEntryLogs.visitorRequestId, requestId), isNull(visitorEntryLogs.exitTime))
-    )
+    .where(and(eq(visitorEntryLogs.visitorRequestId, requestId), isNull(visitorEntryLogs.exitTime)))
     .returning();
 
   if (!entry) {

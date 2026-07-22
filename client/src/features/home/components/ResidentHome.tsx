@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
 import {
@@ -9,9 +8,9 @@ import { VisitorResidentCard } from './VisitorResidentCard';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { RoleDrawer } from '@/components/RoleDrawer';
 import { useRouter } from 'expo-router';
 import { HOME_CONSTANTS } from '../constants/home.constants';
+import { DrawerButton } from '@/components/DrawerButton';
 
 export function ResidentHome() {
   const router = useRouter();
@@ -20,20 +19,13 @@ export function ResidentHome() {
   const { data, isLoading } = usePendingVisitors();
   const respond = useRespondToVisitorRequest();
 
-  const [drawerVisible, setDrawerVisible] = useState(false);
-
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
         {/* Header Bar with Drawer Toggle */}
         <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/50">
           <View className="flex-row items-center gap-3">
-            <Pressable
-              onPress={() => setDrawerVisible(true)}
-              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center active:bg-surface"
-            >
-              <Ionicons name="menu" size={22} color={theme.foreground} />
-            </Pressable>
+            <DrawerButton />
             <View>
               <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
                 {HOME_CONSTANTS.RESIDENT.APP_TAG}
@@ -92,9 +84,6 @@ export function ResidentHome() {
           </ScrollView>
         )}
       </View>
-
-      {/* Role Drawer Overlay */}
-      <RoleDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </Screen>
   );
 }

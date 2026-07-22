@@ -1,4 +1,5 @@
-import { Modal, View, Text, Pressable, ScrollView, SafeAreaView } from 'react-native';
+import { Modal, View, Text, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -6,6 +7,7 @@ import { authClient } from '@/lib/auth-client';
 import { useSocietyDetails } from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { useColorScheme, useThemePreference } from '@/hooks/useColorScheme';
+import * as WebBrowser from 'expo-web-browser';
 import { getDrawerItemsForRole, ROLE_LABELS } from '@/constants/navigation';
 
 interface RoleDrawerProps {
@@ -14,6 +16,9 @@ interface RoleDrawerProps {
 }
 
 export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const drawerWidth = windowWidth * 0.85;
+
   const router = useRouter();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -33,6 +38,9 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
 
   const handleSignOut = async () => {
     onClose();
+    try {
+      WebBrowser.dismissAuthSession();
+    } catch {}
     await authClient.signOut();
   };
 
@@ -44,9 +52,12 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 flex-row bg-black/50">
-        {/* Drawer Panel */}
-        <View className="w-5/6 max-w-[340px] h-full bg-background border-r border-border shadow-2xl flex-1">
-          <SafeAreaView className="flex-1">
+        {/* Drawer Panel — 75% Screen Width */}
+        <View
+          className="h-full bg-background border-r border-border shadow-2xl"
+          style={{ width: drawerWidth }}
+        >
+          <SafeAreaView className="flex-1" style={{ flex: 1 }}>
             {/* Header */}
             <View className="px-5 pt-4 pb-5 border-b border-border/80 bg-card">
               <View className="flex-row items-center justify-between mb-4">
@@ -104,9 +115,10 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
 
             {/* Menu Items List */}
             <ScrollView
-              className="flex-1 px-4 pt-4"
+              className="px-4 pt-4"
+              style={{ flex: 1 }}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 24 }}
+              contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
             >
               {/* Category: Live Screens */}
               <View className="mb-5">

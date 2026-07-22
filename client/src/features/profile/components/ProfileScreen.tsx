@@ -5,7 +5,9 @@ import { authClient } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
+import { DrawerButton } from '@/components/DrawerButton';
 
 const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'sunny-outline' },
@@ -21,6 +23,9 @@ export function ProfileScreen() {
   const { preference, setPreference } = useThemePreference();
 
   const handleSignOut = async () => {
+    try {
+      WebBrowser.dismissAuthSession();
+    } catch {}
     await authClient.signOut();
   };
 
@@ -38,14 +43,17 @@ export function ProfileScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* Page Title */}
-        <View className="pt-8 pb-6">
-          <Text className="text-2xl font-serif-bold text-foreground">Profile</Text>
-          <Text className="text-xs font-sans text-muted mt-1">Your account & estate details</Text>
+        {/* Header Bar with Drawer Button */}
+        <View className="pt-4 pb-4 mb-2 flex-row items-center gap-3 border-b border-border/50">
+          <DrawerButton />
+          <View>
+            <Text className="text-2xl font-serif-bold text-foreground">Profile</Text>
+            <Text className="text-xs font-sans text-muted">Your account &amp; estate details</Text>
+          </View>
         </View>
 
         {/* Avatar + Identity Card */}
-        <View className="bg-card border border-border rounded-2xl p-6 mb-5 items-center gap-4">
+        <View className="bg-card border border-border rounded-2xl p-6 mb-5 items-center gap-4 mt-2">
           {/* Avatar */}
           <View className="w-20 h-20 rounded-full overflow-hidden bg-surface border border-border/60">
             {user?.image ? (

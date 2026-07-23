@@ -65,3 +65,44 @@ export const registerPushTokenSchema = z.object({
   expoPushToken: z.string().min(1),
   deviceId: z.string().optional()
 });
+
+export const createPreApprovalSchema = z
+  .object({
+    name: z.string().min(1),
+    phone: z
+      .string()
+      .min(3)
+      .optional()
+      .or(z.literal(''))
+      .transform((value) => value || undefined),
+    purpose: z
+      .string()
+      .min(1)
+      .optional()
+      .or(z.literal(''))
+      .transform((value) => value || undefined),
+    // admin_visitor excluded on purpose — see visitors.types.ts.
+    visitorType: z.enum(['guest', 'delivery', 'cab', 'service_staff']).optional().default('guest'),
+    validFrom: z.string().datetime().optional(),
+    validUntil: z.string().datetime()
+  })
+  .refine((data) => !data.validFrom || new Date(data.validFrom) < new Date(data.validUntil), {
+    message: 'validUntil must be after validFrom',
+    path: ['validUntil']
+  });
+
+export const verifyPassSchema = z
+  .object({
+    passCode: z
+      .string()
+      .trim()
+      .length(6)
+      .optional()
+      .or(z.literal(''))
+      .transform((value) => value || undefined),
+    requestId: z.string().uuid().optional()
+  })
+  .refine((data) => Boolean(data.passCode || data.requestId), {
+    message: 'Provide either a passCode or a requestId',
+    path: ['passCode']
+  });

@@ -3,35 +3,53 @@ import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { approverTypeEnum, visitorSourceEnum, visitorStatusEnum, visitorTypeEnum } from './enums';
 
-export const visitorRequests = pgTable('visitor_requests', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  societyId: uuid('society_id')
-    .notNull()
-    .references(() => societies.id, { onDelete: 'cascade' }),
-  flatId: uuid('flat_id').references(() => flats.id, { onDelete: 'set null' }),
-  visitorType: visitorTypeEnum('visitor_type').notNull(),
-  approverType: approverTypeEnum('approver_type').notNull(),
-  name: varchar('name', { length: 150 }).notNull(),
-  phone: varchar('phone', { length: 20 }),
-  photo: text('photo'),
-  purpose: text('purpose'),
-  // Non-cab vehicle plate (e.g. a delivery rider's bike). Cab plate numbers
-  // live on cabDetails.vehicleNumber instead — kept separate since a cab's
-  // plate is tied to the cab company/driver pairing, not the visit itself.
-  vehicleNumber: varchar('vehicle_number', { length: 30 }),
-  status: visitorStatusEnum('status').notNull().default('pending'),
-  source: visitorSourceEnum('source').notNull(),
-  createdBy: uuid('created_by')
-    .notNull()
-    .references(() => user.id),
-  approvedBy: uuid('approved_by').references(() => user.id),
+export const visitorRequests = pgTable(
+  'visitor_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    societyId: uuid('society_id')
+      .notNull()
+      .references(() => societies.id, { onDelete: 'cascade' }),
+    flatId: uuid('flat_id').references(() => flats.id, { onDelete: 'set null' }),
+    visitorType: visitorTypeEnum('visitor_type').notNull(),
+    approverType: approverTypeEnum('approver_type').notNull(),
+    name: varchar('name', { length: 150 }).notNull(),
+    phone: varchar('phone', { length: 20 }),
+    photo: text('photo'),
+    purpose: text('purpose'),
+    // Non-cab vehicle plate (e.g. a delivery rider's bike). Cab plate numbers
+    // live on cabDetails.vehicleNumber instead — kept separate since a cab's
+    // plate is tied to the cab company/driver pairing, not the visit itself.
+    vehicleNumber: varchar('vehicle_number', { length: 30 }),
+    status: visitorStatusEnum('status').notNull().default('pending'),
+    source: visitorSourceEnum('source').notNull(),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => user.id),
+    approvedBy: uuid('approved_by').references(() => user.id),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date())
-});
+    // Chapter 8 — Pre-Approvals. Populated only when `source = 'pre_approval'`
+    // (always paired with `approver_type = 'resident'` — pre-approvals are
+    // flat-scoped, never admin-routed). `passCode` is a 6-char alphanumeric
+    // code the guard can key in by hand if the QR scan fails; validity window
+    // bounds when `verify-pass` will accept it.
+    passCode: varchar('pass_code', { length: 6 }),
+    validFrom: timestamp('valid_from'),
+    validUntil: timestamp('valid_until'),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date())
+  },
+  (table) => [
+    // Postgres unique constraints don't count NULLs as duplicates, so this
+    // only ever constrains actual pre-approval rows — regular gate-originated
+    // requests (passCode null) are unaffected.
+    unique('visitor_requests_society_id_pass_code_unique').on(table.societyId, table.passCode)
+  ]
+);
 
 export const deliveryDetails = pgTable('delivery_details', {
   id: uuid('id').primaryKey().defaultRandom(),

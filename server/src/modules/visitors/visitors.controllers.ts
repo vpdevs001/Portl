@@ -3,10 +3,12 @@ import { sendSuccess } from '../../common/http/app-response';
 import { AppError } from '../../common/errors/app-error';
 import * as service from './visitors.service';
 import {
+  createPreApprovalSchema,
   createVisitorRequestSchema,
   registerPushTokenSchema,
   respondVisitorRequestSchema,
-  uploadVisitorPhotoSchema
+  uploadVisitorPhotoSchema,
+  verifyPassSchema
 } from './visitors.schema';
 import { z } from 'zod';
 
@@ -94,4 +96,29 @@ export async function registerPushToken(request: FastifyRequest, reply: FastifyR
   const token = await service.registerPushToken(request.user.id, dto);
 
   return sendSuccess(reply, 201, token);
+}
+
+// ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
+
+export async function createPreApproval(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const dto = createPreApprovalSchema.parse(request.body);
+  const created = await service.createPreApproval(caller, dto);
+
+  return sendSuccess(reply, 201, created);
+}
+
+export async function listPreApprovals(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const preApprovals = await service.listPreApprovals(caller);
+
+  return sendSuccess(reply, 200, preApprovals);
+}
+
+export async function verifyPass(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const dto = verifyPassSchema.parse(request.body);
+  const result = await service.verifyPass(caller, dto);
+
+  return sendSuccess(reply, 200, result);
 }

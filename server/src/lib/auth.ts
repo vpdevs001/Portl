@@ -71,13 +71,7 @@ export const auth = betterAuth({
     'exp+portl-client://',
     'exp+portl-client://*',
     'exp+portl-client://**',
-    ...(isDev
-      ? [
-          'exp://192.168.*.*:*/**',
-          'exp+*://*',
-          'exp+*://**'
-        ]
-      : [])
+    ...(isDev ? ['exp://192.168.*.*:*/**', 'exp+*://*', 'exp+*://**'] : [])
   ],
   plugins: [expo()]
 });

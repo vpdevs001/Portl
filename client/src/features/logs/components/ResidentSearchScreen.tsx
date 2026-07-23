@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
@@ -80,7 +73,9 @@ export function ResidentSearchScreen() {
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder={tab === 'residents' ? 'Search by name or flat…' : 'Search staff by name or role…'}
+          placeholder={
+            tab === 'residents' ? 'Search by name or flat…' : 'Search staff by name or role…'
+          }
           placeholderTextColor={theme.muted}
           className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans text-sm mb-3"
         />
@@ -235,7 +230,9 @@ function StaffRow({
         disabled={isPending}
         className={`px-4 py-2.5 rounded-xl ${staff.isInside ? 'bg-danger/10 border border-danger/20' : 'bg-success/10 border border-success/20'} active:opacity-80`}
       >
-        <Text className={`text-xs font-sans-bold ${staff.isInside ? 'text-danger' : 'text-success'}`}>
+        <Text
+          className={`text-xs font-sans-bold ${staff.isInside ? 'text-danger' : 'text-success'}`}
+        >
           {staff.isInside ? 'Log exit' : 'Log entry'}
         </Text>
       </Pressable>
@@ -250,7 +247,9 @@ function Avatar({ name, image }: { name: string; image: string | null }) {
         <Image source={{ uri: image }} style={{ width: 44, height: 44 }} contentFit="cover" />
       ) : (
         <View className="w-11 h-11 items-center justify-center bg-primary/10">
-          <Text className="text-primary font-serif-bold text-base">{name.charAt(0).toUpperCase()}</Text>
+          <Text className="text-primary font-serif-bold text-base">
+            {name.charAt(0).toUpperCase()}
+          </Text>
         </View>
       )}
     </View>
@@ -262,7 +261,9 @@ function StatusBadge({ isInside }: { isInside: boolean }) {
     <View
       className={`self-start mt-2 px-2 py-0.5 rounded-full ${isInside ? 'bg-success/10' : 'bg-muted/10'}`}
     >
-      <Text className={`text-[10px] font-sans-bold uppercase ${isInside ? 'text-success' : 'text-muted'}`}>
+      <Text
+        className={`text-[10px] font-sans-bold uppercase ${isInside ? 'text-success' : 'text-muted'}`}
+      >
         {isInside ? 'Inside' : 'Outside'}
       </Text>
     </View>

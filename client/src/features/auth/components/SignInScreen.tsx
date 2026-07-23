@@ -28,7 +28,9 @@ export function SignInScreen() {
       // set and the next openAuthSessionAsync throws "invalid state". Dismiss
       // any lingering session before we start a fresh one.
       if (Platform.OS === 'android') {
-        try { WebBrowser.dismissAuthSession(); } catch {}
+        try {
+          WebBrowser.dismissAuthSession();
+        } catch {}
       }
 
       const { error: signInError } = await authClient.signIn.social({

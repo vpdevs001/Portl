@@ -251,7 +251,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 9 — Resident & Staff Entry Logs
+## Chapter 9 — Resident & Staff Entry Logs ✅
 
 `(server + client)` · Branch: `feature/entry-logs`
 

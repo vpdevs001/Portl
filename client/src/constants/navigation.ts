@@ -155,6 +155,15 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     category: 'Gate Operations'
   },
   {
+    id: 'guest-checkin',
+    label: 'Guest Check-in',
+    subtitle: 'Guests currently inside the gate',
+    icon: 'log-in-outline',
+    route: '/(app)/guard/check-in',
+    isLive: true,
+    category: 'Gate Operations'
+  },
+  {
     id: 'entry-logs',
     label: 'Gate Entry Logs',
     subtitle: 'Complete gate check-in history',

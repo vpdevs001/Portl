@@ -5,7 +5,7 @@ export type VisitorRequest = {
   name: string;
   phone?: string;
   purpose?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'checked_in' | 'completed';
   visitorType: 'guest' | 'delivery' | 'cab' | 'service_staff' | 'admin_visitor';
   approverType?: 'resident' | 'admin';
   vehicleNumber?: string;
@@ -100,4 +100,8 @@ export async function verifyPass(payload: { passCode?: string; requestId?: strin
     method: 'POST',
     body: JSON.stringify(payload)
   });
+}
+
+export async function fetchCheckedInVisitors() {
+  return apiRequest<VisitorRequest[]>('/api/visitors/checked-in');
 }

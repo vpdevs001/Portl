@@ -17,13 +17,22 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
   // routing through this same $fetch instance, so @better-auth/expo's
   // session-cookie attachment hooks (which are wired specifically to this
   // instance) still fire correctly.
-  const { data, error } = await authClient.$fetch<ApiEnvelope<T>>(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
+  const hasBody = options?.body !== undefined && options.body !== null;
+  const requestOptions: RequestInit = { ...options };
+
+  if (hasBody) {
+    requestOptions.headers = {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string> | undefined)
-    }
-  });
+    };
+  } else if (options?.headers) {
+    requestOptions.headers = options.headers;
+  }
+
+  const { data, error } = await authClient.$fetch<ApiEnvelope<T>>(
+    `${API_BASE_URL}${path}`,
+    requestOptions
+  );
 
   if (error) {
     throw new Error(error.message ?? `Error ${error.status}`);

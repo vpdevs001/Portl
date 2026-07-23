@@ -1,13 +1,13 @@
 import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
-import { authClient } from '@/lib/auth-client';
+import { useAppSession } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Text, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { DrawerButton } from '@/components/DrawerButton';
 
 export function PollsScreen() {
-  const { data: session } = authClient.useSession();
+  const { data: session } = useAppSession();
   const isAdmin = session?.user?.role === 'society_admin';
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];

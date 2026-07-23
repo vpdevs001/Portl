@@ -44,7 +44,8 @@ export function useCancelInvite() {
   return useMutation({
     mutationFn: (inviteId: string) =>
       apiRequest<SocietyInvite>(`/api/invites/${inviteId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        body: JSON.stringify({})
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invites', 'sent'] });

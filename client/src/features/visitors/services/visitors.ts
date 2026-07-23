@@ -38,13 +38,15 @@ export async function respondToVisitorRequest(id: string, status: 'approved' | '
 
 export async function logVisitorEntry(id: string) {
   return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-entry`, {
-    method: 'POST'
+    method: 'POST',
+    body: JSON.stringify({})
   });
 }
 
 export async function logVisitorExit(id: string) {
   return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-exit`, {
-    method: 'POST'
+    method: 'POST',
+    body: JSON.stringify({})
   });
 }
 
@@ -72,6 +74,7 @@ export type PreApproval = VisitorRequest & {
   passCode?: string;
   validFrom?: string;
   validUntil?: string;
+  isInside?: boolean;
 };
 
 export async function createPreApproval(payload: {

@@ -31,6 +31,7 @@ export function useCreateVisitorRequest() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['logs'] });
     }
   });
 }
@@ -68,6 +69,7 @@ export function useLogVisitorExit() {
     onSuccess: () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['logs'] });
     }
   });
 }

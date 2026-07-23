@@ -1,13 +1,14 @@
 import { Screen } from '@/components/Screen';
 import { Colors } from '@/constants/colors';
 import { useSocietyDetails } from '@/features/society/services/use-society';
-import { authClient } from '@/lib/auth-client';
+import { authClient, useAppSession } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
 import { DrawerButton } from '@/components/DrawerButton';
+import { ResidentEntryHistoryCard } from '@/features/logs/components/ResidentEntryHistoryCard';
 
 const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'sunny-outline' },
@@ -16,7 +17,7 @@ const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string 
 ];
 
 export function ProfileScreen() {
-  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const { data: session, isPending: isSessionPending } = useAppSession();
   const { data: society, isLoading: isSocietyLoading } = useSocietyDetails();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -140,6 +141,8 @@ export function ProfileScreen() {
             <Text className="text-sm font-sans text-muted">No society data available</Text>
           )}
         </View>
+
+        {user?.role === 'resident' ? <ResidentEntryHistoryCard /> : null}
 
         {/* Appearance */}
         <View className="bg-card border border-border rounded-2xl p-6 mb-5 gap-3">

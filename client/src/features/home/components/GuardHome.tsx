@@ -57,7 +57,43 @@ export function GuardHome() {
           isLoading={isLoading}
           onOpenRegister={() => router.push('/(app)/guard/register-visitor')}
         />
+
+        <View className="flex-row gap-3 mt-6">
+          <QuickAction
+            label="Check-in"
+            icon="people-outline"
+            onPress={() => router.push('/(app)/guard/resident-search' as any)}
+          />
+          <QuickAction
+            label="Gate logs"
+            icon="journal-outline"
+            onPress={() => router.push('/(app)/guard/gate-logs' as any)}
+          />
+        </View>
       </View>
     </Screen>
+  );
+}
+
+function QuickAction({
+  label,
+  icon,
+  onPress
+}: {
+  label: string;
+  icon: string;
+  onPress: () => void;
+}) {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 bg-card border border-border rounded-2xl p-4 items-center gap-2 active:opacity-90"
+    >
+      <Ionicons name={icon as never} size={20} color={theme.primary} />
+      <Text className="text-xs font-sans-bold text-foreground">{label}</Text>
+    </Pressable>
   );
 }

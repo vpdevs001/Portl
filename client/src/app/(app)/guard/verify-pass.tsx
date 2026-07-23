@@ -7,7 +7,11 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import { useLogVisitorEntry, useVerifyPass } from '@/features/visitors/hooks/use-visitors';
+import {
+  useLogVisitorEntry,
+  useLogVisitorExit,
+  useVerifyPass
+} from '@/features/visitors/hooks/use-visitors';
 import type { PreApproval } from '@/features/visitors/services/visitors';
 
 export default function VerifyPassScreen() {
@@ -23,6 +27,7 @@ export default function VerifyPassScreen() {
 
   const verifyPass = useVerifyPass();
   const logEntry = useLogVisitorEntry();
+  const logExit = useLogVisitorExit();
 
   function handleReset() {
     setResult(null);
@@ -67,9 +72,18 @@ export default function VerifyPassScreen() {
         {result ? (
           <ResultCard
             result={result}
-            onLogEntry={() => logEntry.mutate(result.id)}
+            onLogEntry={() =>
+              logEntry.mutate(result.id, {
+                onSuccess: () => setResult((current) => current && { ...current, isInside: true })
+              })
+            }
+            onLogExit={() =>
+              logExit.mutate(result.id, {
+                onSuccess: () => setResult((current) => current && { ...current, isInside: false })
+              })
+            }
             isLoggingEntry={logEntry.isPending}
-            entryLogged={logEntry.isSuccess}
+            isLoggingExit={logExit.isPending}
             onScanAnother={handleReset}
           />
         ) : (
@@ -213,18 +227,22 @@ function ScanPanel({
 function ResultCard({
   result,
   onLogEntry,
+  onLogExit,
   isLoggingEntry,
-  entryLogged,
+  isLoggingExit,
   onScanAnother
 }: {
   result: PreApproval;
   onLogEntry: () => void;
+  onLogExit: () => void;
   isLoggingEntry: boolean;
-  entryLogged: boolean;
+  isLoggingExit: boolean;
   onScanAnother: () => void;
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isInside = Boolean(result.isInside);
+  const isLogging = isLoggingEntry || isLoggingExit;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -254,22 +272,39 @@ function ResultCard({
         ) : null}
       </View>
 
-      <Pressable
-        onPress={onLogEntry}
-        disabled={isLoggingEntry || entryLogged}
-        className={`rounded-xl px-4 py-4 items-center mb-3 ${
-          entryLogged ? 'bg-success/20 border border-success/30' : 'bg-primary'
+      <View
+        className={`rounded-xl px-3 py-2 mb-3 self-start ${
+          isInside ? 'bg-success/10' : 'bg-muted/10'
         }`}
       >
-        {isLoggingEntry ? (
-          <ActivityIndicator size="small" color={theme.primaryForeground} />
+        <Text
+          className={`text-[10px] font-sans-bold uppercase ${
+            isInside ? 'text-success' : 'text-muted'
+          }`}
+        >
+          {isInside ? 'Currently inside' : 'Currently outside'}
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={isInside ? onLogExit : onLogEntry}
+        disabled={isLogging}
+        className={`rounded-xl px-4 py-4 items-center mb-3 ${
+          isInside ? 'bg-danger/10 border border-danger/20' : 'bg-primary'
+        }`}
+      >
+        {isLogging ? (
+          <ActivityIndicator
+            size="small"
+            color={isInside ? theme.danger : theme.primaryForeground}
+          />
         ) : (
           <Text
             className={`text-sm font-sans-bold ${
-              entryLogged ? 'text-success' : 'text-primary-foreground'
+              isInside ? 'text-danger' : 'text-primary-foreground'
             }`}
           >
-            {entryLogged ? 'Entry logged' : 'Log entry'}
+            {isInside ? 'Log exit' : 'Log entry'}
           </Text>
         )}
       </Pressable>

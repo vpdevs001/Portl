@@ -141,7 +141,7 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Pre-Approved Check-in',
     subtitle: 'Verify resident invite pass codes',
     icon: 'qr-code-outline',
-    route: '/(app)/guard/pre-approval',
+    route: '/(app)/guard/verify-pass',
     isLive: true,
     category: 'Gate Operations'
   },
@@ -180,7 +180,7 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Pre-Approve Visitor',
     subtitle: 'Create digital gate pass for guests',
     icon: 'key-outline',
-    route: '/(app)/guard/pre-approval',
+    route: '/(app)/pre-approvals',
     isLive: true,
     category: 'Passes & Access'
   },

@@ -65,3 +65,36 @@ export async function registerPushToken(payload: { expoPushToken: string; device
     body: JSON.stringify(payload)
   });
 }
+
+// ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
+
+export type PreApproval = VisitorRequest & {
+  passCode?: string;
+  validFrom?: string;
+  validUntil?: string;
+};
+
+export async function createPreApproval(payload: {
+  name: string;
+  phone?: string;
+  purpose?: string;
+  visitorType?: 'guest' | 'delivery' | 'cab' | 'service_staff';
+  validFrom?: string;
+  validUntil: string;
+}) {
+  return apiRequest<PreApproval>('/api/visitors/pre-approve', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function fetchPreApprovals() {
+  return apiRequest<PreApproval[]>('/api/visitors/pre-approvals');
+}
+
+export async function verifyPass(payload: { passCode?: string; requestId?: string }) {
+  return apiRequest<PreApproval>('/api/visitors/verify-pass', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}

@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   createPreApproval,
   createVisitorRequest,
+  listCheckedInVisitors,
   listPendingVisitors,
   listPreApprovals,
   logVisitorEntry,
@@ -74,5 +75,11 @@ export async function visitorsRoutes(app: FastifyInstance) {
     '/api/visitors/verify-pass',
     { preHandler: [requireAuth, requireSociety, requireRole('security_guard')] },
     verifyPass
+  );
+
+  app.get(
+    '/api/visitors/checked-in',
+    { preHandler: [requireAuth, requireSociety, requireRole('security_guard')] },
+    listCheckedInVisitors
   );
 }

@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -13,6 +14,7 @@ export function VisitorGuardQueue({
   isLoading: boolean;
   onOpenRegister: () => void;
 }) {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -20,9 +22,17 @@ export function VisitorGuardQueue({
     <View className="flex-1">
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-lg font-serif-semibold text-foreground">Pending queue</Text>
-        <Pressable onPress={onOpenRegister} className="rounded-full bg-primary px-3 py-2">
-          <Text className="text-xs font-sans-bold text-primary-foreground">Register visitor</Text>
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          <Pressable
+            onPress={() => router.push('/(app)/guard/verify-pass')}
+            className="rounded-full bg-card border border-border px-3 py-2"
+          >
+            <Text className="text-xs font-sans-bold text-foreground">Verify pass</Text>
+          </Pressable>
+          <Pressable onPress={onOpenRegister} className="rounded-full bg-primary px-3 py-2">
+            <Text className="text-xs font-sans-bold text-primary-foreground">Register visitor</Text>
+          </Pressable>
+        </View>
       </View>
 
       {isLoading ? (

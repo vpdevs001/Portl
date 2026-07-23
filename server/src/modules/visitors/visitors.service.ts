@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { and, eq, inArray, isNull, lt } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
@@ -12,10 +13,12 @@ import {
   visitorRequests
 } from '../../common/db/schema';
 import type {
+  CreatePreApprovalInput,
   CreateVisitorRequestInput,
   RegisterPushTokenInput,
   RespondVisitorRequestInput,
-  UploadVisitorPhotoInput
+  UploadVisitorPhotoInput,
+  VerifyPassInput
 } from './visitors.types.ts';
 
 type CallerRole = 'resident' | 'security_guard' | 'society_admin';
@@ -108,7 +111,7 @@ async function notifyApprovers(request: typeof visitorRequests.$inferSelect) {
       : request.flatId
         ? (
             await db.query.user.findMany({
-              where: { flatId: request.flatId },
+              where: { flatId: request.flatId! },
               columns: { id: true }
             })
           ).map((row) => row.id)
@@ -163,7 +166,7 @@ export async function listPendingRequests(caller: Caller) {
         createdByUser: true,
         flat: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: (r, { desc }) => [desc(r.createdAt)]
     });
   }
 
@@ -177,7 +180,7 @@ export async function listPendingRequests(caller: Caller) {
         createdByUser: true,
         flat: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: (r, { desc }) => [desc(r.createdAt)]
     });
   }
 
@@ -191,7 +194,7 @@ export async function listPendingRequests(caller: Caller) {
       societyId: caller.societyId,
       status: 'pending',
       approverType: 'resident',
-      flatId: caller.flatId
+      flatId: caller.flatId!
     },
     with: {
       deliveryDetails: true,
@@ -200,7 +203,7 @@ export async function listPendingRequests(caller: Caller) {
       createdByUser: true,
       flat: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: (r, { desc }) => [desc(r.createdAt)]
   });
 }
 
@@ -314,4 +317,122 @@ export async function registerPushToken(userId: string, dto: RegisterPushTokenIn
     .returning();
 
   return token;
+}
+
+// ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
+
+// Excludes 0/O and 1/I/L — a guard reading this off a resident's phone
+// screen at the gate shouldn't have to guess which character it is.
+const PASS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const PASS_CODE_LENGTH = 6;
+const PASS_CODE_MAX_ATTEMPTS = 5;
+
+function generatePassCode(): string {
+  let code = '';
+  for (let i = 0; i < PASS_CODE_LENGTH; i++) {
+    code += PASS_CODE_ALPHABET[randomInt(PASS_CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505';
+}
+
+export async function createPreApproval(caller: Caller, dto: CreatePreApprovalInput) {
+  if (!caller.flatId) {
+    throw AppError.forbidden('You are not assigned to a flat');
+  }
+
+  const validFrom = dto.validFrom ? new Date(dto.validFrom) : new Date();
+  const validUntil = new Date(dto.validUntil);
+
+  // Codes collide roughly never (32^6 keyspace scoped per society), but the
+  // unique constraint is the real guarantee — this loop just makes the rare
+  // collision invisible to the caller instead of surfacing a 409.
+  for (let attempt = 1; attempt <= PASS_CODE_MAX_ATTEMPTS; attempt++) {
+    try {
+      const [created] = await db
+        .insert(visitorRequests)
+        .values({
+          societyId: caller.societyId,
+          flatId: caller.flatId,
+          visitorType: dto.visitorType ?? 'guest',
+          approverType: 'resident',
+          name: dto.name,
+          phone: dto.phone ?? null,
+          purpose: dto.purpose ?? null,
+          status: 'approved',
+          source: 'pre_approval',
+          createdBy: caller.id,
+          approvedBy: caller.id,
+          passCode: generatePassCode(),
+          validFrom,
+          validUntil
+        })
+        .returning();
+
+      if (!created) {
+        throw new AppError(500, 'DATABASE_ERROR', 'Failed to create pre-approval');
+      }
+
+      return created;
+    } catch (err) {
+      if (isUniqueViolation(err) && attempt < PASS_CODE_MAX_ATTEMPTS) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  // Unreachable — the loop above always returns or throws — but keeps
+  // TypeScript's control-flow analysis happy about a return on every path.
+  throw new AppError(500, 'DATABASE_ERROR', 'Failed to generate a unique pass code');
+}
+
+export async function listPreApprovals(caller: Caller) {
+  // Only what this resident personally created — matches plan.md's
+  // "pre-approvals they created", not every pre-approval for their flat.
+  return await db.query.visitorRequests.findMany({
+    where: {
+      societyId: caller.societyId,
+      source: 'pre_approval',
+      createdBy: caller.id
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+}
+
+export async function verifyPass(caller: Caller, dto: VerifyPassInput) {
+  const request = dto.requestId
+    ? await db.query.visitorRequests.findFirst({
+        where: { id: dto.requestId, societyId: caller.societyId, source: 'pre_approval' },
+        with: { flat: true, createdByUser: true }
+      })
+    : await db.query.visitorRequests.findFirst({
+        where: {
+          passCode: dto.passCode!.toUpperCase(),
+          societyId: caller.societyId,
+          source: 'pre_approval'
+        },
+        with: { flat: true, createdByUser: true }
+      });
+
+  if (!request) {
+    throw AppError.notFound('No pre-approval found for this code');
+  }
+
+  if (request.status !== 'approved') {
+    throw AppError.conflict('This pre-approval is no longer active');
+  }
+
+  const now = new Date();
+  if (request.validFrom && now < request.validFrom) {
+    throw AppError.badRequest('This pass is not valid yet');
+  }
+  if (request.validUntil && now > request.validUntil) {
+    throw AppError.conflict('This pre-approval pass has expired');
+  }
+
+  return request;
 }

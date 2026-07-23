@@ -1,12 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import {
+  createPreApproval,
   createVisitorRequest,
   listPendingVisitors,
+  listPreApprovals,
   logVisitorEntry,
   logVisitorExit,
   registerPushToken,
   respondToVisitorRequest,
-  uploadVisitorPhoto
+  uploadVisitorPhoto,
+  verifyPass
 } from './visitors.controllers';
 import { requireAuth, requireRole, requireSociety } from '../../common/middleware/auth.middleware';
 
@@ -51,5 +54,25 @@ export async function visitorsRoutes(app: FastifyInstance) {
     '/api/notifications/register',
     { preHandler: [requireAuth, requireSociety] },
     registerPushToken
+  );
+
+  // ─── Chapter 8 — Pre-Approvals ────────────────────────────────────────────
+
+  app.post(
+    '/api/visitors/pre-approve',
+    { preHandler: [requireAuth, requireSociety, requireRole('resident')] },
+    createPreApproval
+  );
+
+  app.get(
+    '/api/visitors/pre-approvals',
+    { preHandler: [requireAuth, requireSociety, requireRole('resident')] },
+    listPreApprovals
+  );
+
+  app.post(
+    '/api/visitors/verify-pass',
+    { preHandler: [requireAuth, requireSociety, requireRole('security_guard')] },
+    verifyPass
   );
 }

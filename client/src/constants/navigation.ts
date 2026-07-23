@@ -60,6 +60,15 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     isLive: true,
     category: 'Community'
   },
+  {
+    id: 'pre-approval',
+    label: 'Pre-Approve Visitor',
+    subtitle: 'Create digital gate pass for guests',
+    icon: 'key-outline',
+    route: '/(app)/pre-approvals',
+    isLive: true,
+    category: 'Passes & Access'
+  },
   // Unbuilt Frontend Features (Backend Ready)
   {
     id: 'maintenance',
@@ -141,7 +150,7 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Pre-Approved Check-in',
     subtitle: 'Verify resident invite pass codes',
     icon: 'qr-code-outline',
-    route: '/(app)/guard/pre-approval',
+    route: '/(app)/guard/verify-pass',
     isLive: true,
     category: 'Gate Operations'
   },
@@ -180,7 +189,7 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Pre-Approve Visitor',
     subtitle: 'Create digital gate pass for guests',
     icon: 'key-outline',
-    route: '/(app)/guard/pre-approval',
+    route: '/(app)/pre-approvals',
     isLive: true,
     category: 'Passes & Access'
   },

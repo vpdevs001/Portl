@@ -35,3 +35,24 @@ export type RegisterPushTokenInput = {
   expoPushToken: string;
   deviceId?: string;
 };
+
+export type CreatePreApprovalInput = {
+  name: string;
+  phone?: string;
+  purpose?: string;
+  // admin_visitor is deliberately excluded — pre-approvals are always
+  // resident-routed (approverType is hardcoded to 'resident' in the
+  // service), and admin_visitor always implies approverType 'admin'.
+  visitorType?: 'guest' | 'delivery' | 'cab' | 'service_staff';
+  // ISO-8601 datetime strings. validFrom defaults to "now" if omitted.
+  validFrom?: string;
+  validUntil: string;
+};
+
+export type VerifyPassInput = {
+  // Guard supplies whichever one the client has on hand: a scanned QR
+  // (visitor_request_id) or a hand-typed passCode. Schema-level refine
+  // guarantees at least one is present.
+  passCode?: string;
+  requestId?: string;
+};

@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createPreApproval,
   createVisitorRequest,
   fetchPendingVisitors,
+  fetchPreApprovals,
   logVisitorEntry,
   logVisitorExit,
   registerPushToken,
   respondToVisitorRequest,
-  uploadVisitorPhoto
+  uploadVisitorPhoto,
+  verifyPass
 } from '@/features/visitors/services/visitors';
 import * as Haptics from 'expo-haptics';
 
@@ -81,5 +84,38 @@ export function useUploadVisitorPhoto() {
 export function useRegisterPushToken() {
   return useMutation({
     mutationFn: registerPushToken
+  });
+}
+
+// ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
+
+export function usePreApprovals() {
+  return useQuery({
+    queryKey: ['visitors', 'pre-approvals'],
+    queryFn: fetchPreApprovals
+  });
+}
+
+export function useCreatePreApproval() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createPreApproval,
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ['visitors', 'pre-approvals'] });
+    }
+  });
+}
+
+export function useVerifyPass() {
+  return useMutation({
+    mutationFn: verifyPass,
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    onError: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
   });
 }

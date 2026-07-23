@@ -230,7 +230,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 8 — Pre-Approvals
+## Chapter 8 — Pre-Approvals ✅
 
 `(server + client)` · Branch: `feature/pre-approvals`
 

@@ -434,5 +434,13 @@ export async function verifyPass(caller: Caller, dto: VerifyPassInput) {
     throw AppError.conflict('This pre-approval pass has expired');
   }
 
-  return request;
+  const openEntry = await db.query.visitorEntryLogs.findFirst({
+    where: {
+      visitorRequestId: request.id,
+      exitTime: { isNull: true }
+    },
+    columns: { id: true }
+  });
+
+  return { ...request, isInside: Boolean(openEntry) };
 }

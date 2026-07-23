@@ -14,6 +14,7 @@ import { authRoutes } from './src/modules/auth/auth.routes.ts';
 import { societyRoutes } from './src/modules/society/society.routes.ts';
 import { inviteRoutes } from './src/modules/invite/invite.routes.ts';
 import { visitorsRoutes } from './src/modules/visitors/visitors.routes.ts';
+import { logsRoutes } from './src/modules/logs/logs.routes.ts';
 import env from './env.ts';
 
 async function buildServer() {
@@ -36,6 +37,22 @@ async function buildServer() {
   });
 
   // ── Zod type provider (must be before any route that uses Zod schemas) ──────
+  app.removeContentTypeParser('application/json');
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_, body, done) => {
+    const rawBody = typeof body === 'string' ? body : body.toString('utf8');
+
+    if (rawBody.length === 0) {
+      done(null, {});
+      return;
+    }
+
+    try {
+      done(null, JSON.parse(rawBody));
+    } catch (error) {
+      done(error as Error, undefined);
+    }
+  });
+
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
@@ -78,6 +95,7 @@ async function buildServer() {
   await app.register(societyRoutes);
   await app.register(inviteRoutes);
   await app.register(visitorsRoutes);
+  await app.register(logsRoutes);
 
   return app;
 }

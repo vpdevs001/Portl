@@ -45,7 +45,7 @@ export async function createInvite(
   // Validate flat if resident
   if (dto.role === 'resident' && dto.flatId) {
     const flat = await db.query.flats.findFirst({
-      where: { id: dto.flatId, societyId }
+      where: { id: dto.flatId!, societyId }
     });
     if (!flat) {
       throw AppError.notFound('Flat not found in this society');
@@ -90,7 +90,7 @@ export async function listSentInvites(
       invitedUser: true,
       flat: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: (i, { desc }) => [desc(i.createdAt)]
   });
 }
 
@@ -123,7 +123,7 @@ export async function listMyInvites(userId: string) {
       society: true,
       flat: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: (i, { desc }) => [desc(i.createdAt)]
   });
 }
 

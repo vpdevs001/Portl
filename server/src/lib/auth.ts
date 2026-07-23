@@ -64,7 +64,20 @@ export const auth = betterAuth({
   trustedOrigins: [
     'portl://',
     'portl://*',
-    ...(isDev ? ['exp://', 'exp://**', 'exp://192.168.*.*:*/**'] : [])
+    'portl://**',
+    'exp://',
+    'exp://*',
+    'exp://**',
+    'exp+portl-client://',
+    'exp+portl-client://*',
+    'exp+portl-client://**',
+    ...(isDev
+      ? [
+          'exp://192.168.*.*:*/**',
+          'exp+*://*',
+          'exp+*://**'
+        ]
+      : [])
   ],
   plugins: [expo()]
 });

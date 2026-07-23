@@ -125,14 +125,14 @@ export async function getSocietyDetails(societyId: string) {
 export async function listTowers(societyId: string) {
   return await db.query.towers.findMany({
     where: { societyId },
-    orderBy: { name: 'asc' }
+    orderBy: (t, { asc }) => [asc(t.name)]
   });
 }
 
 export async function listFlats(societyId: string, towerId?: string) {
   return await db.query.flats.findMany({
     where: towerId ? { societyId, towerId } : { societyId },
-    orderBy: { flatNumber: 'asc' }
+    orderBy: (f, { asc }) => [asc(f.flatNumber)]
   });
 }
 
@@ -142,6 +142,6 @@ export async function listMembers(
 ) {
   return await db.query.user.findMany({
     where: role ? { societyId, role } : { societyId },
-    orderBy: { name: 'asc' }
+    orderBy: (u, { asc }) => [asc(u.name)]
   });
 }

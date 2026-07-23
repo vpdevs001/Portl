@@ -111,7 +111,7 @@ async function notifyApprovers(request: typeof visitorRequests.$inferSelect) {
       : request.flatId
         ? (
             await db.query.user.findMany({
-              where: { flatId: request.flatId },
+              where: { flatId: request.flatId! },
               columns: { id: true }
             })
           ).map((row) => row.id)
@@ -166,7 +166,7 @@ export async function listPendingRequests(caller: Caller) {
         createdByUser: true,
         flat: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: (r, { desc }) => [desc(r.createdAt)]
     });
   }
 
@@ -180,7 +180,7 @@ export async function listPendingRequests(caller: Caller) {
         createdByUser: true,
         flat: true
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: (r, { desc }) => [desc(r.createdAt)]
     });
   }
 
@@ -194,7 +194,7 @@ export async function listPendingRequests(caller: Caller) {
       societyId: caller.societyId,
       status: 'pending',
       approverType: 'resident',
-      flatId: caller.flatId
+      flatId: caller.flatId!
     },
     with: {
       deliveryDetails: true,
@@ -203,7 +203,7 @@ export async function listPendingRequests(caller: Caller) {
       createdByUser: true,
       flat: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: (r, { desc }) => [desc(r.createdAt)]
   });
 }
 

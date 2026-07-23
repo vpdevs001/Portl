@@ -60,6 +60,15 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     isLive: true,
     category: 'Community'
   },
+  {
+    id: 'pre-approval',
+    label: 'Pre-Approve Visitor',
+    subtitle: 'Create digital gate pass for guests',
+    icon: 'key-outline',
+    route: '/(app)/pre-approvals',
+    isLive: true,
+    category: 'Passes & Access'
+  },
   // Unbuilt Frontend Features (Backend Ready)
   {
     id: 'maintenance',

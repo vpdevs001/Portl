@@ -78,7 +78,9 @@ export const relations = defineRelations(schema, (r) => ({
     amenities: r.many.amenities(),
     maintenanceDues: r.many.maintenanceDues(),
     visitorRequests: r.many.visitorRequests(),
-    invites: r.many.societyInvites()
+    invites: r.many.societyInvites(),
+    residentEntryLogs: r.many.residentEntryLogs(),
+    staffEntryLogs: r.many.staffEntryLogs()
   },
 
   towers: {
@@ -178,6 +180,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   residentEntryLogs: {
+    society: r.one.societies({
+      from: r.residentEntryLogs.societyId,
+      to: r.societies.id
+    }),
     user: r.one.user({
       from: r.residentEntryLogs.userId,
       to: r.user.id,
@@ -202,6 +208,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   staffEntryLogs: {
+    society: r.one.societies({
+      from: r.staffEntryLogs.societyId,
+      to: r.societies.id
+    }),
     staff: r.one.staffDirectory({
       from: r.staffEntryLogs.staffId,
       to: r.staffDirectory.id

@@ -122,3 +122,10 @@ export async function verifyPass(request: FastifyRequest, reply: FastifyReply) {
 
   return sendSuccess(reply, 200, result);
 }
+
+export async function listCheckedInVisitors(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const visitors = await service.listCheckedInVisitors(caller);
+
+  return sendSuccess(reply, 200, visitors);
+}

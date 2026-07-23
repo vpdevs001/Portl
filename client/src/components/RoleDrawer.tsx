@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { authClient } from '@/lib/auth-client';
+import { authClient, useAppSession } from '@/lib/auth-client';
 import { useSocietyDetails } from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { useColorScheme, useThemePreference } from '@/hooks/useColorScheme';
@@ -23,7 +23,7 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { setPreference } = useThemePreference();
-  const { data: session } = authClient.useSession();
+  const { data: session } = useAppSession();
   const { data: society } = useSocietyDetails();
 
   const user = session?.user;

@@ -20,7 +20,9 @@ export const visitorStatusEnum = pgEnum('visitor_status', [
   'pending',
   'approved',
   'rejected',
-  'expired'
+  'expired',
+  'checked_in',
+  'completed'
 ]);
 
 export const visitorSourceEnum = pgEnum('visitor_source', [

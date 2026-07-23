@@ -111,9 +111,9 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Gate Entry Logs',
     subtitle: 'Audit visitor & resident check-ins',
     icon: 'journal-outline',
-    route: '/(app)/feature-preview?id=entry-logs',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/guard/gate-logs',
+    isLive: true,
+    category: 'Management'
   },
   {
     id: 'society-settings',
@@ -155,22 +155,40 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     category: 'Gate Operations'
   },
   {
+    id: 'guest-checkin',
+    label: 'Guest Check-in',
+    subtitle: 'Guests currently inside the gate',
+    icon: 'log-in-outline',
+    route: '/(app)/guard/check-in',
+    isLive: true,
+    category: 'Gate Operations'
+  },
+  {
     id: 'entry-logs',
     label: 'Gate Entry Logs',
     subtitle: 'Complete gate check-in history',
     icon: 'journal-outline',
-    route: '/(app)/feature-preview?id=entry-logs',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/guard/gate-logs',
+    isLive: true,
+    category: 'Gate Operations'
+  },
+  {
+    id: 'resident-checkin',
+    label: 'Resident & Staff Check-in',
+    subtitle: 'Search and log entry or exit',
+    icon: 'people-outline',
+    route: '/(app)/guard/resident-search',
+    isLive: true,
+    category: 'Gate Operations'
   },
   {
     id: 'staff-checkin',
     label: 'Staff Check-in Log',
     subtitle: 'Daily staff entry & exit register',
     icon: 'badge-vr-outline',
-    route: '/(app)/feature-preview?id=staff-checkin',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/guard/resident-search',
+    isLive: true,
+    category: 'Gate Operations'
   },
   {
     id: 'emergency',

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createPreApproval,
   createVisitorRequest,
+  fetchCheckedInVisitors,
   fetchPendingVisitors,
   fetchPreApprovals,
   logVisitorEntry,
@@ -23,6 +24,19 @@ export function usePendingVisitors() {
   });
 }
 
+// Backs the guard's Check-in screen — guests currently inside (status =
+// 'checked_in'). Polls for the same reason as usePendingVisitors: a guard
+// walking the gate away from their phone shouldn't have to pull-to-refresh
+// to see someone log an exit from elsewhere.
+export function useCheckedInVisitors() {
+  return useQuery({
+    queryKey: ['visitors', 'checked-in'],
+    queryFn: fetchCheckedInVisitors,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true
+  });
+}
+
 export function useCreateVisitorRequest() {
   const queryClient = useQueryClient();
 
@@ -31,6 +45,7 @@ export function useCreateVisitorRequest() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['logs'] });
     }
   });
 }
@@ -56,6 +71,8 @@ export function useLogVisitorEntry() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['visitors', 'checked-in'] });
+      queryClient.invalidateQueries({ queryKey: ['logs'] });
     }
   });
 }
@@ -68,6 +85,8 @@ export function useLogVisitorExit() {
     onSuccess: () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['visitors', 'checked-in'] });
+      queryClient.invalidateQueries({ queryKey: ['logs'] });
     }
   });
 }

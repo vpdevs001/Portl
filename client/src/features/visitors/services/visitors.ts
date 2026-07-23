@@ -5,7 +5,7 @@ export type VisitorRequest = {
   name: string;
   phone?: string;
   purpose?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'checked_in' | 'completed';
   visitorType: 'guest' | 'delivery' | 'cab' | 'service_staff' | 'admin_visitor';
   approverType?: 'resident' | 'admin';
   vehicleNumber?: string;
@@ -38,13 +38,15 @@ export async function respondToVisitorRequest(id: string, status: 'approved' | '
 
 export async function logVisitorEntry(id: string) {
   return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-entry`, {
-    method: 'POST'
+    method: 'POST',
+    body: JSON.stringify({})
   });
 }
 
 export async function logVisitorExit(id: string) {
   return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-exit`, {
-    method: 'POST'
+    method: 'POST',
+    body: JSON.stringify({})
   });
 }
 
@@ -72,6 +74,7 @@ export type PreApproval = VisitorRequest & {
   passCode?: string;
   validFrom?: string;
   validUntil?: string;
+  isInside?: boolean;
 };
 
 export async function createPreApproval(payload: {
@@ -97,4 +100,8 @@ export async function verifyPass(payload: { passCode?: string; requestId?: strin
     method: 'POST',
     body: JSON.stringify(payload)
   });
+}
+
+export async function fetchCheckedInVisitors() {
+  return apiRequest<VisitorRequest[]>('/api/visitors/checked-in');
 }

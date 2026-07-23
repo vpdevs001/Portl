@@ -22,6 +22,9 @@ export const visitorEntryLogs = pgTable('visitor_entry_logs', {
 
 export const residentEntryLogs = pgTable('resident_entry_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
+  societyId: uuid('society_id')
+    .notNull()
+    .references(() => societies.id, { onDelete: 'cascade' }),
   userId: uuid('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
@@ -56,6 +59,9 @@ export const staffDirectory = pgTable('staff_directory', {
 
 export const staffEntryLogs = pgTable('staff_entry_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
+  societyId: uuid('society_id')
+    .notNull()
+    .references(() => societies.id, { onDelete: 'cascade' }),
   staffId: uuid('staff_id')
     .notNull()
     .references(() => staffDirectory.id, { onDelete: 'cascade' }),

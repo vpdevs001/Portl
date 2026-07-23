@@ -8,7 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { ThemeProvider } from '@/hooks/useColorScheme';
 import { fontsToLoad } from '@/constants/fonts';
-import { authClient } from '@/lib/auth-client';
+import { useAppSession } from '@/lib/auth-client';
 
 import '../global.css';
 
@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 WebBrowser.maybeCompleteAuthSession();
 
 function RootNavigation() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useAppSession();
   const segments = useSegments();
   const router = useRouter();
 

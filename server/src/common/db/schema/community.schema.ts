@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
-import { complaintStatusEnum, noticeCategoryEnum } from './enums';
+import { complaintCategoryEnum, complaintStatusEnum, noticeCategoryEnum } from './enums';
 
 export const notices = pgTable('notices', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -94,9 +94,16 @@ export const complaints = pgTable('complaints', {
   raisedBy: uuid('raised_by')
     .notNull()
     .references(() => user.id),
-  category: varchar('category', { length: 100 }).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
+  category: complaintCategoryEnum('category').notNull().default('general'),
   status: complaintStatusEnum('status').notNull().default('open'),
+  // Optional resident-attached photo, same base64-upload pattern as
+  // visitor photos (Chapter 7) — uploaded via POST /api/upload.
+  photoUrl: varchar('photo_url', { length: 2048 }),
+  // Admin's resolution notes, appended when the status is updated
+  // (complaints.service.ts). Null until an admin first responds.
+  adminComments: text('admin_comments'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

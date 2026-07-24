@@ -47,6 +47,14 @@ export const complaintStatusEnum = pgEnum('complaint_status', [
   'closed'
 ]);
 
+export const complaintCategoryEnum = pgEnum('complaint_category', [
+  'plumbing',
+  'electrical',
+  'security',
+  'cleanliness',
+  'general'
+]);
+
 // ===== AMENITIES =====
 
 export const bookingStatusEnum = pgEnum('booking_status', ['pending', 'confirmed', 'cancelled']);

@@ -45,9 +45,12 @@ export async function visitorsRoutes(app: FastifyInstance) {
     logVisitorExit
   );
 
+  // Generic authenticated upload endpoint — originally guard-only for
+  // visitor photos (Chapter 7), opened up to residents in Chapter 12 for
+  // complaint photos. Same base64-upload flow either way.
   app.post(
     '/api/upload',
-    { preHandler: [requireAuth, requireSociety, requireRole('security_guard')] },
+    { preHandler: [requireAuth, requireSociety, requireRole('security_guard', 'resident')] },
     uploadVisitorPhoto
   );
 

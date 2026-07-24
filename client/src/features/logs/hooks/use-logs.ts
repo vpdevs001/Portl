@@ -26,11 +26,7 @@ export function useMyEntryLogs() {
   });
 }
 
-export function useGateResidents(params?: {
-  search?: string;
-  towerId?: string;
-  flatId?: string;
-}) {
+export function useGateResidents(params?: { search?: string; towerId?: string; flatId?: string }) {
   return useQuery({
     queryKey: ['logs', 'residents', params],
     queryFn: () => fetchGateResidents(params)

@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "59801297-2772-4ef0-859e-96e0d01f7ab9",
-  "prevIds": ["2bfb20e7-e362-4ace-8314-7d80cd7bd6b2"],
+  "id": "fd364fe9-3bb7-4fd0-9447-fa374072bf7d",
+  "prevIds": ["7226fa08-4537-4bab-9e0e-4a95eba21ff1"],
   "ddl": [
     {
       "values": ["resident", "admin"],
@@ -35,6 +35,12 @@
       "schema": "public"
     },
     {
+      "values": ["emergency", "maintenance", "event", "general"],
+      "name": "notice_category",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
       "values": ["pending", "approved", "rejected"],
       "name": "payment_confirmation_status",
       "entityType": "enums",
@@ -53,7 +59,7 @@
       "schema": "public"
     },
     {
-      "values": ["pending", "approved", "rejected", "expired"],
+      "values": ["pending", "approved", "rejected", "expired", "checked_in", "completed"],
       "name": "visitor_status",
       "entityType": "enums",
       "schema": "public"
@@ -2179,6 +2185,32 @@
       "generated": null,
       "identity": null,
       "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notices"
+    },
+    {
+      "type": "notice_category",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'general'",
+      "generated": null,
+      "identity": null,
+      "name": "category",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expires_at",
       "entityType": "columns",
       "schema": "public",
       "table": "notices"

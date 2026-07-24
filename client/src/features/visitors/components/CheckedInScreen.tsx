@@ -1,11 +1,5 @@
 import { useMemo } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  Text,
-  View
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Screen } from '@/components/Screen';
@@ -58,17 +52,33 @@ export function CheckedInScreen({ visitors }: { visitors: CheckedInVisitor[] }) 
           ListEmptyComponent={
             <View className="items-center py-16">
               <Ionicons name="person-outline" size={36} color={theme.muted} />
-              <Text className="text-sm font-sans text-muted mt-4">No visitors currently checked in.</Text>
+              <Text className="text-sm font-sans text-muted mt-4">
+                No visitors currently checked in.
+              </Text>
             </View>
           }
-          renderItem={({ item }) => <VisitorRow visitor={item} onLogExit={() => handleLogExit(item.id)} isLoading={logExit.isPending} />}
+          renderItem={({ item }) => (
+            <VisitorRow
+              visitor={item}
+              onLogExit={() => handleLogExit(item.id)}
+              isLoading={logExit.isPending}
+            />
+          )}
         />
       </View>
     </Screen>
   );
 }
 
-function VisitorRow({ visitor, onLogExit, isLoading }: { visitor: CheckedInVisitor; onLogExit: () => void; isLoading: boolean }) {
+function VisitorRow({
+  visitor,
+  onLogExit,
+  isLoading
+}: {
+  visitor: CheckedInVisitor;
+  onLogExit: () => void;
+  isLoading: boolean;
+}) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -89,13 +99,17 @@ function VisitorRow({ visitor, onLogExit, isLoading }: { visitor: CheckedInVisit
           </View>
           <Text className="text-sm font-sans-semibold text-foreground">{visitor.name}</Text>
           {visitor.flat ? (
-            <Text className="text-xs font-sans text-muted mt-0.5">Flat {visitor.flat.flatNumber}</Text>
+            <Text className="text-xs font-sans text-muted mt-0.5">
+              Flat {visitor.flat.flatNumber}
+            </Text>
           ) : null}
           {visitor.purpose ? (
             <Text className="text-xs font-sans text-muted mt-0.5">{visitor.purpose}</Text>
           ) : null}
         </View>
-        <Text className="text-[10px] font-sans text-muted">Entry: {formatTime(visitor.entryTime)}</Text>
+        <Text className="text-[10px] font-sans text-muted">
+          Entry: {formatTime(visitor.entryTime)}
+        </Text>
       </View>
 
       <Pressable
@@ -139,9 +153,7 @@ function TypeBadge({ type }: { type: VisitorRequest['visitorType'] }) {
 
   return (
     <View className={`px-2 py-0.5 rounded-full ${styles}`}>
-      <Text className={`text-[10px] font-sans-bold uppercase ${textStyles}`}>
-        {labels[type]}
-      </Text>
+      <Text className={`text-[10px] font-sans-bold uppercase ${textStyles}`}>{labels[type]}</Text>
     </View>
   );
 }

@@ -1,12 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Screen } from '@/components/Screen';
@@ -111,7 +104,9 @@ export function GateLogsScreen() {
             ListEmptyComponent={
               <View className="items-center py-16">
                 <Ionicons name="journal-outline" size={36} color={theme.muted} />
-                <Text className="text-sm font-sans text-muted mt-4">No gate logs for today yet.</Text>
+                <Text className="text-sm font-sans text-muted mt-4">
+                  No gate logs for today yet.
+                </Text>
               </View>
             }
             renderItem={({ item }) => <LogRow log={item} />}
@@ -178,9 +173,7 @@ function TypeBadge({ type }: { type: GateLog['type'] }) {
 
   return (
     <View className={`px-2 py-0.5 rounded-full ${styles}`}>
-      <Text className={`text-[10px] font-sans-bold uppercase ${textStyles}`}>
-        {type}
-      </Text>
+      <Text className={`text-[10px] font-sans-bold uppercase ${textStyles}`}>{type}</Text>
     </View>
   );
 }

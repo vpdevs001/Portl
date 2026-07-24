@@ -6,6 +6,7 @@ export default function AdminLayout() {
       <Stack.Screen name="complaints/manage" />
       <Stack.Screen name="amenities/logs" />
       <Stack.Screen name="amenities/create" />
+      <Stack.Screen name="staff/manage" />
       <Stack.Screen name="gate-logs" />
     </Stack>
   );

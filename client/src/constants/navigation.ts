@@ -102,9 +102,9 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Staff Directory',
     subtitle: 'Maids, drivers & maintenance staff',
     icon: 'people-outline',
-    route: '/(app)/feature-preview?id=staff',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/staff-directory',
+    isLive: true,
+    category: 'Management'
   },
   {
     id: 'entry-logs',
@@ -270,9 +270,9 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Society Staff Directory',
     subtitle: 'Find verified maids, cooks & plumbers',
     icon: 'people-outline',
-    route: '/(app)/feature-preview?id=staff',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/staff-directory',
+    isLive: true,
+    category: 'Community'
   }
 ];
 

@@ -19,6 +19,7 @@ import { noticesRoutes } from './src/modules/notices/notices.routes.ts';
 import { pollsRoutes } from './src/modules/polls/polls.routes.ts';
 import { amenitiesRoutes } from './src/modules/amenities/amenities.routes.ts';
 import { complaintsRoutes } from './src/modules/complaints/complaints.routes.ts';
+import { staffRoutes } from './src/modules/staff/staff.routes.ts';
 import { initSocket } from './src/lib/socket.ts';
 import env from './env.ts';
 
@@ -105,6 +106,7 @@ async function buildServer() {
   await app.register(pollsRoutes);
   await app.register(amenitiesRoutes);
   await app.register(complaintsRoutes);
+  await app.register(staffRoutes);
 
   // ── Live polling (Chapter 11) ───────────────────────────────────────────────
   // Attaches to the same underlying Node HTTP server Fastify wraps, so it

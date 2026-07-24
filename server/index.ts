@@ -16,6 +16,8 @@ import { inviteRoutes } from './src/modules/invite/invite.routes.ts';
 import { visitorsRoutes } from './src/modules/visitors/visitors.routes.ts';
 import { logsRoutes } from './src/modules/logs/logs.routes.ts';
 import { noticesRoutes } from './src/modules/notices/notices.routes.ts';
+import { pollsRoutes } from './src/modules/polls/polls.routes.ts';
+import { initSocket } from './src/lib/socket.ts';
 import env from './env.ts';
 
 async function buildServer() {
@@ -98,6 +100,12 @@ async function buildServer() {
   await app.register(visitorsRoutes);
   await app.register(logsRoutes);
   await app.register(noticesRoutes);
+  await app.register(pollsRoutes);
+
+  // ── Live polling (Chapter 11) ───────────────────────────────────────────────
+  // Attaches to the same underlying Node HTTP server Fastify wraps, so it
+  // shares the port/listen call below rather than needing its own.
+  initSocket(app.server, env.CORS_ORIGINS.length ? env.CORS_ORIGINS : true);
 
   return app;
 }

@@ -298,34 +298,27 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 11 — Polls
+## Chapter 11 — Polls ✅
 
 `(server + client)` · Branch: `feature/polls`
 
 ### Server Architecture (Fastify)
 
-- **Database Schema (`server/src/common/db/schema/community.schema.ts`)**:
-  - `polls`: `id` (UUID), `society_id` (FK), `question` (varchar), `description` (text, optional), `ends_at` (timestamp), `created_at` (timestamp).
-  - `poll_options`: `id` (UUID), `poll_id` (FK), `option_text` (varchar).
-  - `poll_votes`: `id` (UUID), `poll_id` (FK), `option_id` (FK), `user_id` (FK), `created_at` (timestamp). Composite unique index on `(poll_id, user_id)` to enforce one-vote-per-resident.
+- **Database Schema (`server/src/common/db/schema/community.schema.ts`)**: `polls`/`poll_options`/`poll_votes` were already scaffolded ahead of this chapter (society-scoped `polls` with `question`/`starts_at`/`ends_at`, `poll_options`, `poll_votes`). This chapter added the missing piece: a composite **unique index on `poll_votes(poll_id, user_id)`** (`poll_votes_poll_id_user_id_unique`, migration `20260724034124_safe_pet_avengers`) so one-vote-per-resident is DB-enforced via atomic insert, not a check-then-insert race.
 - **Endpoints (`server/src/modules/polls/polls.routes.ts`)**:
-  - `POST /api/polls` - Admin creates a poll with options. Role check: `requireRole('society_admin')`.
-  - `GET /api/polls` - Lists all polls (active & closed) along with the caller's vote status.
-  - `POST /api/polls/:id/vote` - Cast a vote. Verifies `ends_at > now` and user hasn't voted yet. Runs atomic insert into `poll_votes`.
-  - `GET /api/polls/:id/results` - Calculate vote aggregates. Uses Drizzle `sql` helper for grouping and counting:
-
-    ```tsx
-    db.select({ optionId: pollVotes.optionId, count: count() })
-      .from(pollVotes)
-      .groupBy(pollVotes.optionId);
-    ```
+  - `POST /api/polls` - Admin creates a poll with 2–10 options in a single transaction. Role check: `requireRole('society_admin')`.
+  - `GET /api/polls` - Lists all polls (active & closed) with each option's live vote count and the caller's own vote status, so the client never needs a second round trip per poll.
+  - `POST /api/polls/:id/vote` - Cast a vote. Verifies `ends_at > now`; the insert relies on the unique constraint above, catching Postgres `23505` and rethrowing as a friendly 409 ("You have already voted in this poll").
+  - `GET /api/polls/:id/results` - Vote aggregates via Drizzle's `count()` + `groupBy`, matching the plan's original example.
+- **Live updates (`server/src/lib/socket.ts`)**: a Socket.IO server attached to the same underlying Fastify HTTP server. Clients authenticate over the handshake using their existing Better Auth session cookie (sent in `auth.cookie`, since React Native's WebSocket transport can't attach custom headers) and join a per-society room. `poll:created` fires on `POST /api/polls`; `poll:results` fires on every successful vote — both fire-and-forget so a socket hiccup never fails the REST response.
 
 ### Client Architecture (Expo)
 
 - **Admin Interface**:
-  - `client/src/app/(app)/admin/polls/create.tsx` (dynamic options input builder, `ends_at` via the same date picker pattern as notices).
-- **Resident Interface**:
-  - `client/src/app/(app)/polls.tsx` (renders active vote cards with radio buttons, or a bar-chart results layout if the resident has voted or the poll has ended).
+  - `client/src/app/(app)/polls/create.tsx` (dynamic options input builder, 2–10 options, `ends_at` via the same date picker pattern as notices).
+- **Resident/Guard Interface**:
+  - `client/src/app/(app)/polls/index.tsx` (renders active vote cards with radio buttons, or a live bar-chart results layout if the caller has voted or the poll has ended).
+- **Real-time (`client/src/lib/socket.ts`, `client/src/features/polls/hooks/use-polls.ts`)**: a shared Socket.IO client connects using `authClient.getCookie()` for the handshake; `usePolls()` subscribes to `poll:created`/`poll:results` and patches the TanStack Query cache directly, so every connected device sees vote counts update live with no polling interval.
 
 ---
 
@@ -523,5 +516,6 @@ Three separate checks, not one combined middleware:
 - **Verify package versions against the actual registry before installing** — this has already caught stale/wrong versions twice (ESLint 9 vs 10 tooling, `@eslint/js`/`typescript-eslint`/`globals`).
 - **Authorization is RBAC + tenant scoping, not textbook single-tenant RBAC** — role alone never determines access; every check also confirms the specific resource belongs to the caller's own `society_id`, either baked into the query (direct-column tables) or via an explicit shared helper (one-hop tables). See Chapter 5 for the full design.
 - **Push notifications are built module-by-module starting in Chapter 7** (minimal token table + registration + send-on-event), not built from scratch in Chapter 16 — Chapter 16 is a consolidation/hardening pass over infrastructure that already exists by then.
+- **Socket.IO for live/real-time features, introduced in Chapter 11** — one `Server` instance attached to Fastify's underlying HTTP server (`server/src/lib/socket.ts`), one room per society. Auth rides on the existing Better Auth session cookie passed through the handshake's `auth` payload (not headers — React Native's WebSocket transport can't set custom headers), verified with `auth.api.getSession`. Future chapters needing live updates (e.g. Complaints status changes, Amenity booking availability) should extend this same socket server with new events/rooms rather than standing up a second one.
 
 ---

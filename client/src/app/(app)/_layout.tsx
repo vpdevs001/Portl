@@ -92,6 +92,7 @@ function AppTabs() {
         <Tabs.Screen name="pre-approvals" options={{ href: null }} />
         <Tabs.Screen name="complaints" options={{ href: null }} />
         <Tabs.Screen name="amenities" options={{ href: null }} />
+        <Tabs.Screen name="staff-directory" options={{ href: null }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
         <Tabs.Screen name="feature-preview" options={{ href: null }} />
       </Tabs>

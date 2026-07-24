@@ -404,7 +404,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 14 — Staff/Service Provider Directory
+## Chapter 14 — Staff/Service Provider Directory ✅
 
 `(server + client)` · Branch: `feature/staff-directory`
 

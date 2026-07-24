@@ -33,6 +33,13 @@ export const visitorSourceEnum = pgEnum('visitor_source', [
 
 // ===== COMMUNITY MANAGEMENT =====
 
+export const noticeCategoryEnum = pgEnum('notice_category', [
+  'emergency',
+  'maintenance',
+  'event',
+  'general'
+]);
+
 export const complaintStatusEnum = pgEnum('complaint_status', [
   'open',
   'in_progress',

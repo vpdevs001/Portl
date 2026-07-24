@@ -15,6 +15,7 @@ import { societyRoutes } from './src/modules/society/society.routes.ts';
 import { inviteRoutes } from './src/modules/invite/invite.routes.ts';
 import { visitorsRoutes } from './src/modules/visitors/visitors.routes.ts';
 import { logsRoutes } from './src/modules/logs/logs.routes.ts';
+import { noticesRoutes } from './src/modules/notices/notices.routes.ts';
 import env from './env.ts';
 
 async function buildServer() {
@@ -96,6 +97,7 @@ async function buildServer() {
   await app.register(inviteRoutes);
   await app.register(visitorsRoutes);
   await app.register(logsRoutes);
+  await app.register(noticesRoutes);
 
   return app;
 }

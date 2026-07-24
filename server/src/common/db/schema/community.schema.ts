@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
-import { complaintStatusEnum } from './enums';
+import { complaintStatusEnum, noticeCategoryEnum } from './enums';
 
 export const notices = pgTable('notices', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -13,6 +13,11 @@ export const notices = pgTable('notices', {
     .references(() => user.id),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
+  category: noticeCategoryEnum('category').notNull().default('general'),
+  // Null = stays visible indefinitely. Once set and passed, the notice is
+  // filtered out of the default feed (see notices.service.ts) rather than
+  // deleted outright — admins can still reach it via ?includeExpired=true.
+  expiresAt: timestamp('expires_at'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

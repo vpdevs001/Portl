@@ -322,26 +322,27 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 12 — Complaints (Helpdesk)
+## Chapter 12 — Complaints (Helpdesk) ✅
 
 `(server + client)` · Branch: `feature/complaints`
 
 ### Server Architecture (Fastify)
 
-- **Database Schema (`server/src/common/db/schema/community.schema.ts`)**:
-  - `complaints`: `id` (UUID), `society_id` (FK), `flat_id` (FK), `user_id` (FK), `title` (varchar), `description` (text), `category` (enum: `plumbing`, `electrical`, `security`, `cleanliness`, `general`), `status` (enum: `open`, `in_progress`, `resolved`, `closed`), `photo_url` (varchar, optional), `admin_comments` (text, optional), `created_at` (timestamp), `updated_at` (timestamp).
+- **Database Schema (`server/src/common/db/schema/community.schema.ts`)**: `complaints` was already scaffolded ahead of this chapter (society/flat/user-scoped, `complaint_status` enum). This chapter added the missing pieces: a `title` column, a `complaint_category` enum (`plumbing`/`electrical`/`security`/`cleanliness`/`general`) replacing the free-text `category` varchar, an optional `photo_url`, and an optional `admin_comments` — migration `20260724060130_previous_sugar_man`.
 - **Endpoints (`server/src/modules/complaints/complaints.routes.ts`)**:
-  - `POST /api/complaints` - Resident logs complaint.
-  - `GET /api/complaints` - Fetch complaints. Residents see flat-specific complaints; Admins see all complaints in their society.
-  - `PUT /api/complaints/:id/status` - Admin updates complaint status and appends resolution comments. Sends push notification back to the reporting resident.
+  - `POST /api/complaints` - Resident logs a complaint against their own flat. Role check: `requireRole('resident')`.
+  - `GET /api/complaints` - Residents see every complaint raised against their own flat (not just their own — a flat can have several residents); admins see the whole society's queue. The split happens inside the service based on `caller.role`, same pattern as notices/polls.
+  - `PUT /api/complaints/:id/status` - Admin updates status and optionally appends a resolution note (`adminComments`). Role check: `requireRole('society_admin')`. Sends a push notification back to the reporting resident (`raisedBy`), fire-and-forget, mirroring the notices push pattern (Chapter 10).
+- **Photo upload**: reuses the generic `POST /api/upload` base64-upload endpoint introduced for visitor photos (Chapter 7) — its role restriction was loosened from guard-only to guard-or-resident so a resident can attach a complaint photo through the same flow.
 
 ### Client Architecture (Expo)
 
 - **Resident Interface**:
-  - `client/src/app/(app)/complaints/create.tsx` (Category grid picker, image upload, form details).
-  - `client/src/app/(app)/complaints/index.tsx` (list of outstanding complaints with custom status badges: red for open, yellow for in-progress, green for resolved).
+  - `client/src/app/(app)/complaints/create.tsx` (category grid picker, title/description fields, camera/library photo capture via the same `expo-image-picker` → base64 → `/api/upload` flow as visitor registration).
+  - `client/src/app/(app)/complaints/index.tsx` (list of the resident's flat complaints with status badges: red for open, amber for in-progress, green for resolved, muted for closed; shows the admin's resolution note once one exists).
 - **Admin Interface**:
-  - `client/src/app/(app)/admin/complaints/manage.tsx` (Triage board, updates tickets, leaves notes).
+  - `client/src/app/(app)/admin/complaints/manage.tsx` (triage board with status filter chips; each ticket expands into a status picker + resolution-note field that calls `PUT /api/complaints/:id/status`).
+- Both `constants/navigation.ts` drawer entries (`ADMIN_DRAWER_ITEMS` and `RESIDENT_DRAWER_ITEMS`) flipped from the `feature-preview` placeholder to live routes; `complaints` and `admin` registered as hidden (drawer-only) routes in `app/(app)/_layout.tsx`.
 
 ---
 

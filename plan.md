@@ -275,7 +275,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 10 — Notices
+## Chapter 10 — Notices ✅
 
 `(server + client)` · Branch: `feature/notices`
 

@@ -4,7 +4,12 @@ import { AppError } from '../../common/errors/app-error';
 import { ERROR_CODES } from '../../common/errors/error-codes';
 import { notices, pushTokens, user } from '../../common/db/schema';
 import { sendPushNotifications } from '../../lib/push';
-import type { Caller, CreateNoticeInput, ListNoticesQuery, UpdateNoticeInput } from './notices.types';
+import type {
+  Caller,
+  CreateNoticeInput,
+  ListNoticesQuery,
+  UpdateNoticeInput
+} from './notices.types';
 
 export async function createNotice(caller: Caller, dto: CreateNoticeInput) {
   const [created] = await db

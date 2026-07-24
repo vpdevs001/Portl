@@ -54,14 +54,13 @@ export default function CreatePreApprovalScreen() {
 
   const createPreApproval = useCreatePreApproval();
 
-  function handlePickerChange(field: 'from' | 'until', selected?: Date) {
+  function handlePickerChange(field: 'from' | 'until', selected: Date) {
     // Android's dialog is modal and self-dismisses; iOS's inline spinner
     // stays open until the person taps the field again — closing it here
     // unconditionally would fight the iOS spinner mid-scroll.
     if (Platform.OS === 'android') {
       setActivePicker(null);
     }
-    if (!selected) return;
 
     if (field === 'from') {
       setValidFrom(selected);
@@ -70,6 +69,12 @@ export default function CreatePreApprovalScreen() {
       }
     } else {
       setValidUntil(selected);
+    }
+  }
+
+  function handlePickerDismiss() {
+    if (Platform.OS === 'android') {
+      setActivePicker(null);
     }
   }
 
@@ -187,9 +192,9 @@ export default function CreatePreApprovalScreen() {
           onPress={() => setActivePicker(activePicker === 'from' ? null : 'from')}
           className="flex-row items-center justify-between bg-card border border-border rounded-xl px-4 py-3 mb-2"
         >
-          <View>
+          <View className="flex-1 pr-3">
             <Text className="text-[11px] font-sans text-muted">Valid from</Text>
-            <Text className="text-sm font-sans-semibold text-foreground mt-0.5">
+            <Text className="text-sm font-sans-semibold text-foreground mt-0.5" numberOfLines={1}>
               {formatDateTime(validFrom)}
             </Text>
           </View>
@@ -201,7 +206,8 @@ export default function CreatePreApprovalScreen() {
             mode="datetime"
             minimumDate={new Date()}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(_event, selected) => handlePickerChange('from', selected)}
+            onValueChange={(_event, selected) => handlePickerChange('from', selected)}
+            onDismiss={handlePickerDismiss}
           />
         ) : null}
 
@@ -209,9 +215,9 @@ export default function CreatePreApprovalScreen() {
           onPress={() => setActivePicker(activePicker === 'until' ? null : 'until')}
           className="flex-row items-center justify-between bg-card border border-border rounded-xl px-4 py-3 mb-4"
         >
-          <View>
+          <View className="flex-1 pr-3">
             <Text className="text-[11px] font-sans text-muted">Valid until</Text>
-            <Text className="text-sm font-sans-semibold text-foreground mt-0.5">
+            <Text className="text-sm font-sans-semibold text-foreground mt-0.5" numberOfLines={1}>
               {formatDateTime(validUntil)}
             </Text>
           </View>
@@ -223,7 +229,8 @@ export default function CreatePreApprovalScreen() {
             mode="datetime"
             minimumDate={validFrom}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(_event, selected) => handlePickerChange('until', selected)}
+            onValueChange={(_event, selected) => handlePickerChange('until', selected)}
+            onDismiss={handlePickerDismiss}
           />
         ) : null}
 

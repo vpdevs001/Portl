@@ -57,12 +57,16 @@ export default function CreateNoticeScreen() {
 
   const createNotice = useCreateNotice();
 
-  function handleDateChange(_event: unknown, selected?: Date) {
+  function handleDateValueChange(_event: unknown, selected: Date) {
     if (Platform.OS === 'android') {
       setShowPicker(false);
     }
-    if (selected) {
-      setExpiresAt(selected);
+    setExpiresAt(selected);
+  }
+
+  function handleDatePickerDismiss() {
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
     }
   }
 
@@ -184,7 +188,7 @@ export default function CreateNoticeScreen() {
             hasExpiry ? 'bg-primary/10 border-primary/30' : 'bg-card border-border'
           }`}
         >
-          <View>
+          <View className="flex-1 pr-3">
             <Text className="text-sm font-sans-semibold text-foreground">
               {hasExpiry ? 'Notice will expire' : 'No expiry — stays up indefinitely'}
             </Text>
@@ -206,9 +210,9 @@ export default function CreateNoticeScreen() {
             onPress={() => setShowPicker(true)}
             className="flex-row items-center justify-between bg-card border border-border rounded-xl px-4 py-3 mb-4"
           >
-            <View>
+            <View className="flex-1 pr-3">
               <Text className="text-[11px] font-sans text-muted">Expires on</Text>
-              <Text className="text-sm font-sans-semibold text-foreground mt-0.5">
+              <Text className="text-sm font-sans-semibold text-foreground mt-0.5" numberOfLines={1}>
                 {formatDate(expiresAt)}
               </Text>
             </View>
@@ -222,7 +226,8 @@ export default function CreateNoticeScreen() {
             mode="date"
             minimumDate={new Date()}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
+            onValueChange={handleDateValueChange}
+            onDismiss={handleDatePickerDismiss}
           />
         ) : null}
 

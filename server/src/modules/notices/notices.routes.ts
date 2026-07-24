@@ -1,10 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import {
-  createNotice,
-  deleteNotice,
-  listNotices,
-  updateNotice
-} from './notices.controllers';
+import { createNotice, deleteNotice, listNotices, updateNotice } from './notices.controllers';
 import { requireAuth, requireRole, requireSociety } from '../../common/middleware/auth.middleware';
 
 export async function noticesRoutes(app: FastifyInstance) {

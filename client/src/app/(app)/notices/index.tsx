@@ -1,15 +1,20 @@
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useAppSession } from '@/lib/auth-client';
 import { useDeleteNotice, useNotices } from '@/features/notices/hooks/use-notices';
 import type { Notice, NoticeCategory } from '@/features/notices/services/notices';
 
-const CATEGORY_META: Record<NoticeCategory, { label: string; icon: string; token: 'danger' | 'warning' | 'primary' | 'muted' }> = {
+const CATEGORY_META: Record<
+  NoticeCategory,
+  { label: string; icon: string; token: 'danger' | 'warning' | 'primary' | 'muted' }
+> = {
   emergency: { label: 'Emergency', icon: 'warning-outline', token: 'danger' },
   maintenance: { label: 'Maintenance', icon: 'construct-outline', token: 'warning' },
   event: { label: 'Event', icon: 'calendar-outline', token: 'primary' },
@@ -116,20 +121,25 @@ function NoticeCard({ notice, isAdmin }: { notice: Notice; isAdmin: boolean }) {
   const meta = CATEGORY_META[notice.category];
   const badgeColor = theme[meta.token];
   const expiry = formatExpiry(notice.expiresAt);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  function handleDelete() {
-    Alert.alert('Delete notice', `Remove "${notice.title}" from the notice board?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => deleteNotice.mutate(notice.id)
-      }
-    ]);
+  function handleConfirmDelete() {
+    setConfirmingDelete(false);
+    deleteNotice.mutate(notice.id);
   }
 
   return (
     <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+      <ConfirmDialog
+        visible={confirmingDelete}
+        title="Delete notice"
+        message={`Remove "${notice.title}" from the notice board?`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmingDelete(false)}
+      />
+
       <View className="flex-row items-center justify-between mb-2">
         <View
           className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
@@ -143,9 +153,12 @@ function NoticeCard({ notice, isAdmin }: { notice: Notice; isAdmin: boolean }) {
             {meta.label}
           </Text>
         </View>
-
         {isAdmin ? (
-          <Pressable onPress={handleDelete} hitSlop={12} disabled={deleteNotice.isPending}>
+          <Pressable
+            onPress={() => setConfirmingDelete(true)}
+            hitSlop={12}
+            disabled={deleteNotice.isPending}
+          >
             <Ionicons name="trash-outline" size={16} color={theme.muted} />
           </Pressable>
         ) : null}
@@ -160,9 +173,7 @@ function NoticeCard({ notice, isAdmin }: { notice: Notice; isAdmin: boolean }) {
         <Text className="text-[11px] font-sans text-muted">
           {notice.createdByUser?.name ? `Posted by ${notice.createdByUser.name}` : 'Society admin'}
         </Text>
-        {expiry ? (
-          <Text className="text-[11px] font-sans text-muted">Expires {expiry}</Text>
-        ) : null}
+        {expiry ? <Text className="text-[11px] font-sans text-muted">Expires {expiry}</Text> : null}
       </View>
     </View>
   );

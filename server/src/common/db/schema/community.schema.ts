@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { complaintStatusEnum, noticeCategoryEnum } from './enums';
@@ -59,20 +59,29 @@ export const pollOptions = pgTable('poll_options', {
     .$onUpdate(() => new Date())
 });
 
-export const pollVotes = pgTable('poll_votes', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  pollId: uuid('poll_id')
-    .notNull()
-    .references(() => polls.id, { onDelete: 'cascade' }),
-  pollOptionId: uuid('poll_option_id')
-    .notNull()
-    .references(() => pollOptions.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+export const pollVotes = pgTable(
+  'poll_votes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pollId: uuid('poll_id')
+      .notNull()
+      .references(() => polls.id, { onDelete: 'cascade' }),
+    pollOptionId: uuid('poll_option_id')
+      .notNull()
+      .references(() => pollOptions.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
 
-  createdAt: timestamp('created_at').defaultNow().notNull()
-});
+    createdAt: timestamp('created_at').defaultNow().notNull()
+  },
+  (table) => [
+    // One vote per resident per poll (plan.md Chapter 11). The atomic insert
+    // in polls.service.ts relies on the DB rejecting a second row for the
+    // same (pollId, userId) rather than a check-then-insert race.
+    unique('poll_votes_poll_id_user_id_unique').on(table.pollId, table.userId)
+  ]
+);
 
 export const complaints = pgTable('complaints', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -346,7 +346,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 13 — Amenities & Booking
+## Chapter 13 — Amenities & Booking ✅
 
 `(server + client)` · Branch: `feature/amenities`
 

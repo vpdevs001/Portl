@@ -84,9 +84,9 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Amenity Bookings',
     subtitle: 'Manage clubhouse, pool & hall slots',
     icon: 'water-outline',
-    route: '/(app)/feature-preview?id=amenities',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/admin/amenities/logs',
+    isLive: true,
+    category: 'Management'
   },
   {
     id: 'complaints',
@@ -111,7 +111,7 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Gate Entry Logs',
     subtitle: 'Audit visitor & resident check-ins',
     icon: 'journal-outline',
-    route: '/(app)/guard/gate-logs',
+    route: '/(app)/admin/gate-logs',
     isLive: true,
     category: 'Management'
   },
@@ -252,9 +252,9 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Book Amenities',
     subtitle: 'Reserve clubhouse, pool & tennis court',
     icon: 'water-outline',
-    route: '/(app)/feature-preview?id=amenities',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/amenities/book',
+    isLive: true,
+    category: 'Community'
   },
   {
     id: 'complaints',

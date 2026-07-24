@@ -48,6 +48,7 @@ export default fp(async (app: FastifyInstance) => {
             : null;
 
     if (zodError) {
+      app.log.warn({ issues: zodError.issues }, 'Validation error');
       return sendError(
         reply,
         400,
@@ -73,6 +74,7 @@ export default fp(async (app: FastifyInstance) => {
           );
 
         case '23503': // foreign_key_violation
+          app.log.warn({ pgCode, detail: (error as { detail?: string }).detail }, 'FK violation');
           return sendError(
             reply,
             400,
@@ -81,6 +83,10 @@ export default fp(async (app: FastifyInstance) => {
           );
 
         case '23502': // not_null_violation
+          app.log.warn(
+            { pgCode, column: (error as { column?: string }).column },
+            'NOT NULL violation'
+          );
           return sendError(reply, 400, ERROR_CODES.MISSING_FIELD, 'A required field is missing');
 
         default:

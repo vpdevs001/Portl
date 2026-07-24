@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { bookingStatusEnum } from './enums';
@@ -11,6 +11,10 @@ export const amenities = pgTable('amenities', {
   name: varchar('name', { length: 150 }).notNull(),
   description: text('description'),
   capacity: integer('capacity'),
+  // Soft-disable instead of delete — an amenity taken offline for
+  // maintenance shouldn't orphan its historical bookings (mirrors the
+  // is_active pattern used by staff_directory, Chapter 14).
+  isActive: boolean('is_active').notNull().default(true),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

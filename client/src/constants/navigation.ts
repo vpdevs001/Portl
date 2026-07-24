@@ -93,9 +93,9 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Complaints & Helpdesk',
     subtitle: 'Manage resident tickets & status',
     icon: 'build-outline',
-    route: '/(app)/feature-preview?id=complaints',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/admin/complaints/manage',
+    isLive: true,
+    category: 'Community'
   },
   {
     id: 'staff',
@@ -261,9 +261,9 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Log Complaint / Service',
     subtitle: 'Report maintenance & plumbing issues',
     icon: 'build-outline',
-    route: '/(app)/feature-preview?id=complaints',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/complaints',
+    isLive: true,
+    category: 'Community'
   },
   {
     id: 'staff',

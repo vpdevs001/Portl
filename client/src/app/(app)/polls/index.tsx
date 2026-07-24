@@ -240,7 +240,8 @@ function PollResultsView({ poll }: { poll: Poll }) {
   return (
     <View className="gap-2.5">
       {poll.options.map((option) => {
-        const pct = poll.totalVotes > 0 ? Math.round((option.voteCount / poll.totalVotes) * 100) : 0;
+        const pct =
+          poll.totalVotes > 0 ? Math.round((option.voteCount / poll.totalVotes) * 100) : 0;
         const barWidthPct = Math.round((option.voteCount / maxVotes) * 100);
         const isMyVote = poll.votedOptionId === option.id;
 

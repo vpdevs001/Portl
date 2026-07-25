@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import {
+  createEmergencyAlert,
   createNotice,
   deleteNotice,
   fetchNotices,
@@ -47,6 +48,18 @@ export function useDeleteNotice() {
     mutationFn: (id: string) => deleteNotice(id),
     onSuccess: () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      queryClient.invalidateQueries({ queryKey: ['notices'] });
+    }
+  });
+}
+
+export function useCreateEmergencyAlert() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { title: string; description: string }) => createEmergencyAlert(payload),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['notices'] });
     }
   });

@@ -95,7 +95,8 @@ function AppTabs() {
         <Tabs.Screen name="staff-directory" options={{ href: null }} />
         <Tabs.Screen name="payments" options={{ href: null }} />
         <Tabs.Screen name="admin" options={{ href: null }} />
-        <Tabs.Screen name="feature-preview" options={{ href: null }} />
+        <Tabs.Screen name="society-settings" options={{ href: null }} />
+        <Tabs.Screen name="visitor-history" options={{ href: null }} />
       </Tabs>
 
       {/* Mount global drawer overlay */}

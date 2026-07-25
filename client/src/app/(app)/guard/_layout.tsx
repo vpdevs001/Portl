@@ -12,6 +12,7 @@ export default function GuardLayout() {
         <Stack.Screen name="verify-pass" />
         <Stack.Screen name="resident-search" />
         <Stack.Screen name="gate-logs" />
+        <Stack.Screen name="emergency-alert" />
       </Stack>
     </View>
   );

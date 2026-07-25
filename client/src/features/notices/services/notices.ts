@@ -46,3 +46,13 @@ export async function deleteNotice(id: string) {
     method: 'DELETE'
   });
 }
+
+// Chapter 17 — guard-only broadcast, always category 'emergency'. Backed by
+// its own endpoint rather than createNotice, so a guard can only ever send
+// this narrow shape.
+export async function createEmergencyAlert(payload: { title: string; description: string }) {
+  return apiRequest<Notice>('/api/notices/emergency-alert', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}

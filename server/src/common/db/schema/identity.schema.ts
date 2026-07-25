@@ -8,6 +8,11 @@ export const societies = pgTable('societies', {
   state: varchar('state', { length: 100 }).notNull(),
   pincode: varchar('pincode', { length: 20 }).notNull(),
 
+  // The single UPI VPA residents pay maintenance dues into (Chapter 15).
+  // Belongs to the society, not any individual admin, so it stays stable
+  // across admin handovers (e.g. yearly treasurer rotation).
+  upiId: varchar('upi_id', { length: 100 }),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

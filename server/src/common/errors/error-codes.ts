@@ -38,7 +38,10 @@ export const ERROR_CODES = {
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
 
   // 500 – the Better Auth request handler itself threw (auth.controller.ts)
-  AUTH_FAILURE: 'AUTH_FAILURE'
+  AUTH_FAILURE: 'AUTH_FAILURE',
+
+  // 502 – an upstream file-storage provider (ImageKit) rejected or failed an upload
+  UPLOAD_FAILED: 'UPLOAD_FAILED'
 } as const;
 
 /** Union type of every valid error code string. */

@@ -39,6 +39,7 @@ export const paymentConfirmations = pgTable('payment_confirmations', {
   upiRef: varchar('upi_ref', { length: 100 }),
   status: paymentConfirmationStatusEnum('status').notNull().default('pending'),
   reviewedBy: uuid('reviewed_by').references(() => user.id),
+  rejectionReason: text('rejection_reason'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

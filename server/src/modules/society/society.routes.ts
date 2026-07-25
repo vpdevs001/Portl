@@ -6,7 +6,8 @@ import {
   listTowers,
   createFlat,
   listFlats,
-  listMembers
+  listMembers,
+  updateSocietyUpiId
 } from './society.controllers';
 import { requireAuth, requireRole, requireSociety } from '../../common/middleware/auth.middleware';
 
@@ -14,6 +15,11 @@ export async function societyRoutes(app: FastifyInstance) {
   // Societies
   app.post('/api/societies', { preHandler: [requireAuth] }, createSociety);
   app.get('/api/societies/me', { preHandler: [requireAuth, requireSociety] }, getSocietyDetailsMe);
+  app.put(
+    '/api/societies/upi',
+    { preHandler: [requireAuth, requireSociety, requireRole('society_admin')] },
+    updateSocietyUpiId
+  );
 
   // Towers
   app.post(

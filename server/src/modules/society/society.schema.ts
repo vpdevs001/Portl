@@ -18,6 +18,16 @@ export const createFlatSchema = z.object({
   floor: z.number().int().optional()
 });
 
+export const updateSocietyUpiIdSchema = z.object({
+  // Basic VPA shape check (handle@bank) — UPI doesn't validate beyond this
+  // without hitting a bank/NPCI API, which is out of scope here.
+  upiId: z
+    .string()
+    .trim()
+    .regex(/^[\w.+-]{2,256}@[a-zA-Z][\w.-]{1,64}$/, 'Enter a valid UPI ID, e.g. society@okhdfcbank')
+});
+
 export type CreateSocietyInput = z.infer<typeof createSocietySchema>;
 export type CreateTowerInput = z.infer<typeof createTowerSchema>;
 export type CreateFlatInput = z.infer<typeof createFlatSchema>;
+export type UpdateSocietyUpiIdInput = z.infer<typeof updateSocietyUpiIdSchema>;

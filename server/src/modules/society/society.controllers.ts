@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { sendSuccess } from '../../common/http/app-response';
 import { AppError } from '../../common/errors/app-error';
 import * as service from './society.service';
-import { createSocietySchema, createTowerSchema, createFlatSchema } from './society.schema';
+import { createSocietySchema, createTowerSchema, createFlatSchema, updateSocietyUpiIdSchema } from './society.schema';
 
 export async function createSociety(request: FastifyRequest, reply: FastifyReply) {
   if (!request.user) {
@@ -90,4 +90,16 @@ export async function listMembers(request: FastifyRequest, reply: FastifyReply) 
   const members = await service.listMembers(societyId, role);
 
   return sendSuccess(reply, 200, members);
+}
+
+export async function updateSocietyUpiId(request: FastifyRequest, reply: FastifyReply) {
+  const societyId = request.user?.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { upiId } = updateSocietyUpiIdSchema.parse(request.body);
+  const society = await service.updateSocietyUpiId(societyId, upiId);
+
+  return sendSuccess(reply, 200, society);
 }

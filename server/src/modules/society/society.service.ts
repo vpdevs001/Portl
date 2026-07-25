@@ -145,3 +145,17 @@ export async function listMembers(
     orderBy: (u, { asc }) => [asc(u.name)]
   });
 }
+
+export async function updateSocietyUpiId(societyId: string, upiId: string) {
+  const [updated] = await db
+    .update(societies)
+    .set({ upiId })
+    .where(eq(societies.id, societyId))
+    .returning();
+
+  if (!updated) {
+    throw AppError.notFound('Society not found');
+  }
+
+  return updated;
+}

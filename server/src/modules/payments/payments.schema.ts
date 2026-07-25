@@ -1,15 +1,14 @@
 import { z } from 'zod';
 
-export const generateDuesSchema = z.object({
-  period: z.string().trim().min(1).max(20),
-  amount: z.number().positive(),
-  dueDate: z.string().min(1),
-  // Empty/omitted → bill every flat in the society (handled in the service).
-  flatIds: z.array(z.string().uuid()).optional()
+export const listDuesQuerySchema = z.object({
+  status: z.enum(['pending', 'review', 'paid']).optional()
 });
 
-export const listDuesQuerySchema = z.object({
-  status: z.enum(['pending', 'paid', 'overdue']).optional()
+export const setDueStatusSchema = z.object({
+  // Admin can only force a due directly between pending/paid — 'review'
+  // is only ever entered via a resident's own submission, never set
+  // manually.
+  status: z.enum(['pending', 'paid'])
 });
 
 export const confirmPaymentSchema = z.object({
@@ -45,6 +44,6 @@ export const verifyPaymentSchema = z
     path: ['rejectionReason']
   });
 
-export const paymentConfirmationIdParamsSchema = z.object({
+export const idParamsSchema = z.object({
   id: z.string().uuid()
 });

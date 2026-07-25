@@ -61,7 +61,18 @@ export const bookingStatusEnum = pgEnum('booking_status', ['pending', 'confirmed
 
 // ===== MAINTENANCE & PAYMENTS =====
 
-export const dueStatusEnum = pgEnum('due_status', ['pending', 'paid', 'overdue']);
+// Chapter 15 rework: a due's status now reflects the actual review
+// workflow — pending (unpaid, or resubmit needed after a reject),
+// review (resident submitted proof, awaiting admin), paid (approved, or
+// admin marked it paid directly). "overdue" was dropped — there's no
+// concept of a due date anymore since dues auto-materialize each month
+// from the flat's fixed monthly amount.
+export const dueStatusEnum = pgEnum('due_status', ['pending', 'review', 'paid']);
+
+// Flat type — kept as a plain string union rather than growing the pg enum
+// list further; residential unit types are fairly fixed but "other" covers
+// anything unusual (shops, offices in mixed-use societies, etc).
+export const flatTypeEnum = pgEnum('flat_type', ['1bhk', '2bhk', '3bhk', '4bhk', '5bhk', 'other']);
 
 export const paymentConfirmationStatusEnum = pgEnum('payment_confirmation_status', [
   'pending',

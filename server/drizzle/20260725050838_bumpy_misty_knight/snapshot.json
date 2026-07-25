@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "a0bf6d5b-f0ec-4b84-83c5-ada8ef1c13f3",
-  "prevIds": ["3c0c4c4f-6839-4cd7-a03a-e3d43bde2711"],
+  "id": "d8308509-07a9-4ab1-a298-fe22dd785cb4",
+  "prevIds": ["a0bf6d5b-f0ec-4b84-83c5-ada8ef1c13f3"],
   "ddl": [
     {
       "values": ["resident", "admin"],
@@ -29,8 +29,14 @@
       "schema": "public"
     },
     {
-      "values": ["pending", "paid", "overdue"],
+      "values": ["pending", "review", "paid"],
       "name": "due_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["1bhk", "2bhk", "3bhk", "4bhk", "5bhk", "other"],
+      "name": "flat_type",
       "entityType": "enums",
       "schema": "public"
     },
@@ -800,6 +806,32 @@
       "generated": null,
       "identity": null,
       "name": "floor",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "flats"
+    },
+    {
+      "type": "flat_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'1bhk'",
+      "generated": null,
+      "identity": null,
+      "name": "flat_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "flats"
+    },
+    {
+      "type": "numeric(10,2)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'0'",
+      "generated": null,
+      "identity": null,
+      "name": "monthly_amount",
       "entityType": "columns",
       "schema": "public",
       "table": "flats"
@@ -2794,7 +2826,7 @@
       "table": "maintenance_dues"
     },
     {
-      "type": "varchar(20)",
+      "type": "varchar(7)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -2815,19 +2847,6 @@
       "generated": null,
       "identity": null,
       "name": "amount",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "maintenance_dues"
-    },
-    {
-      "type": "date",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "due_date",
       "entityType": "columns",
       "schema": "public",
       "table": "maintenance_dues"
@@ -4117,6 +4136,15 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "poll_votes"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["flat_id", "period"],
+      "nullsNotDistinct": false,
+      "name": "maintenance_dues_flat_period_unique",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "maintenance_dues"
     },
     {
       "nameExplicit": false,

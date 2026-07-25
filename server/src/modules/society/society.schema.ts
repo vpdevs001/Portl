@@ -12,10 +12,19 @@ export const createTowerSchema = z.object({
   name: z.string().min(1).max(100)
 });
 
+const flatTypeSchema = z.enum(['1bhk', '2bhk', '3bhk', '4bhk', '5bhk', 'other']);
+
 export const createFlatSchema = z.object({
   towerId: z.string().uuid(),
   flatNumber: z.string().min(1).max(20),
-  floor: z.number().int().optional()
+  floor: z.number().int().optional(),
+  flatType: flatTypeSchema,
+  monthlyAmount: z.number().nonnegative()
+});
+
+export const updateFlatSchema = z.object({
+  flatType: flatTypeSchema.optional(),
+  monthlyAmount: z.number().nonnegative().optional()
 });
 
 export const updateSocietyUpiIdSchema = z.object({
@@ -30,4 +39,5 @@ export const updateSocietyUpiIdSchema = z.object({
 export type CreateSocietyInput = z.infer<typeof createSocietySchema>;
 export type CreateTowerInput = z.infer<typeof createTowerSchema>;
 export type CreateFlatInput = z.infer<typeof createFlatSchema>;
+export type UpdateFlatInput = z.infer<typeof updateFlatSchema>;
 export type UpdateSocietyUpiIdInput = z.infer<typeof updateSocietyUpiIdSchema>;

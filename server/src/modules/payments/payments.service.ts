@@ -1,61 +1,122 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { ERROR_CODES } from '../../common/errors/error-codes';
-import { maintenanceDues, paymentConfirmations, pushTokens } from '../../common/db/schema';
+import { maintenanceDues, paymentConfirmations } from '../../common/db/schema';
 import { sendPushNotifications } from '../../lib/push';
 import { uploadToImageKit } from '../../lib/imagekit';
 import type {
   Caller,
   ConfirmPaymentInput,
-  GenerateDuesInput,
   ListDuesQuery,
+  SetDueStatusInput,
   VerifyPaymentInput
 } from './payments.types';
 
-// ─── Dues ───────────────────────────────────────────────────────────────────
+// ─── Current-period helpers ─────────────────────────────────────────────────
 
-export async function generateDues(caller: Caller, dto: GenerateDuesInput) {
-  const targetFlats = dto.flatIds?.length
-    ? await db.query.flats.findMany({
-        where: { id: { in: dto.flatIds }, societyId: caller.societyId },
-        columns: { id: true }
-      })
-    : await db.query.flats.findMany({
-        where: { societyId: caller.societyId },
-        columns: { id: true }
-      });
+// "YYYY-MM" for the current calendar month. Every due is keyed by this, so
+// the moment a new month starts, there simply isn't a row yet for it —
+// the next read materializes a fresh 'pending' due automatically. No cron,
+// no explicit "generate bills" step.
+function currentPeriod(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
-  if (targetFlats.length === 0) {
-    throw AppError.badRequest('No matching flats found for this society');
+async function ensureDueForFlat(societyId: string, flatId: string) {
+  const period = currentPeriod();
+
+  const existing = await db.query.maintenanceDues.findFirst({
+    where: { flatId, period }
+  });
+  if (existing) return existing;
+
+  const flat = await db.query.flats.findFirst({ where: { id: flatId, societyId } });
+  if (!flat) {
+    throw AppError.notFound('Flat not found');
   }
 
-  const created = await db
+  const [created] = await db
+    .insert(maintenanceDues)
+    .values({
+      societyId,
+      flatId,
+      period,
+      amount: flat.monthlyAmount,
+      status: 'pending'
+    })
+    // Guards against a race where two requests both find no existing row
+    // and both try to create one — the unique (flatId, period) constraint
+    // makes the second insert a no-op instead of an error.
+    .onConflictDoNothing()
+    .returning();
+
+  if (created) return created;
+
+  // Someone else won the race — read back what they created.
+  const winner = await db.query.maintenanceDues.findFirst({ where: { flatId, period } });
+  if (!winner) {
+    throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to materialize due');
+  }
+  return winner;
+}
+
+async function ensureDuesForSociety(societyId: string) {
+  const period = currentPeriod();
+
+  const flats = await db.query.flats.findMany({
+    where: { societyId },
+    columns: { id: true, monthlyAmount: true }
+  });
+  if (flats.length === 0) return;
+
+  const existing = await db.query.maintenanceDues.findMany({
+    where: { societyId, period },
+    columns: { flatId: true }
+  });
+  const existingFlatIds = new Set(existing.map((d) => d.flatId));
+
+  const missing = flats.filter((f) => !existingFlatIds.has(f.id));
+  if (missing.length === 0) return;
+
+  await db
     .insert(maintenanceDues)
     .values(
-      targetFlats.map((flat) => ({
-        societyId: caller.societyId,
+      missing.map((flat) => ({
+        societyId,
         flatId: flat.id,
-        period: dto.period,
-        amount: dto.amount.toFixed(2),
-        dueDate: dto.dueDate,
+        period,
+        amount: flat.monthlyAmount,
         status: 'pending' as const
       }))
     )
-    .returning();
-
-  return created;
+    .onConflictDoNothing();
 }
 
+// ─── Dues ───────────────────────────────────────────────────────────────────
+
 export async function listDues(caller: Caller, query: ListDuesQuery) {
+  const period = currentPeriod();
+
   if (caller.role === 'society_admin') {
+    await ensureDuesForSociety(caller.societyId);
+
     return await db.query.maintenanceDues.findMany({
       where: {
         societyId: caller.societyId,
+        period,
         ...(query.status ? { status: query.status } : {})
       },
-      with: { flat: true },
-      orderBy: { dueDate: 'desc' }
+      with: {
+        flat: true,
+        paymentConfirmations: {
+          orderBy: { createdAt: 'desc' },
+          limit: 1,
+          with: { raisedByUser: true }
+        }
+      },
+      orderBy: { flatId: 'asc' }
     });
   }
 
@@ -63,16 +124,19 @@ export async function listDues(caller: Caller, query: ListDuesQuery) {
     return [];
   }
 
+  await ensureDueForFlat(caller.societyId, caller.flatId);
+
   return await db.query.maintenanceDues.findMany({
     where: {
       societyId: caller.societyId,
       flatId: caller.flatId,
+      period,
       ...(query.status ? { status: query.status } : {})
     },
     with: {
+      flat: true,
       paymentConfirmations: { orderBy: { createdAt: 'desc' }, limit: 1 }
-    },
-    orderBy: { dueDate: 'desc' }
+    }
   });
 }
 
@@ -86,6 +150,22 @@ async function findDueInSociety(dueId: string, societyId: string) {
   }
 
   return due;
+}
+
+export async function setDueStatus(caller: Caller, dueId: string, dto: SetDueStatusInput) {
+  const due = await findDueInSociety(dueId, caller.societyId);
+
+  const [updated] = await db
+    .update(maintenanceDues)
+    .set({ status: dto.status })
+    .where(eq(maintenanceDues.id, due.id))
+    .returning();
+
+  if (!updated) {
+    throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to update due');
+  }
+
+  return updated;
 }
 
 // ─── Payment confirmations ──────────────────────────────────────────────────
@@ -104,6 +184,9 @@ export async function confirmPayment(caller: Caller, dto: ConfirmPaymentInput) {
   if (due.status === 'paid') {
     throw AppError.conflict('This due has already been marked as paid');
   }
+  if (due.status === 'review') {
+    throw AppError.conflict('A payment proof for this due is already under review');
+  }
 
   const uploaded = await uploadToImageKit({
     base64: dto.screenshot,
@@ -111,56 +194,37 @@ export async function confirmPayment(caller: Caller, dto: ConfirmPaymentInput) {
     folder: 'payments'
   });
 
-  const [created] = await db
-    .insert(paymentConfirmations)
-    .values({
-      dueId: dto.dueId,
-      flatId: caller.flatId,
-      raisedBy: caller.id,
-      amount: dto.amount.toFixed(2),
-      screenshot: uploaded.url,
-      upiRef: dto.upiRef ?? null,
-      status: 'pending'
-    })
-    .returning();
+  const created = await db.transaction(async (tx) => {
+    const [confirmation] = await tx
+      .insert(paymentConfirmations)
+      .values({
+        dueId: dto.dueId,
+        flatId: caller.flatId as string,
+        raisedBy: caller.id,
+        amount: dto.amount.toFixed(2),
+        screenshot: uploaded.url,
+        upiRef: dto.upiRef ?? null,
+        status: 'pending'
+      })
+      .returning();
 
-  if (!created) {
-    throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to save payment confirmation');
-  }
+    if (!confirmation) {
+      throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to save payment confirmation');
+    }
+
+    await tx
+      .update(maintenanceDues)
+      .set({ status: 'review' })
+      .where(eq(maintenanceDues.id, due.id));
+
+    return confirmation;
+  });
 
   // Fire-and-forget, same pattern as visitor requests / complaints —
   // never blocks the response if the push itself fails.
   void notifyAdmins(caller.societyId, due.period).catch(() => undefined);
 
   return created;
-}
-
-export async function listPaymentConfirmations(caller: Caller) {
-  if (caller.role === 'society_admin') {
-    return await db.query.paymentConfirmations.findMany({
-      where: { due: { societyId: caller.societyId } },
-      with: {
-        due: true,
-        flat: true,
-        raisedByUser: { columns: { id: true, name: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
-
-  if (!caller.flatId) {
-    return [];
-  }
-
-  return await db.query.paymentConfirmations.findMany({
-    where: { flatId: caller.flatId },
-    with: {
-      due: true,
-      flat: true,
-      raisedByUser: { columns: { id: true, name: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
 }
 
 export async function verifyPayment(
@@ -195,17 +259,17 @@ export async function verifyPayment(
       throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to update payment confirmation');
     }
 
-    // Approving marks the underlying due as paid. Rejecting leaves the due
-    // exactly as it was (still pending/overdue) — the resident can submit
-    // a fresh confirmation.
-    if (dto.status === 'approved') {
-      await tx
-        .update(maintenanceDues)
-        .set({ status: 'paid' })
-        .where(
-          and(eq(maintenanceDues.id, updatedConfirmation.dueId), eq(maintenanceDues.societyId, caller.societyId))
-        );
-    }
+    // Approve → paid. Reject → back to pending so the resident can
+    // resubmit. Either way this resolves the 'review' state.
+    await tx
+      .update(maintenanceDues)
+      .set({ status: dto.status === 'approved' ? 'paid' : 'pending' })
+      .where(
+        and(
+          eq(maintenanceDues.id, updatedConfirmation.dueId),
+          eq(maintenanceDues.societyId, caller.societyId)
+        )
+      );
 
     return updatedConfirmation;
   });
@@ -227,18 +291,13 @@ async function notifyAdmins(societyId: string, period: string) {
     return;
   }
 
-  const tokens = await db
-    .select({ token: pushTokens.expoPushToken })
-    .from(pushTokens)
-    .where(
-      inArray(
-        pushTokens.userId,
-        admins.map((a) => a.id)
-      )
-    );
+  const tokens = await db.query.pushTokens.findMany({
+    where: { userId: { in: admins.map((a) => a.id) } },
+    columns: { expoPushToken: true }
+  });
 
   await sendPushNotifications(
-    tokens.map((t) => t.token),
+    tokens.map((t) => t.expoPushToken),
     {
       title: 'New payment confirmation',
       body: `A resident submitted a payment proof for ${period}`,
@@ -248,15 +307,15 @@ async function notifyAdmins(societyId: string, period: string) {
 }
 
 async function notifyResident(confirmation: typeof paymentConfirmations.$inferSelect) {
-  const tokens = await db
-    .select({ token: pushTokens.expoPushToken })
-    .from(pushTokens)
-    .where(eq(pushTokens.userId, confirmation.raisedBy));
+  const tokens = await db.query.pushTokens.findMany({
+    where: { userId: confirmation.raisedBy },
+    columns: { expoPushToken: true }
+  });
 
   const approved = confirmation.status === 'approved';
 
   await sendPushNotifications(
-    tokens.map((t) => t.token),
+    tokens.map((t) => t.expoPushToken),
     {
       title: approved ? 'Payment verified' : 'Payment rejected',
       body: approved

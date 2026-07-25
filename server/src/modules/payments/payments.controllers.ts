@@ -4,9 +4,9 @@ import { sendSuccess } from '../../common/http/app-response';
 import * as service from './payments.service';
 import {
   confirmPaymentSchema,
-  generateDuesSchema,
+  idParamsSchema,
   listDuesQuerySchema,
-  paymentConfirmationIdParamsSchema,
+  setDueStatusSchema,
   verifyPaymentSchema
 } from './payments.schema';
 
@@ -29,20 +29,21 @@ function requireCaller(request: FastifyRequest) {
   };
 }
 
-export async function generateDues(request: FastifyRequest, reply: FastifyReply) {
-  const caller = requireCaller(request);
-  const dto = generateDuesSchema.parse(request.body);
-  const created = await service.generateDues(caller, dto);
-
-  return sendSuccess(reply, 201, created);
-}
-
 export async function listDues(request: FastifyRequest, reply: FastifyReply) {
   const caller = requireCaller(request);
   const query = listDuesQuerySchema.parse(request.query);
   const dues = await service.listDues(caller, query);
 
   return sendSuccess(reply, 200, dues);
+}
+
+export async function setDueStatus(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const { id } = idParamsSchema.parse(request.params);
+  const dto = setDueStatusSchema.parse(request.body);
+  const updated = await service.setDueStatus(caller, id, dto);
+
+  return sendSuccess(reply, 200, updated);
 }
 
 export async function confirmPayment(request: FastifyRequest, reply: FastifyReply) {
@@ -53,16 +54,9 @@ export async function confirmPayment(request: FastifyRequest, reply: FastifyRepl
   return sendSuccess(reply, 201, confirmation);
 }
 
-export async function listPaymentConfirmations(request: FastifyRequest, reply: FastifyReply) {
-  const caller = requireCaller(request);
-  const confirmations = await service.listPaymentConfirmations(caller);
-
-  return sendSuccess(reply, 200, confirmations);
-}
-
 export async function verifyPayment(request: FastifyRequest, reply: FastifyReply) {
   const caller = requireCaller(request);
-  const { id } = paymentConfirmationIdParamsSchema.parse(request.params);
+  const { id } = idParamsSchema.parse(request.params);
   const dto = verifyPaymentSchema.parse(request.body);
   const updated = await service.verifyPayment(caller, id, dto);
 

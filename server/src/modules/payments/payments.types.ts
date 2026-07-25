@@ -5,17 +5,14 @@ export type Caller = {
   flatId?: string | null;
 };
 
-export type GenerateDuesInput = {
-  period: string;
-  amount: number;
-  dueDate: string;
-  // Omitted → bill every flat in the society. Provided → bill only these
-  // flats (e.g. a corrective run for a couple of flats that were missed).
-  flatIds?: string[];
-};
+export type DueStatus = 'pending' | 'review' | 'paid';
 
 export type ListDuesQuery = {
-  status?: 'pending' | 'paid' | 'overdue';
+  status?: DueStatus;
+};
+
+export type SetDueStatusInput = {
+  status: 'pending' | 'paid';
 };
 
 export type ConfirmPaymentInput = {

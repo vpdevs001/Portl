@@ -3,7 +3,13 @@ import { z } from 'zod';
 import { sendSuccess } from '../../common/http/app-response';
 import { AppError } from '../../common/errors/app-error';
 import * as service from './society.service';
-import { createSocietySchema, createTowerSchema, createFlatSchema, updateSocietyUpiIdSchema } from './society.schema';
+import {
+  createSocietySchema,
+  createTowerSchema,
+  createFlatSchema,
+  updateFlatSchema,
+  updateSocietyUpiIdSchema
+} from './society.schema';
 
 export async function createSociety(request: FastifyRequest, reply: FastifyReply) {
   if (!request.user) {
@@ -58,6 +64,21 @@ export async function createFlat(request: FastifyRequest, reply: FastifyReply) {
   const flat = await service.createFlat(societyId, dto);
 
   return sendSuccess(reply, 201, flat);
+}
+
+const flatIdParamsSchema = z.object({ id: z.string().uuid() });
+
+export async function updateFlat(request: FastifyRequest, reply: FastifyReply) {
+  const societyId = request.user?.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { id } = flatIdParamsSchema.parse(request.params);
+  const dto = updateFlatSchema.parse(request.body);
+  const flat = await service.updateFlat(societyId, id, dto);
+
+  return sendSuccess(reply, 200, flat);
 }
 
 const listFlatsQuerySchema = z.object({

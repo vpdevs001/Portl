@@ -5,6 +5,7 @@ import {
   createTower,
   listTowers,
   createFlat,
+  updateFlat,
   listFlats,
   listMembers,
   updateSocietyUpiId
@@ -36,6 +37,11 @@ export async function societyRoutes(app: FastifyInstance) {
     createFlat
   );
   app.get('/api/societies/flats', { preHandler: [requireAuth, requireSociety] }, listFlats);
+  app.put(
+    '/api/societies/flats/:id',
+    { preHandler: [requireAuth, requireSociety, requireRole('society_admin')] },
+    updateFlat
+  );
 
   // Members
   app.get('/api/societies/members', { preHandler: [requireAuth, requireSociety] }, listMembers);

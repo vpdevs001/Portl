@@ -3,7 +3,12 @@ import { db } from '../../common/db';
 import { societies, towers, flats } from '../../common/db/schema/identity.schema';
 import { user } from '../../common/db/schema/auth.schema';
 import { AppError } from '../../common/errors/app-error';
-import type { CreateSocietyInput, CreateTowerInput, CreateFlatInput } from './society.schema';
+import type {
+  CreateSocietyInput,
+  CreateTowerInput,
+  CreateFlatInput,
+  UpdateFlatInput
+} from './society.schema';
 
 export async function createSocietyAndAssignAdmin(userId: string, dto: CreateSocietyInput) {
   return await db.transaction(async (tx) => {
@@ -81,7 +86,9 @@ export async function createFlat(societyId: string, dto: CreateFlatInput) {
       societyId,
       towerId: dto.towerId,
       flatNumber: dto.flatNumber,
-      floor: dto.floor ?? null
+      floor: dto.floor ?? null,
+      flatType: dto.flatType,
+      monthlyAmount: dto.monthlyAmount.toFixed(2)
     })
     .returning();
 
@@ -134,6 +141,28 @@ export async function listFlats(societyId: string, towerId?: string) {
     where: towerId ? { societyId, towerId } : { societyId },
     orderBy: (f, { asc }) => [asc(f.flatNumber)]
   });
+}
+
+export async function updateFlat(societyId: string, flatId: string, dto: UpdateFlatInput) {
+  const flat = await db.query.flats.findFirst({ where: { id: flatId, societyId } });
+  if (!flat) {
+    throw AppError.notFound('Flat not found in this society');
+  }
+
+  const [updated] = await db
+    .update(flats)
+    .set({
+      ...(dto.flatType ? { flatType: dto.flatType } : {}),
+      ...(dto.monthlyAmount !== undefined ? { monthlyAmount: dto.monthlyAmount.toFixed(2) } : {})
+    })
+    .where(eq(flats.id, flatId))
+    .returning();
+
+  if (!updated) {
+    throw new AppError(500, 'DATABASE_ERROR', 'Failed to update flat');
+  }
+
+  return updated;
 }
 
 export async function listMembers(

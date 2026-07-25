@@ -32,3 +32,11 @@ export const listNoticesQuerySchema = z.object({
     .optional()
     .transform((value) => value === 'true')
 });
+
+// Chapter 17 — guard-only, deliberately narrower than createNoticeSchema:
+// no category (server forces 'emergency'), no expiresAt (an emergency
+// notice isn't something you schedule to auto-hide).
+export const createEmergencyAlertSchema = z.object({
+  title: z.string().trim().min(1).max(255),
+  description: z.string().trim().min(1)
+});

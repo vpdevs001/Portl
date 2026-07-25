@@ -15,6 +15,14 @@ export type CreateNoticeInput = {
   expiresAt?: string;
 };
 
+// Chapter 17 — a guard-triggered broadcast to the whole society. Deliberately
+// narrower than CreateNoticeInput: no category (always 'emergency'), no
+// expiry (an emergency notice isn't something you schedule to auto-hide).
+export type EmergencyAlertInput = {
+  title: string;
+  description: string;
+};
+
 export type UpdateNoticeInput = {
   title?: string;
   description?: string;

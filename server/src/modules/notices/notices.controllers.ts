@@ -3,7 +3,12 @@ import { z } from 'zod';
 import { sendSuccess } from '../../common/http/app-response';
 import { AppError } from '../../common/errors/app-error';
 import * as service from './notices.service';
-import { createNoticeSchema, listNoticesQuerySchema, updateNoticeSchema } from './notices.schema';
+import {
+  createEmergencyAlertSchema,
+  createNoticeSchema,
+  listNoticesQuerySchema,
+  updateNoticeSchema
+} from './notices.schema';
 
 const noticeIdParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -29,6 +34,14 @@ export async function createNotice(request: FastifyRequest, reply: FastifyReply)
   const caller = requireCaller(request);
   const dto = createNoticeSchema.parse(request.body);
   const created = await service.createNotice(caller, dto);
+
+  return sendSuccess(reply, 201, created);
+}
+
+export async function createEmergencyAlert(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const dto = createEmergencyAlertSchema.parse(request.body);
+  const created = await service.createEmergencyAlert(caller, dto);
 
   return sendSuccess(reply, 201, created);
 }

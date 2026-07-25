@@ -36,8 +36,19 @@ export const updateSocietyUpiIdSchema = z.object({
     .regex(/^[\w.+-]{2,256}@[a-zA-Z][\w.-]{1,64}$/, 'Enter a valid UPI ID, e.g. society@okhdfcbank')
 });
 
+// Chapter 17 — Society Settings screen. All fields optional/partial-update,
+// same pattern as updateFlatSchema: send only what changed.
+export const updateSocietyDetailsSchema = z.object({
+  name: z.string().trim().min(1).max(255).optional(),
+  address: z.string().trim().min(1).optional(),
+  city: z.string().trim().min(1).max(100).optional(),
+  state: z.string().trim().min(1).max(100).optional(),
+  pincode: z.string().trim().min(1).max(20).optional()
+});
+
 export type CreateSocietyInput = z.infer<typeof createSocietySchema>;
 export type CreateTowerInput = z.infer<typeof createTowerSchema>;
 export type CreateFlatInput = z.infer<typeof createFlatSchema>;
 export type UpdateFlatInput = z.infer<typeof updateFlatSchema>;
 export type UpdateSocietyUpiIdInput = z.infer<typeof updateSocietyUpiIdSchema>;
+export type UpdateSocietyDetailsInput = z.infer<typeof updateSocietyDetailsSchema>;

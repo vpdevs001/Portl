@@ -8,7 +8,8 @@ import {
   createTowerSchema,
   createFlatSchema,
   updateFlatSchema,
-  updateSocietyUpiIdSchema
+  updateSocietyUpiIdSchema,
+  updateSocietyDetailsSchema
 } from './society.schema';
 
 export async function createSociety(request: FastifyRequest, reply: FastifyReply) {
@@ -148,6 +149,18 @@ export async function updateSocietyUpiId(request: FastifyRequest, reply: Fastify
 
   const { upiId } = updateSocietyUpiIdSchema.parse(request.body);
   const society = await service.updateSocietyUpiId(societyId, upiId);
+
+  return sendSuccess(reply, 200, society);
+}
+
+export async function updateSocietyDetails(request: FastifyRequest, reply: FastifyReply) {
+  const societyId = request.user?.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const dto = updateSocietyDetailsSchema.parse(request.body);
+  const society = await service.updateSocietyDetails(societyId, dto);
 
   return sendSuccess(reply, 200, society);
 }

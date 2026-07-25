@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, unique } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, unique, index } from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { approverTypeEnum, visitorSourceEnum, visitorStatusEnum, visitorTypeEnum } from './enums';
@@ -47,7 +47,14 @@ export const visitorRequests = pgTable(
     // Postgres unique constraints don't count NULLs as duplicates, so this
     // only ever constrains actual pre-approval rows — regular gate-originated
     // requests (passCode null) are unaffected.
-    unique('visitor_requests_society_id_pass_code_unique').on(table.societyId, table.passCode)
+    unique('visitor_requests_society_id_pass_code_unique').on(table.societyId, table.passCode),
+    // Chapter 17 — "pending requests for my society" (5s poll fallback from
+    // Chapter 7, plus every push-fanout lookup) is the single hottest query
+    // in the app, hence the composite rather than relying on the single-
+    // column societyId index below for it.
+    index('visitor_requests_society_id_status_idx').on(table.societyId, table.status),
+    index('visitor_requests_society_id_idx').on(table.societyId),
+    index('visitor_requests_flat_id_idx').on(table.flatId)
   ]
 );
 

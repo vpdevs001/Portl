@@ -5,6 +5,7 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { FilterPill } from '@/components/FilterPill';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTowers } from '@/features/society/services/use-society';
@@ -82,13 +83,13 @@ export function ResidentSearchScreen() {
 
         {tab === 'residents' && towers && towers.length > 0 ? (
           <View className="flex-row flex-wrap gap-2 mb-4">
-            <FilterChip
+            <FilterPill
               label="All towers"
               active={!towerId}
               onPress={() => setTowerId(undefined)}
             />
             {towers.map((tower) => (
-              <FilterChip
+              <FilterPill
                 key={tower.id}
                 label={tower.name}
                 active={towerId === tower.id}
@@ -150,27 +151,6 @@ export function ResidentSearchScreen() {
         )}
       </View>
     </Screen>
-  );
-}
-
-function FilterChip({
-  label,
-  active,
-  onPress
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={`px-3 py-1.5 rounded-full border ${active ? 'bg-primary/10 border-primary/30' : 'bg-card border-border'}`}
-    >
-      <Text className={`text-xs font-sans-semibold ${active ? 'text-primary' : 'text-muted'}`}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 

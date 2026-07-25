@@ -5,8 +5,12 @@ import {
   createTower,
   listTowers,
   createFlat,
+  updateFlat,
   listFlats,
-  listMembers
+  listMembers,
+  leaveSociety,
+  removeMember,
+  updateSocietyUpiId
 } from './society.controllers';
 import { requireAuth, requireRole, requireSociety } from '../../common/middleware/auth.middleware';
 
@@ -14,6 +18,11 @@ export async function societyRoutes(app: FastifyInstance) {
   // Societies
   app.post('/api/societies', { preHandler: [requireAuth] }, createSociety);
   app.get('/api/societies/me', { preHandler: [requireAuth, requireSociety] }, getSocietyDetailsMe);
+  app.put(
+    '/api/societies/upi',
+    { preHandler: [requireAuth, requireSociety, requireRole('society_admin')] },
+    updateSocietyUpiId
+  );
 
   // Towers
   app.post(
@@ -30,7 +39,22 @@ export async function societyRoutes(app: FastifyInstance) {
     createFlat
   );
   app.get('/api/societies/flats', { preHandler: [requireAuth, requireSociety] }, listFlats);
+  app.put(
+    '/api/societies/flats/:id',
+    { preHandler: [requireAuth, requireSociety, requireRole('society_admin')] },
+    updateFlat
+  );
 
   // Members
   app.get('/api/societies/members', { preHandler: [requireAuth, requireSociety] }, listMembers);
+
+  // Any member (resident, guard, or admin) leaving of their own accord.
+  app.post('/api/societies/leave', { preHandler: [requireAuth, requireSociety] }, leaveSociety);
+
+  // Admin-initiated removal of another member.
+  app.delete(
+    '/api/societies/members/:userId',
+    { preHandler: [requireAuth, requireSociety, requireRole('society_admin')] },
+    removeMember
+  );
 }

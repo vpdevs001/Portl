@@ -14,6 +14,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { FilterPill } from '@/components/FilterPill';
 import {
   useComplaints,
   useUpdateComplaintStatus
@@ -97,26 +98,14 @@ export default function ManageComplaintsScreen() {
           className="my-4"
           contentContainerClassName="gap-2"
         >
-          {FILTERS.map((f) => {
-            const active = filter === f.value;
-            return (
-              <Pressable
-                key={f.value}
-                onPress={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-full border mr-2 ${
-                  active ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {FILTERS.map((f) => (
+            <FilterPill
+              key={f.value}
+              label={f.label}
+              active={filter === f.value}
+              onPress={() => setFilter(f.value)}
+            />
+          ))}
         </ScrollView>
 
         {isLoading ? (
@@ -235,7 +224,7 @@ function ComplaintTicket({ complaint }: { complaint: Complaint }) {
                 <Pressable
                   key={status}
                   onPress={() => setNextStatus(status)}
-                  className="flex-row items-center gap-1.5 px-3 py-2 rounded-full border"
+                  className="flex-row items-center gap-1.5 px-3 py-2 rounded-lg border"
                   style={{
                     backgroundColor: active ? `${color}1a` : theme.card,
                     borderColor: active ? color : theme.border

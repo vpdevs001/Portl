@@ -131,7 +131,7 @@ export default function CreateComplaintScreen() {
               <Pressable
                 key={c.value}
                 onPress={() => setCategory(c.value)}
-                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full border ${
+                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border ${
                   active ? 'bg-primary border-primary' : 'bg-card border-border'
                 }`}
               >

@@ -3,6 +3,7 @@ import { and, eq, inArray, isNull, lt } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { sendPushNotifications } from '../../lib/push';
+import { uploadToImageKit } from '../../lib/imagekit';
 import {
   cabDetails,
   deliveryDetails,
@@ -377,9 +378,22 @@ export async function listCheckedInVisitors(caller: Caller) {
   }));
 }
 
+// Generic authenticated upload — despite the name (kept for backwards
+// compatibility with the shared POST /api/upload route across visitors and
+// complaints), this just uploads whatever base64 file it's given to
+// ImageKit and hands back the resulting URL. Payment confirmation
+// screenshots (Chapter 15) reuse the same helper directly rather than
+// going through this route, since they need society/flat scoping the
+// generic route doesn't have.
 export async function uploadVisitorPhoto(input: UploadVisitorPhotoInput) {
+  const uploaded = await uploadToImageKit({
+    base64: input.base64,
+    fileName: input.fileName,
+    folder: 'general'
+  });
+
   return {
-    url: `https://example.com/uploads/${input.fileName}`,
+    url: uploaded.url,
     fileName: input.fileName,
     contentType: input.contentType
   };

@@ -15,6 +15,7 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
+import { FilterPill } from '@/components/FilterPill';
 import { useFlats } from '@/features/society/services/use-society';
 import {
   useCreateVisitorRequest,
@@ -193,7 +194,7 @@ export function RegisterVisitorScreen() {
               <Pressable
                 key={t.value}
                 onPress={() => setVisitorType(t.value)}
-                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full border mr-2 ${
+                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border mr-2 ${
                   active ? 'bg-primary border-primary' : 'bg-card border-border'
                 }`}
               >
@@ -383,26 +384,14 @@ export function RegisterVisitorScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerClassName="gap-2"
               >
-                {filteredFlats.slice(0, 20).map((flat) => {
-                  const active = flatId === flat.id;
-                  return (
-                    <Pressable
-                      key={flat.id}
-                      onPress={() => setFlatId(flat.id)}
-                      className={`px-4 py-2.5 rounded-lg border mr-2 ${
-                        active ? 'bg-primary border-primary' : 'bg-card border-border'
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-sans-bold ${
-                          active ? 'text-primary-foreground' : 'text-foreground'
-                        }`}
-                      >
-                        {flat.flatNumber}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {filteredFlats.slice(0, 20).map((flat) => (
+                  <FilterPill
+                    key={flat.id}
+                    label={flat.flatNumber}
+                    active={flatId === flat.id}
+                    onPress={() => setFlatId(flat.id)}
+                  />
+                ))}
               </ScrollView>
             )}
           </View>

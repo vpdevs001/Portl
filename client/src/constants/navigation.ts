@@ -69,15 +69,14 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     isLive: true,
     category: 'Passes & Access'
   },
-  // Unbuilt Frontend Features (Backend Ready)
   {
     id: 'maintenance',
     label: 'Maintenance & Dues',
     subtitle: 'Track dues, payments & confirmations',
     icon: 'card-outline',
-    route: '/(app)/feature-preview?id=maintenance',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/admin/payments/review',
+    isLive: true,
+    category: 'Management'
   },
   {
     id: 'amenities',
@@ -243,9 +242,9 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Pay Maintenance Dues',
     subtitle: 'View bills & upload payment receipts',
     icon: 'card-outline',
-    route: '/(app)/feature-preview?id=maintenance',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/payments',
+    isLive: true,
+    category: 'Community'
   },
   {
     id: 'amenities',

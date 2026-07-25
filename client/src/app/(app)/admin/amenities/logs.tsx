@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { FilterPill } from '@/components/FilterPill';
 import { useAmenities, useBookings } from '@/features/amenities/hooks/use-amenities';
 import type { AmenityBooking } from '@/features/amenities/services/amenities';
 
@@ -89,38 +90,20 @@ export default function AmenityLogsScreen() {
             className="my-4"
             contentContainerClassName="gap-2 pr-2"
           >
-            <Pressable
+            <FilterPill
+              label="All"
+              active={amenityFilter === null}
               onPress={() => setAmenityFilter(null)}
-              className={`px-4 py-2 rounded-full border mr-1 ${
-                amenityFilter === null ? 'bg-primary border-primary' : 'bg-card border-border'
-              }`}
-            >
-              <Text
-                className={`text-xs font-sans-bold ${
-                  amenityFilter === null ? 'text-primary-foreground' : 'text-foreground-secondary'
-                }`}
-              >
-                All
-              </Text>
-            </Pressable>
+            />
             {amenities.map((a) => {
               const active = amenityFilter === a.id;
               return (
-                <Pressable
+                <FilterPill
                   key={a.id}
+                  label={a.name}
+                  active={active}
                   onPress={() => setAmenityFilter(active ? null : a.id)}
-                  className={`px-4 py-2 rounded-full border mr-1 ${
-                    active ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {a.name}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </ScrollView>

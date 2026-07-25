@@ -1,10 +1,34 @@
-import { useCreateFlat, useFlats, useTowers } from '@/features/society/services/use-society';
+import {
+  useCreateFlat,
+  useFlats,
+  useTowers,
+  type FlatType
+} from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View
+} from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { FilterPill } from '@/components/FilterPill';
+
+const FLAT_TYPES: { value: FlatType; label: string }[] = [
+  { value: '1bhk', label: '1BHK' },
+  { value: '2bhk', label: '2BHK' },
+  { value: '3bhk', label: '3BHK' },
+  { value: '4bhk', label: '4BHK' },
+  { value: '5bhk', label: '5BHK' },
+  { value: 'other', label: 'Other' }
+];
 
 export function SetupFlatsScreen() {
   const router = useRouter();
@@ -21,6 +45,8 @@ export function SetupFlatsScreen() {
 
   const [flatNumber, setFlatNumber] = useState('');
   const [floor, setFloor] = useState('');
+  const [flatType, setFlatType] = useState<FlatType>('1bhk');
+  const [monthlyAmount, setMonthlyAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -42,14 +68,24 @@ export function SetupFlatsScreen() {
       return;
     }
 
+    const parsedAmount = monthlyAmount.trim() ? Number(monthlyAmount.trim()) : 0;
+    if (monthlyAmount.trim() && (isNaN(parsedAmount) || parsedAmount < 0)) {
+      setError('Monthly amount must be a valid number');
+      return;
+    }
+
     try {
       await createFlatMutation.mutateAsync({
         towerId: effectiveTowerId,
         flatNumber: flatNumber.trim(),
-        floor: parsedFloor
+        floor: parsedFloor,
+        flatType,
+        monthlyAmount: parsedAmount
       });
       setFlatNumber('');
       setFloor('');
+      setFlatType('1bhk');
+      setMonthlyAmount('');
     } catch (e: any) {
       setError(e.message ?? 'Failed to add flat');
     }
@@ -60,142 +96,182 @@ export function SetupFlatsScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background px-6 py-12">
-      {/* Hero */}
-      <View className="mb-8 mt-4">
-        <Text className="text-3xl font-serif-bold text-foreground mb-3">Setup Flats</Text>
-        <Text className="text-sm font-sans text-foreground-secondary leading-5">
-          Map out the apartments or office units in each tower. You can switch towers to view and
-          configure their respective units.
-        </Text>
-      </View>
-
-      {/* Tower Selector */}
-      <View className="mb-6">
-        <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-          Select Tower
-        </Text>
-        {isLoadingTowers ? (
-          <ActivityIndicator size="small" color="#a9832e" />
-        ) : towers && towers.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
-            {towers.map((t) => {
-              const active = effectiveTowerId === t.id;
-              return (
-                <Pressable
-                  key={t.id}
-                  onPress={() => setSelectedTowerId(t.id)}
-                  className={`px-4 py-2.5 rounded-lg border mr-2 ${
-                    active ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-medium ${
-                      active ? 'text-primary-foreground' : 'text-foreground'
-                    }`}
-                  >
-                    {t.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        ) : (
-          <Text className="text-xs font-sans text-muted">
-            No towers registered. Go back to add towers.
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1"
+    >
+      <ScrollView className="flex-1 bg-background px-6 py-12">
+        {/* Hero */}
+        <View className="mb-8 mt-4">
+          <Text className="text-3xl font-serif-bold text-foreground mb-3">Setup Flats</Text>
+          <Text className="text-sm font-sans text-foreground-secondary leading-5">
+            Map out the apartments or office units in each tower. You can switch towers to view and
+            configure their respective units.
           </Text>
-        )}
-      </View>
+        </View>
 
-      {/* Add Flat Form */}
-      <View className="p-5 bg-card border border-border rounded-xl gap-4 mb-8">
-        <Text className="text-sm font-sans-bold text-foreground">Add New Flat</Text>
-        {error ? (
-          <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg">
-            <Text className="text-danger font-sans text-xs">{error}</Text>
+        {/* Tower Selector */}
+        <View className="mb-6">
+          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
+            Select Tower
+          </Text>
+          {isLoadingTowers ? (
+            <ActivityIndicator size="small" color="#a9832e" />
+          ) : towers && towers.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="flex-row gap-2"
+            >
+              {towers.map((t) => (
+                <FilterPill
+                  key={t.id}
+                  label={t.name}
+                  active={effectiveTowerId === t.id}
+                  onPress={() => setSelectedTowerId(t.id)}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <Text className="text-xs font-sans text-muted">
+              No towers registered. Go back to add towers.
+            </Text>
+          )}
+        </View>
+
+        {/* Add Flat Form */}
+        <View className="p-5 bg-card border border-border rounded-xl gap-4 mb-8">
+          <Text className="text-sm font-sans-bold text-foreground">Add New Flat</Text>
+          {error ? (
+            <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg">
+              <Text className="text-danger font-sans text-xs">{error}</Text>
+            </View>
+          ) : null}
+
+          <View className="flex-row gap-3">
+            <View className="flex-[2] gap-1">
+              <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat No.</Text>
+              <TextInput
+                value={flatNumber}
+                onChangeText={setFlatNumber}
+                placeholder="e.g. 101"
+                placeholderTextColor="#93a08d"
+                className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+              />
+            </View>
+
+            <View className="flex-1 gap-1">
+              <Text className="text-[10px] font-sans-semibold text-muted uppercase">
+                Floor (Opt)
+              </Text>
+              <TextInput
+                value={floor}
+                onChangeText={setFloor}
+                placeholder="e.g. 1"
+                placeholderTextColor="#93a08d"
+                keyboardType="numeric"
+                className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+              />
+            </View>
+
+            <View className="justify-end">
+              <Pressable
+                onPress={handleAddFlat}
+                disabled={createFlatMutation.isPending}
+                className="px-4 py-2 bg-primary rounded-lg items-center justify-center h-10"
+              >
+                {createFlatMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#1a1409" />
+                ) : (
+                  <Ionicons name="add" size={18} color={theme.primaryForeground} />
+                )}
+              </Pressable>
+            </View>
           </View>
-        ) : null}
 
-        <View className="flex-row gap-3">
-          <View className="flex-[2] gap-1">
-            <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat No.</Text>
-            <TextInput
-              value={flatNumber}
-              onChangeText={setFlatNumber}
-              placeholder="e.g. 101"
-              placeholderTextColor="#93a08d"
-              className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
-            />
+          <View className="gap-1">
+            <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat Type</Text>
+            <View className="flex-row flex-wrap">
+              {FLAT_TYPES.map((t) => (
+                <FilterPill
+                  key={t.value}
+                  label={t.label}
+                  active={flatType === t.value}
+                  onPress={() => setFlatType(t.value)}
+                  className="mb-2"
+                />
+              ))}
+            </View>
           </View>
 
-          <View className="flex-1 gap-1">
-            <Text className="text-[10px] font-sans-semibold text-muted uppercase">Floor (Opt)</Text>
+          <View className="gap-1">
+            <Text className="text-[10px] font-sans-semibold text-muted uppercase">
+              Monthly Amount (₹)
+            </Text>
             <TextInput
-              value={floor}
-              onChangeText={setFloor}
-              placeholder="e.g. 1"
+              value={monthlyAmount}
+              onChangeText={setMonthlyAmount}
+              placeholder="e.g. 2500"
               placeholderTextColor="#93a08d"
               keyboardType="numeric"
               className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
             />
           </View>
-
-          <View className="justify-end">
-            <Pressable
-              onPress={handleAddFlat}
-              disabled={createFlatMutation.isPending}
-              className="px-4 py-2 bg-primary rounded-lg items-center justify-center h-10"
-            >
-              {createFlatMutation.isPending ? (
-                <ActivityIndicator size="small" color="#1a1409" />
-              ) : (
-                <Ionicons name="add" size={18} color={theme.primaryForeground} />
-              )}
-            </Pressable>
-          </View>
         </View>
-      </View>
 
-      {/* Flats List */}
-      <View className="mb-10">
-        <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-          Units registered in {towers?.find((t) => t.id === effectiveTowerId)?.name ?? 'Tower'} (
-          {flats?.length ?? 0})
-        </Text>
+        {/* Flats List */}
+        <View className="mb-10">
+          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
+            Units registered in {towers?.find((t) => t.id === effectiveTowerId)?.name ?? 'Tower'} (
+            {flats?.length ?? 0})
+          </Text>
 
-        {isLoadingFlats ? (
-          <ActivityIndicator size="small" color="#a9832e" />
-        ) : flats && flats.length > 0 ? (
-          <View className="flex-row flex-wrap gap-2">
-            {flats.map((flat) => (
-              <View
-                key={flat.id}
-                className="px-3.5 py-2 bg-card border border-border rounded-lg flex-row items-center gap-1.5"
-              >
-                <Text className="text-xs font-sans-medium text-foreground">{flat.flatNumber}</Text>
-                <Text className="text-[10px] font-sans text-muted">(Fl: {flat.floor ?? 'G'})</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View className="p-6 bg-card border border-border border-dashed rounded-xl items-center justify-center">
-            <Text className="text-xs font-sans text-muted">
-              No units registered in this tower yet
-            </Text>
-          </View>
-        )}
-      </View>
+          {isLoadingFlats ? (
+            <ActivityIndicator size="small" color="#a9832e" />
+          ) : flats && flats.length > 0 ? (
+            <View className="flex-row flex-wrap gap-2">
+              {flats.map((flat) => (
+                <View
+                  key={flat.id}
+                  className="px-3.5 py-2 bg-card border border-border rounded-lg flex-row items-center gap-1.5"
+                >
+                  <Text className="text-xs font-sans-medium text-foreground">
+                    {flat.flatNumber}
+                  </Text>
+                  <Text className="text-[10px] font-sans text-muted">
+                    (Fl: {flat.floor ?? 'G'})
+                  </Text>
+                  <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                    <Text className="text-[9px] font-sans-bold text-primary uppercase">
+                      {FLAT_TYPES.find((t) => t.value === flat.flatType)?.label ?? flat.flatType}
+                    </Text>
+                  </View>
+                  <Text className="text-[10px] font-sans-bold text-muted">
+                    ₹{flat.monthlyAmount}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View className="p-6 bg-card border border-border border-dashed rounded-xl items-center justify-center">
+              <Text className="text-xs font-sans text-muted">
+                No units registered in this tower yet
+              </Text>
+            </View>
+          )}
+        </View>
 
-      {/* Next Step */}
-      <Pressable
-        onPress={handleNext}
-        className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
-      >
-        <Text className="text-primary-foreground font-sans-bold text-base">
-          Next: Invite Members
-        </Text>
-        <Ionicons name="arrow-forward" size={18} color={theme.primaryForeground} />
-      </Pressable>
-    </ScrollView>
+        {/* Next Step */}
+        <Pressable
+          onPress={handleNext}
+          className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
+        >
+          <Text className="text-primary-foreground font-sans-bold text-base">
+            Next: Invite Members
+          </Text>
+          <Ionicons name="arrow-forward" size={18} color={theme.primaryForeground} />
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

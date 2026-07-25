@@ -4,9 +4,16 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
-import type { Flat, Society, SocietyDetails, Tower, UserMember } from '../types/society.types';
+import type {
+  Flat,
+  FlatType,
+  Society,
+  SocietyDetails,
+  Tower,
+  UserMember
+} from '../types/society.types';
 
-export type { Flat, Society, SocietyDetails, Tower, UserMember };
+export type { Flat, FlatType, Society, SocietyDetails, Tower, UserMember };
 
 export function useCreateSociety() {
   return useMutation({
@@ -37,6 +44,20 @@ export function useSocietyDetails() {
   });
 }
 
+export function useUpdateSocietyUpiId() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { upiId: string }) =>
+      apiRequest<Society>('/api/societies/upi', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
+  });
+}
+
 export function useCreateTower() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -62,7 +83,13 @@ export function useTowers() {
 export function useCreateFlat() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { towerId: string; flatNumber: string; floor?: number }) =>
+    mutationFn: (data: {
+      towerId: string;
+      flatNumber: string;
+      floor?: number;
+      flatType: FlatType;
+      monthlyAmount: number;
+    }) =>
       apiRequest<Flat>('/api/societies/flats', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -70,6 +97,21 @@ export function useCreateFlat() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flats'] });
       queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
+  });
+}
+
+export function useUpdateFlat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; flatType?: FlatType; monthlyAmount?: number }) =>
+      apiRequest<Flat>(`/api/societies/flats/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flats'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
     }
   });
 }
@@ -85,5 +127,34 @@ export function useSocietyMembers(role?: 'resident' | 'security_guard' | 'societ
   return useQuery({
     queryKey: ['members', { role }],
     queryFn: () => apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
+  });
+}
+
+// NOTE: like useCreateSociety, this does not refetch the session itself —
+// leaving clears societyId/role server-side, but Better Auth's useSession()
+// is a nanostores atom outside the TanStack Query cache. The caller must
+// call authClient.useSession().refetch() after a successful leave so the
+// navigation gate in app/_layout.tsx picks up the change and redirects to
+// onboarding.
+export function useLeaveSociety() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiRequest<{ id: string }>('/api/societies/leave', { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    }
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiRequest<{ id: string }>(`/api/societies/members/${userId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
   });
 }

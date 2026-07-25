@@ -11,6 +11,8 @@ const env = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
 
+  IMAGEKIT_PRIVATE_KEY: z.string(),
+
   CORS_ORIGINS: z
     .string()
     .optional()

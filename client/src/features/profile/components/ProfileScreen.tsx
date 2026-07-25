@@ -1,9 +1,11 @@
 import { Screen } from '@/components/Screen';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Colors } from '@/constants/colors';
-import { useSocietyDetails } from '@/features/society/services/use-society';
+import { useLeaveSociety, useSocietyDetails } from '@/features/society/services/use-society';
 import { authClient, useAppSession } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
@@ -17,17 +19,34 @@ const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string 
 ];
 
 export function ProfileScreen() {
-  const { data: session, isPending: isSessionPending } = useAppSession();
+  const { data: session, isPending: isSessionPending, refetch: refetchSession } = useAppSession();
   const { data: society, isLoading: isSocietyLoading } = useSocietyDetails();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { preference, setPreference } = useThemePreference();
+  const leaveSocietyMutation = useLeaveSociety();
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   const handleSignOut = async () => {
     try {
       WebBrowser.dismissAuthSession();
     } catch {}
     await authClient.signOut();
+  };
+
+  const performLeaveSociety = async () => {
+    setConfirmingLeave(false);
+    setLeaveError(null);
+    try {
+      await leaveSocietyMutation.mutateAsync();
+      // Session's societyId/role are now stale on the client — refetch so
+      // app/_layout.tsx's navigation gate sees the change and redirects to
+      // onboarding automatically.
+      await refetchSession();
+    } catch (e: any) {
+      setLeaveError(e.message ?? 'Failed to leave society');
+    }
   };
 
   if (isSessionPending || isSocietyLoading) {
@@ -181,6 +200,38 @@ export function ProfileScreen() {
             })}
           </View>
         </View>
+
+        {leaveError ? (
+          <View className="p-3 bg-danger/10 border border-danger/20 rounded-xl mb-4">
+            <Text className="text-danger font-sans text-xs">{leaveError}</Text>
+          </View>
+        ) : null}
+
+        {/* Leave Society */}
+        <Pressable
+          onPress={() => setConfirmingLeave(true)}
+          disabled={leaveSocietyMutation.isPending}
+          className="w-full py-4 rounded-xl bg-danger/10 border border-danger/20 active:bg-danger/20 items-center justify-center flex-row gap-2 mb-3"
+        >
+          {leaveSocietyMutation.isPending ? (
+            <ActivityIndicator size="small" color={theme.danger} />
+          ) : (
+            <>
+              <Ionicons name="exit-outline" size={18} color={theme.danger} />
+              <Text className="text-danger font-sans-semibold text-base">Leave Society</Text>
+            </>
+          )}
+        </Pressable>
+
+        <ConfirmDialog
+          visible={confirmingLeave}
+          title="Leave Society"
+          message={`Are you sure you want to leave ${society?.name ?? 'this society'}? You'll lose access to your flat, visitor history, and society features until you're invited again.`}
+          confirmLabel="Leave"
+          destructive
+          onConfirm={performLeaveSociety}
+          onCancel={() => setConfirmingLeave(false)}
+        />
 
         {/* Sign Out */}
         <Pressable

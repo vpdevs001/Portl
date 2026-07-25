@@ -3,7 +3,13 @@ import { z } from 'zod';
 import { sendSuccess } from '../../common/http/app-response';
 import { AppError } from '../../common/errors/app-error';
 import * as service from './society.service';
-import { createSocietySchema, createTowerSchema, createFlatSchema } from './society.schema';
+import {
+  createSocietySchema,
+  createTowerSchema,
+  createFlatSchema,
+  updateFlatSchema,
+  updateSocietyUpiIdSchema
+} from './society.schema';
 
 export async function createSociety(request: FastifyRequest, reply: FastifyReply) {
   if (!request.user) {
@@ -60,6 +66,21 @@ export async function createFlat(request: FastifyRequest, reply: FastifyReply) {
   return sendSuccess(reply, 201, flat);
 }
 
+const flatIdParamsSchema = z.object({ id: z.string().uuid() });
+
+export async function updateFlat(request: FastifyRequest, reply: FastifyReply) {
+  const societyId = request.user?.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { id } = flatIdParamsSchema.parse(request.params);
+  const dto = updateFlatSchema.parse(request.body);
+  const flat = await service.updateFlat(societyId, id, dto);
+
+  return sendSuccess(reply, 200, flat);
+}
+
 const listFlatsQuerySchema = z.object({
   towerId: z.string().uuid().optional()
 });
@@ -90,4 +111,43 @@ export async function listMembers(request: FastifyRequest, reply: FastifyReply) 
   const members = await service.listMembers(societyId, role);
 
   return sendSuccess(reply, 200, members);
+}
+
+export async function leaveSociety(request: FastifyRequest, reply: FastifyReply) {
+  if (!request.user) {
+    throw AppError.unauthorized('Authentication required');
+  }
+
+  const result = await service.leaveSociety(request.user.id);
+  return sendSuccess(reply, 200, result);
+}
+
+const removeMemberParamsSchema = z.object({ userId: z.string().uuid() });
+
+export async function removeMember(request: FastifyRequest, reply: FastifyReply) {
+  if (!request.user) {
+    throw AppError.unauthorized('Authentication required');
+  }
+
+  const societyId = request.user.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { userId } = removeMemberParamsSchema.parse(request.params);
+  const result = await service.removeMember(societyId, request.user.id, userId);
+
+  return sendSuccess(reply, 200, result);
+}
+
+export async function updateSocietyUpiId(request: FastifyRequest, reply: FastifyReply) {
+  const societyId = request.user?.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { upiId } = updateSocietyUpiIdSchema.parse(request.body);
+  const society = await service.updateSocietyUpiId(societyId, upiId);
+
+  return sendSuccess(reply, 200, society);
 }

@@ -1,9 +1,14 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { societies, towers, flats } from '../../common/db/schema/identity.schema';
 import { user } from '../../common/db/schema/auth.schema';
 import { AppError } from '../../common/errors/app-error';
-import type { CreateSocietyInput, CreateTowerInput, CreateFlatInput } from './society.schema';
+import type {
+  CreateSocietyInput,
+  CreateTowerInput,
+  CreateFlatInput,
+  UpdateFlatInput
+} from './society.schema';
 
 export async function createSocietyAndAssignAdmin(userId: string, dto: CreateSocietyInput) {
   return await db.transaction(async (tx) => {
@@ -81,7 +86,9 @@ export async function createFlat(societyId: string, dto: CreateFlatInput) {
       societyId,
       towerId: dto.towerId,
       flatNumber: dto.flatNumber,
-      floor: dto.floor ?? null
+      floor: dto.floor ?? null,
+      flatType: dto.flatType,
+      monthlyAmount: dto.monthlyAmount.toFixed(2)
     })
     .returning();
 
@@ -136,6 +143,28 @@ export async function listFlats(societyId: string, towerId?: string) {
   });
 }
 
+export async function updateFlat(societyId: string, flatId: string, dto: UpdateFlatInput) {
+  const flat = await db.query.flats.findFirst({ where: { id: flatId, societyId } });
+  if (!flat) {
+    throw AppError.notFound('Flat not found in this society');
+  }
+
+  const [updated] = await db
+    .update(flats)
+    .set({
+      ...(dto.flatType ? { flatType: dto.flatType } : {}),
+      ...(dto.monthlyAmount !== undefined ? { monthlyAmount: dto.monthlyAmount.toFixed(2) } : {})
+    })
+    .where(eq(flats.id, flatId))
+    .returning();
+
+  if (!updated) {
+    throw new AppError(500, 'DATABASE_ERROR', 'Failed to update flat');
+  }
+
+  return updated;
+}
+
 export async function listMembers(
   societyId: string,
   role?: 'resident' | 'security_guard' | 'society_admin'
@@ -144,4 +173,90 @@ export async function listMembers(
     where: role ? { societyId, role } : { societyId },
     orderBy: (u, { asc }) => [asc(u.name)]
   });
+}
+
+export async function leaveSociety(userId: string) {
+  return await db.transaction(async (tx) => {
+    const currentUser = await tx.query.user.findFirst({ where: { id: userId } });
+
+    if (!currentUser || !currentUser.societyId) {
+      throw AppError.forbidden('User does not belong to a society');
+    }
+
+    // A sole admin leaving would strand the society with no one able to
+    // manage it — require them to hand off admin duties to another member
+    // first (Chapter 17+ concern; for now this just blocks the action).
+    if (currentUser.role === 'society_admin') {
+      const [otherAdmin] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(user)
+        .where(
+          and(
+            eq(user.societyId, currentUser.societyId),
+            eq(user.role, 'society_admin'),
+            ne(user.id, userId)
+          )
+        );
+
+      if (!otherAdmin || otherAdmin.count === 0) {
+        throw AppError.conflict(
+          'You are the only admin in this society. Promote another member to admin before leaving.'
+        );
+      }
+    }
+
+    const [updated] = await tx
+      .update(user)
+      .set({ societyId: null, flatId: null, role: null })
+      .where(eq(user.id, userId))
+      .returning();
+
+    if (!updated) {
+      throw new AppError(500, 'DATABASE_ERROR', 'Failed to leave society');
+    }
+
+    return updated;
+  });
+}
+
+export async function removeMember(societyId: string, actorId: string, targetUserId: string) {
+  if (targetUserId === actorId) {
+    throw AppError.badRequest('Use the leave endpoint to remove yourself from a society');
+  }
+
+  return await db.transaction(async (tx) => {
+    const targetUser = await tx.query.user.findFirst({
+      where: { id: targetUserId, societyId }
+    });
+
+    if (!targetUser) {
+      throw AppError.notFound('Member not found in this society');
+    }
+
+    const [updated] = await tx
+      .update(user)
+      .set({ societyId: null, flatId: null, role: null })
+      .where(eq(user.id, targetUserId))
+      .returning();
+
+    if (!updated) {
+      throw new AppError(500, 'DATABASE_ERROR', 'Failed to remove member');
+    }
+
+    return updated;
+  });
+}
+
+export async function updateSocietyUpiId(societyId: string, upiId: string) {
+  const [updated] = await db
+    .update(societies)
+    .set({ upiId })
+    .where(eq(societies.id, societyId))
+    .returning();
+
+  if (!updated) {
+    throw AppError.notFound('Society not found');
+  }
+
+  return updated;
 }

@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, integer, numeric } from 'drizzle-orm/pg-core';
+import { flatTypeEnum } from './enums';
 
 export const societies = pgTable('societies', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -7,6 +8,11 @@ export const societies = pgTable('societies', {
   city: varchar('city', { length: 100 }).notNull(),
   state: varchar('state', { length: 100 }).notNull(),
   pincode: varchar('pincode', { length: 20 }).notNull(),
+
+  // The single UPI VPA residents pay maintenance dues into (Chapter 15).
+  // Belongs to the society, not any individual admin, so it stays stable
+  // across admin handovers (e.g. yearly treasurer rotation).
+  upiId: varchar('upi_id', { length: 100 }),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
@@ -39,6 +45,12 @@ export const flats = pgTable('flats', {
     .references(() => towers.id, { onDelete: 'cascade' }),
   flatNumber: varchar('flat_number', { length: 20 }).notNull(),
   floor: integer('floor'),
+  // Chapter 15 — set by the admin when the flat is created, editable
+  // later. Drives the amount used each time a monthly due is
+  // materialized for this flat; changing it only affects future dues,
+  // past ones keep their original snapshot.
+  flatType: flatTypeEnum('flat_type').notNull().default('1bhk'),
+  monthlyAmount: numeric('monthly_amount', { precision: 10, scale: 2 }).notNull().default('0'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')

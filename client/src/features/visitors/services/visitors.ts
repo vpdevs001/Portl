@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api';
+import { apiRequestOfflineAware } from '@/lib/offline-mutation';
 
 export type VisitorRequest = {
   id: string;
@@ -37,17 +38,21 @@ export async function respondToVisitorRequest(id: string, status: 'approved' | '
 }
 
 export async function logVisitorEntry(id: string) {
-  return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-entry`, {
-    method: 'POST',
-    body: JSON.stringify({})
-  });
+  // Chapter 17 — queues locally via SQLite if the gate loses connectivity
+  // mid-shift, rather than failing the guard's tap outright.
+  return apiRequestOfflineAware<{ id: string }>(
+    `/api/visitors/request/${id}/log-entry`,
+    { method: 'POST', body: JSON.stringify({}) },
+    { id: 'queued-offline' }
+  );
 }
 
 export async function logVisitorExit(id: string) {
-  return apiRequest<{ id: string }>(`/api/visitors/request/${id}/log-exit`, {
-    method: 'POST',
-    body: JSON.stringify({})
-  });
+  return apiRequestOfflineAware<{ id: string }>(
+    `/api/visitors/request/${id}/log-exit`,
+    { method: 'POST', body: JSON.stringify({}) },
+    { id: 'queued-offline' }
+  );
 }
 
 export async function uploadVisitorPhoto(payload: {

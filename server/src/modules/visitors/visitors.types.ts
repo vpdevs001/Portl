@@ -31,11 +31,6 @@ export type UploadVisitorPhotoInput = {
   base64: string;
 };
 
-export type RegisterPushTokenInput = {
-  expoPushToken: string;
-  deviceId?: string;
-};
-
 export type CreatePreApprovalInput = {
   name: string;
   phone?: string;

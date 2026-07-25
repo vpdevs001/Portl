@@ -3,7 +3,7 @@ import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { ERROR_CODES } from '../../common/errors/error-codes';
 import { maintenanceDues, paymentConfirmations } from '../../common/db/schema';
-import { sendPushNotifications } from '../../lib/push';
+import { sendPushToUsers } from '../../common/services/push.service';
 import { uploadToImageKit } from '../../lib/imagekit';
 import type {
   Caller,
@@ -287,41 +287,26 @@ async function notifyAdmins(societyId: string, period: string) {
     columns: { id: true }
   });
 
-  if (admins.length === 0) {
-    return;
-  }
-
-  const tokens = await db.query.pushTokens.findMany({
-    where: { userId: { in: admins.map((a) => a.id) } },
-    columns: { expoPushToken: true }
-  });
-
-  await sendPushNotifications(
-    tokens.map((t) => t.expoPushToken),
+  await sendPushToUsers(
+    admins.map((a) => a.id),
     {
       title: 'New payment confirmation',
       body: `A resident submitted a payment proof for ${period}`,
-      data: { type: 'payment_confirmation' }
+      screen: '/(app)/admin/payments/review',
+      params: {}
     }
   );
 }
 
 async function notifyResident(confirmation: typeof paymentConfirmations.$inferSelect) {
-  const tokens = await db.query.pushTokens.findMany({
-    where: { userId: confirmation.raisedBy },
-    columns: { expoPushToken: true }
-  });
-
   const approved = confirmation.status === 'approved';
 
-  await sendPushNotifications(
-    tokens.map((t) => t.expoPushToken),
-    {
-      title: approved ? 'Payment verified' : 'Payment rejected',
-      body: approved
-        ? 'Your maintenance payment has been confirmed as paid.'
-        : `Your payment proof was rejected${confirmation.rejectionReason ? `: ${confirmation.rejectionReason}` : '.'}`,
-      data: { dueId: confirmation.dueId, type: 'payment_confirmation' }
-    }
-  );
+  await sendPushToUsers([confirmation.raisedBy], {
+    title: approved ? 'Payment verified' : 'Payment rejected',
+    body: approved
+      ? 'Your maintenance payment has been confirmed as paid.'
+      : `Your payment proof was rejected${confirmation.rejectionReason ? `: ${confirmation.rejectionReason}` : '.'}`,
+    screen: '/(app)/payments',
+    params: { dueId: confirmation.dueId }
+  });
 }

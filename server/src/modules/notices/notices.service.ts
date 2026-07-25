@@ -2,8 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { ERROR_CODES } from '../../common/errors/error-codes';
-import { notices, pushTokens, user } from '../../common/db/schema';
-import { sendPushNotifications } from '../../lib/push';
+import { notices } from '../../common/db/schema';
+import { sendPushToUsers } from '../../common/services/push.service';
 import type {
   Caller,
   CreateNoticeInput,
@@ -36,18 +36,18 @@ export async function createNotice(caller: Caller, dto: CreateNoticeInput) {
 }
 
 async function notifySociety(notice: typeof notices.$inferSelect) {
-  const tokens = await db
-    .select({ token: pushTokens.expoPushToken })
-    .from(pushTokens)
-    .innerJoin(user, eq(user.id, pushTokens.userId))
-    .where(eq(user.societyId, notice.societyId));
+  const recipients = await db.query.user.findMany({
+    where: { societyId: notice.societyId },
+    columns: { id: true }
+  });
 
-  await sendPushNotifications(
-    tokens.map((t) => t.token),
+  await sendPushToUsers(
+    recipients.map((row) => row.id),
     {
       title: 'New society notice',
       body: notice.title,
-      data: { noticeId: notice.id, type: 'notice' }
+      screen: '/(app)/notices',
+      params: { noticeId: notice.id }
     }
   );
 }

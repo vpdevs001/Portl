@@ -1,13 +1,12 @@
 import { randomInt } from 'node:crypto';
-import { and, eq, inArray, isNull, lt } from 'drizzle-orm';
+import { and, eq, isNull, lt } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
-import { sendPushNotifications } from '../../lib/push';
+import { sendPushToUsers } from '../../common/services/push.service';
 import { uploadToImageKit } from '../../lib/imagekit';
 import {
   cabDetails,
   deliveryDetails,
-  pushTokens,
   serviceStaffDetails,
   visitorEntryLogs,
   visitorRequests
@@ -15,7 +14,6 @@ import {
 import type {
   CreatePreApprovalInput,
   CreateVisitorRequestInput,
-  RegisterPushTokenInput,
   RespondVisitorRequestInput,
   UploadVisitorPhotoInput,
   VerifyPassInput
@@ -117,23 +115,12 @@ async function notifyApprovers(request: typeof visitorRequests.$inferSelect) {
           ).map((row) => row.id)
         : [];
 
-  if (recipientIds.length === 0) {
-    return;
-  }
-
-  const tokens = await db
-    .select({ token: pushTokens.expoPushToken })
-    .from(pushTokens)
-    .where(inArray(pushTokens.userId, recipientIds));
-
-  await sendPushNotifications(
-    tokens.map((t) => t.token),
-    {
-      title: 'New visitor at the gate',
-      body: `${request.name} is waiting — ${request.visitorType.replace('_', ' ')}`,
-      data: { visitorRequestId: request.id, type: 'visitor_request' }
-    }
-  );
+  await sendPushToUsers(recipientIds, {
+    title: 'New visitor at the gate',
+    body: `${request.name} is waiting — ${request.visitorType.replace('_', ' ')}`,
+    screen: '/(app)/home',
+    params: { requestId: request.id }
+  });
 }
 
 async function expirePendingRequests(societyId: string) {
@@ -397,23 +384,6 @@ export async function uploadVisitorPhoto(input: UploadVisitorPhotoInput) {
     fileName: input.fileName,
     contentType: input.contentType
   };
-}
-
-export async function registerPushToken(userId: string, dto: RegisterPushTokenInput) {
-  const [token] = await db
-    .insert(pushTokens)
-    .values({
-      userId,
-      expoPushToken: dto.expoPushToken,
-      deviceId: dto.deviceId ?? null
-    })
-    .onConflictDoUpdate({
-      target: [pushTokens.userId, pushTokens.expoPushToken],
-      set: { deviceId: dto.deviceId ?? null }
-    })
-    .returning();
-
-  return token;
 }
 
 // ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────

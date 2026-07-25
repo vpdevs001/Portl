@@ -61,11 +61,6 @@ export const uploadVisitorPhotoSchema = z.object({
   base64: z.string().min(1)
 });
 
-export const registerPushTokenSchema = z.object({
-  expoPushToken: z.string().min(1),
-  deviceId: z.string().optional()
-});
-
 export const createPreApprovalSchema = z
   .object({
     name: z.string().min(1),

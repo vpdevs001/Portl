@@ -2,8 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { ERROR_CODES } from '../../common/errors/error-codes';
-import { complaints, pushTokens } from '../../common/db/schema';
-import { sendPushNotifications } from '../../lib/push';
+import { complaints } from '../../common/db/schema';
+import { sendPushToUsers } from '../../common/services/push.service';
 import type { Caller, CreateComplaintInput, UpdateComplaintStatusInput } from './complaints.types';
 
 export async function createComplaint(caller: Caller, dto: CreateComplaintInput) {
@@ -112,19 +112,12 @@ export async function updateComplaintStatus(
 }
 
 async function notifyReporter(complaint: typeof complaints.$inferSelect) {
-  const tokens = await db
-    .select({ token: pushTokens.expoPushToken })
-    .from(pushTokens)
-    .where(eq(pushTokens.userId, complaint.raisedBy));
-
   const statusLabel = complaint.status.replace('_', ' ');
 
-  await sendPushNotifications(
-    tokens.map((t) => t.token),
-    {
-      title: 'Your complaint was updated',
-      body: `"${complaint.title}" is now ${statusLabel}`,
-      data: { complaintId: complaint.id, type: 'complaint' }
-    }
-  );
+  await sendPushToUsers([complaint.raisedBy], {
+    title: 'Your complaint was updated',
+    body: `"${complaint.title}" is now ${statusLabel}`,
+    screen: '/(app)/complaints',
+    params: { complaintId: complaint.id }
+  });
 }

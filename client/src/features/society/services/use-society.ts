@@ -129,3 +129,32 @@ export function useSocietyMembers(role?: 'resident' | 'security_guard' | 'societ
     queryFn: () => apiRequest<UserMember[]>(`/api/societies/members${role ? `?role=${role}` : ''}`)
   });
 }
+
+// NOTE: like useCreateSociety, this does not refetch the session itself —
+// leaving clears societyId/role server-side, but Better Auth's useSession()
+// is a nanostores atom outside the TanStack Query cache. The caller must
+// call authClient.useSession().refetch() after a successful leave so the
+// navigation gate in app/_layout.tsx picks up the change and redirects to
+// onboarding.
+export function useLeaveSociety() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiRequest<{ id: string }>('/api/societies/leave', { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    }
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiRequest<{ id: string }>(`/api/societies/members/${userId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
+  });
+}

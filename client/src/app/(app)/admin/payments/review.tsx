@@ -99,7 +99,7 @@ export default function ReviewPaymentsScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="my-4"
-          contentContainerClassName="gap-0"
+          contentContainerClassName="gap-2"
         >
           {FILTERS.map((f) => (
             <FilterPill

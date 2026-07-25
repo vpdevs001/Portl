@@ -6,6 +6,7 @@ import {
   useRespondToVisitorRequest
 } from '@/features/visitors/hooks/use-visitors';
 import { VisitorResidentCard } from './VisitorResidentCard';
+import { SocietyMembersSection } from './SocietyMembersSection';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
@@ -63,33 +64,37 @@ export function AdminHome() {
           </Text>
         </View>
 
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
-            {!data || data.length === 0 ? (
-              <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[200px]">
-                <Ionicons name="shield-checkmark-outline" size={28} color={theme.primary} />
-                <Text className="text-base font-serif-semibold text-foreground mt-3">
-                  {HOME_CONSTANTS.ADMIN.EMPTY_TITLE}
-                </Text>
-                <Text className="text-sm font-sans text-foreground-secondary text-center mt-2 px-4">
-                  {HOME_CONSTANTS.ADMIN.EMPTY_SUBTITLE}
-                </Text>
-              </View>
-            ) : (
-              data.map((request) => (
-                <VisitorResidentCard
-                  key={request.id}
-                  request={request}
-                  onRespond={(id, status) => respond.mutate({ id, status })}
-                />
-              ))
-            )}
-          </ScrollView>
-        )}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
+          <SocietyMembersSection />
+
+          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
+            Pending Approvals
+          </Text>
+
+          {isLoading ? (
+            <View className="items-center justify-center py-10">
+              <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+          ) : !data || data.length === 0 ? (
+            <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[200px]">
+              <Ionicons name="shield-checkmark-outline" size={28} color={theme.primary} />
+              <Text className="text-base font-serif-semibold text-foreground mt-3">
+                {HOME_CONSTANTS.ADMIN.EMPTY_TITLE}
+              </Text>
+              <Text className="text-sm font-sans text-foreground-secondary text-center mt-2 px-4">
+                {HOME_CONSTANTS.ADMIN.EMPTY_SUBTITLE}
+              </Text>
+            </View>
+          ) : (
+            data.map((request) => (
+              <VisitorResidentCard
+                key={request.id}
+                request={request}
+                onRespond={(id, status) => respond.mutate({ id, status })}
+              />
+            ))
+          )}
+        </ScrollView>
       </View>
     </Screen>
   );

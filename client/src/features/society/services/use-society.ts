@@ -37,6 +37,20 @@ export function useSocietyDetails() {
   });
 }
 
+export function useUpdateSocietyUpiId() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { upiId: string }) =>
+      apiRequest<Society>('/api/societies/upi', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
+  });
+}
+
 export function useCreateTower() {
   const queryClient = useQueryClient();
   return useMutation({

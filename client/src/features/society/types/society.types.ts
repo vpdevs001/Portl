@@ -9,6 +9,7 @@ export interface Society {
   city: string;
   state: string;
   pincode: string;
+  upiId: string | null;
   createdAt: string;
   updatedAt: string;
 }

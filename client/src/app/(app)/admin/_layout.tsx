@@ -8,6 +8,8 @@ export default function AdminLayout() {
       <Stack.Screen name="amenities/create" />
       <Stack.Screen name="staff/manage" />
       <Stack.Screen name="gate-logs" />
+      <Stack.Screen name="payments/review" />
+      <Stack.Screen name="payments/generate-selected" />
     </Stack>
   );
 }

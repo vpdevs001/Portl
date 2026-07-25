@@ -78,8 +78,7 @@ export default function StaffDirectoryScreen() {
         {/* Admin Action Button */}
         {isAdmin && (
           <Pressable
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onPress={() => router.push('/(app)/admin/staff/manage' as any)}
+            onPress={() => router.push('/(app)/admin/staff/manage')}
             className="flex-row items-center justify-center bg-primary rounded-xl py-3.5 px-4 mb-5"
           >
             <Ionicons name="person-add-outline" size={18} color={theme.primaryForeground} />
@@ -182,8 +181,7 @@ export default function StaffDirectoryScreen() {
                     <>
                       <Pressable
                         onPress={() =>
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (router.push as any)({
+                          router.push({
                             pathname: '/(app)/admin/staff/manage',
                             params: {
                               id: item.id,

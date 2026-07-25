@@ -15,7 +15,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import { FilterPill } from '@/components/FilterPill';
+import { getErrorMessage } from '@/lib/errors';
 import { useDues, useSetDueStatus, useVerifyPayment } from '@/features/payments/hooks/use-payments';
 import { useSocietyDetails, useUpdateSocietyUpiId } from '@/features/society/services/use-society';
 import type { DueStatus, MaintenanceDue } from '@/features/payments/services/payments';
@@ -102,12 +102,21 @@ export default function ReviewPaymentsScreen() {
           contentContainerClassName="gap-2"
         >
           {FILTERS.map((f) => (
-            <FilterPill
+            <Pressable
               key={f.value}
-              label={f.label}
-              active={filter === f.value}
               onPress={() => setFilter(f.value)}
-            />
+              className={`self-start p-2 rounded-md border mr-2 ${
+                filter === f.value ? 'bg-primary border-primary' : 'bg-card border-border'
+              }`}
+            >
+              <Text
+                className={`text-xs font-sans-bold ${
+                  filter === f.value ? 'text-primary-foreground' : 'text-foreground-secondary'
+                }`}
+              >
+                {f.label}
+              </Text>
+            </Pressable>
           ))}
         </ScrollView>
 
@@ -133,9 +142,10 @@ export default function ReviewPaymentsScreen() {
           </View>
         ) : (
           <ScrollView
+            key={filter}
             showsVerticalScrollIndicator={false}
             contentContainerClassName="pb-20"
-            className="mt-1"
+            className="flex-1 mt-1"
           >
             {dues.map((due) => (
               <DueCard key={due.id} due={due} onViewScreenshot={(url) => setLightboxUrl(url)} />
@@ -378,7 +388,7 @@ function UpiSettingsModal({ visible, onClose }: { visible: boolean; onClose: () 
       await updateUpiId.mutateAsync({ upiId: trimmed });
       handleClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save UPI ID');
+      setError(getErrorMessage(e));
     }
   }
 

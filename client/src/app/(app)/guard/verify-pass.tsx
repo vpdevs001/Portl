@@ -13,6 +13,7 @@ import {
   useVerifyPass
 } from '@/features/visitors/hooks/use-visitors';
 import type { PreApproval } from '@/features/visitors/services/visitors';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function VerifyPassScreen() {
   const router = useRouter();
@@ -150,9 +151,7 @@ export default function VerifyPassScreen() {
             {verifyPass.isError ? (
               <View className="mt-4 rounded-xl bg-danger/10 border border-danger/20 p-3">
                 <Text className="text-sm font-sans text-danger">
-                  {verifyPass.error instanceof Error
-                    ? verifyPass.error.message
-                    : 'Could not verify this pass'}
+                  {getErrorMessage(verifyPass.error)}
                 </Text>
                 <Pressable onPress={handleReset} className="mt-2">
                   <Text className="text-xs font-sans-bold text-primary">Try again</Text>

@@ -45,7 +45,9 @@ export function useCreateVisitorRequest() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pending'] });
       queryClient.invalidateQueries({ queryKey: ['logs'] });
-    }
+    },
+    // features/visitors/components/RegisterVisitorScreen.tsx renders its own inline error banner.
+    meta: { suppressErrorToast: true }
   });
 }
 
@@ -118,7 +120,9 @@ export function useCreatePreApproval() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['visitors', 'pre-approvals'] });
-    }
+    },
+    // pre-approvals/create.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 
@@ -130,6 +134,8 @@ export function useVerifyPass() {
     },
     onError: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
+    },
+    // guard/verify-pass.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }

@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, numeric } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+  integer,
+  numeric,
+  index
+} from 'drizzle-orm/pg-core';
 import { flatTypeEnum } from './enums';
 
 export const societies = pgTable('societies', {
@@ -21,40 +30,51 @@ export const societies = pgTable('societies', {
     .$onUpdate(() => new Date())
 });
 
-export const towers = pgTable('towers', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  societyId: uuid('society_id')
-    .notNull()
-    .references(() => societies.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 100 }).notNull(),
+export const towers = pgTable(
+  'towers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    societyId: uuid('society_id')
+      .notNull()
+      .references(() => societies.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date())
-});
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date())
+  },
+  (table) => [index('towers_society_id_idx').on(table.societyId)]
+);
 
-export const flats = pgTable('flats', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  societyId: uuid('society_id')
-    .notNull()
-    .references(() => societies.id, { onDelete: 'cascade' }),
-  towerId: uuid('tower_id')
-    .notNull()
-    .references(() => towers.id, { onDelete: 'cascade' }),
-  flatNumber: varchar('flat_number', { length: 20 }).notNull(),
-  floor: integer('floor'),
-  // Chapter 15 — set by the admin when the flat is created, editable
-  // later. Drives the amount used each time a monthly due is
-  // materialized for this flat; changing it only affects future dues,
-  // past ones keep their original snapshot.
-  flatType: flatTypeEnum('flat_type').notNull().default('1bhk'),
-  monthlyAmount: numeric('monthly_amount', { precision: 10, scale: 2 }).notNull().default('0'),
+export const flats = pgTable(
+  'flats',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    societyId: uuid('society_id')
+      .notNull()
+      .references(() => societies.id, { onDelete: 'cascade' }),
+    towerId: uuid('tower_id')
+      .notNull()
+      .references(() => towers.id, { onDelete: 'cascade' }),
+    flatNumber: varchar('flat_number', { length: 20 }).notNull(),
+    floor: integer('floor'),
+    // Chapter 15 — set by the admin when the flat is created, editable
+    // later. Drives the amount used each time a monthly due is
+    // materialized for this flat; changing it only affects future dues,
+    // past ones keep their original snapshot.
+    flatType: flatTypeEnum('flat_type').notNull().default('1bhk'),
+    monthlyAmount: numeric('monthly_amount', { precision: 10, scale: 2 }).notNull().default('0'),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date())
-});
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date())
+  },
+  (table) => [
+    index('flats_society_id_idx').on(table.societyId),
+    index('flats_tower_id_idx').on(table.towerId)
+  ]
+);

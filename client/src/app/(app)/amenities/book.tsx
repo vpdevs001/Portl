@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 import {
   useAmenities,
   useBookAmenity,
@@ -159,7 +160,7 @@ export default function BookAmenityScreen() {
       });
       setShowSuccessModal(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Booking failed. Please try again.');
+      setError(getErrorMessage(e));
     }
   }
 

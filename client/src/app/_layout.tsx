@@ -6,7 +6,10 @@ import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { ToastProvider } from '@/components/Toast';
 import { ThemeProvider } from '@/hooks/useColorScheme';
+import { AppLockProvider, useAppLock } from '@/hooks/useAppLock';
+import { AppLockScreen } from '@/components/AppLockScreen';
 import { fontsToLoad } from '@/constants/fonts';
 import { useAppSession } from '@/lib/auth-client';
 
@@ -17,6 +20,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 function RootNavigation() {
   const { data: session, isPending } = useAppSession();
+  const { locked, isReady: appLockReady } = useAppLock();
   const segments = useSegments();
   const router = useRouter();
 
@@ -46,12 +50,19 @@ function RootNavigation() {
     }
   }, [session, isPending, segments, router]);
 
-  if (isPending) {
+  if (isPending || !appLockReady) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#a9832e" />
       </View>
     );
+  }
+
+  // The lock screen sits above the Stack rather than replacing it, so the
+  // underlying route tree stays mounted (scroll position, form state, etc.
+  // survive a lock/unlock cycle instead of being torn down and rebuilt).
+  if (locked) {
+    return <AppLockScreen />;
   }
 
   return (
@@ -80,7 +91,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <QueryProvider>
-          <RootNavigation />
+          <ToastProvider>
+            <AppLockProvider>
+              <RootNavigation />
+            </AppLockProvider>
+          </ToastProvider>
         </QueryProvider>
       </ThemeProvider>
     </SafeAreaProvider>

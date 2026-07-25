@@ -119,9 +119,9 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Society Settings',
     subtitle: 'Society parameters & configuration',
     icon: 'settings-outline',
-    route: '/(app)/feature-preview?id=society-settings',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/society-settings',
+    isLive: true,
+    category: 'Management'
   }
 ];
 
@@ -181,22 +181,13 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     category: 'Gate Operations'
   },
   {
-    id: 'staff-checkin',
-    label: 'Staff Check-in Log',
-    subtitle: 'Daily staff entry & exit register',
-    icon: 'badge-vr-outline',
-    route: '/(app)/guard/resident-search',
-    isLive: true,
-    category: 'Gate Operations'
-  },
-  {
     id: 'emergency',
     label: 'Emergency Alert Hotline',
     subtitle: 'Instant alert to admin & residents',
     icon: 'alert-circle-outline',
-    route: '/(app)/feature-preview?id=emergency',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/guard/emergency-alert',
+    isLive: true,
+    category: 'Gate Operations'
   }
 ];
 
@@ -233,9 +224,9 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     label: 'Visitor Entry History',
     subtitle: 'Log of guests who entered your flat',
     icon: 'time-outline',
-    route: '/(app)/feature-preview?id=visitor-history',
-    isLive: false,
-    category: 'Backend Ready'
+    route: '/(app)/visitor-history',
+    isLive: true,
+    category: 'Community'
   },
   {
     id: 'maintenance',

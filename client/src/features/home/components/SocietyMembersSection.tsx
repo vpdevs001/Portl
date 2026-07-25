@@ -13,6 +13,18 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+// Priority when a flat somehow has more than one due row this month:
+// review (a proof is actively awaiting the admin) outranks pending,
+// which outranks paid, so the dot always reflects the thing needing
+// the most attention.
+const DUE_STATUS_RANK = { review: 2, pending: 1, paid: 0 } as const;
+
+const DUE_DOT_META: Record<keyof typeof DUE_STATUS_RANK, { dotClass: string; label: string }> = {
+  pending: { dotClass: 'bg-danger', label: 'Pending' },
+  review: { dotClass: 'bg-warning', label: 'Review' },
+  paid: { dotClass: 'bg-success', label: 'Paid' }
+};
+
 /**
  * Admin-only "Society Members" list — shown on the admin Home tab.
  *
@@ -38,15 +50,14 @@ export function SocietyMembersSection() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // flatId -> true if that flat has any unpaid/under-review due this
-  // month. No entry (undefined) means paid, no due yet, or not a resident.
+  // flatId -> this month's due status for that flat ('pending' | 'review' |
+  // 'paid'). No entry (undefined) means no due yet or not a resident.
   const duesByFlatId = useMemo(() => {
-    const map = new Map<string, boolean>();
+    const map = new Map<string, keyof typeof DUE_STATUS_RANK>();
     for (const due of dues ?? []) {
-      if (due.status !== 'paid') {
-        map.set(due.flatId, true);
-      } else if (!map.has(due.flatId)) {
-        map.set(due.flatId, false);
+      const existing = map.get(due.flatId);
+      if (!existing || DUE_STATUS_RANK[due.status] > DUE_STATUS_RANK[existing]) {
+        map.set(due.flatId, due.status);
       }
     }
     return map;
@@ -114,7 +125,8 @@ export function SocietyMembersSection() {
           {members.map((member) => {
             const isSelf = member.id === session?.user?.id;
             const label = flatLabel(member.flatId);
-            const hasDue = member.flatId ? duesByFlatId.get(member.flatId) : undefined;
+            const dueStatus = member.flatId ? duesByFlatId.get(member.flatId) : undefined;
+            const dueDot = dueStatus ? DUE_DOT_META[dueStatus] : null;
             const isRemoving = removingId === member.id && removeMemberMutation.isPending;
 
             return (
@@ -136,11 +148,14 @@ export function SocietyMembersSection() {
                       {member.name}
                     </Text>
                     {isSelf && <Text className="text-[10px] font-sans text-muted">(You)</Text>}
-                    {hasDue && (
+                    {dueDot && (
                       <View
-                        className="w-2 h-2 rounded-full bg-danger"
-                        accessibilityLabel="Has outstanding dues"
-                      />
+                        className="flex-row items-center gap-1"
+                        accessibilityLabel={`Maintenance due: ${dueDot.label}`}
+                      >
+                        <View className={`w-2 h-2 rounded-full ${dueDot.dotClass}`} />
+                        <Text className="text-[10px] font-sans text-muted">{dueDot.label}</Text>
+                      </View>
                     )}
                   </View>
                   <Text className="text-xs font-sans text-muted capitalize" numberOfLines={1}>

@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { authClient } from '@/lib/auth-client';
+import { getErrorMessage } from '@/lib/errors';
 import { Colors } from '@/constants/colors';
 
 export function SignInScreen() {
@@ -42,13 +43,13 @@ export function SignInScreen() {
         setError(signInError.message ?? 'Google sign-in failed');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const rawMessage = err instanceof Error ? err.message : String(err);
       // Swallow the "invalid state" error — it means the browser was already
       // open/closed without completing OAuth. Just reset so the user can retry.
-      if (msg.includes('invalid state')) {
+      if (rawMessage.includes('invalid state')) {
         setError('Sign-in was interrupted. Please try again.');
       } else {
-        setError(msg || 'An unexpected error occurred. Please try again.');
+        setError(getErrorMessage(err));
       }
     } finally {
       inFlightRef.current = false;

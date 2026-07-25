@@ -45,9 +45,20 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
   };
 
   const items = getDrawerItemsForRole(role);
-  const liveItems = items.filter((i) => i.isLive);
-  const backendItems = items.filter((i) => !i.isLive);
   const roleTitle = ROLE_LABELS[role] ?? 'Resident';
+
+  // Group items by category, preserving the order categories first appear
+  // in the array (rather than alphabetizing or hard-coding an order here).
+  const categories: string[] = [];
+  const itemsByCategory = new Map<string, typeof items>();
+  for (const item of items) {
+    const category = item.category ?? 'General';
+    if (!itemsByCategory.has(category)) {
+      categories.push(category);
+      itemsByCategory.set(category, []);
+    }
+    itemsByCategory.get(category)!.push(item);
+  }
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -120,87 +131,38 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
             >
-              {/* Category: Live Screens */}
-              <View className="mb-5">
-                <View className="flex-row items-center justify-between mb-2.5 px-2">
-                  <Text className="text-[11px] font-sans-bold text-primary tracking-wider uppercase">
-                    Active Features
-                  </Text>
-                  <View className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                    <Text className="text-[9px] font-sans-bold text-emerald-600 dark:text-emerald-400">
-                      LIVE
+              {categories.map((category) => (
+                <View key={category} className="mb-5">
+                  <View className="mb-2.5 px-2">
+                    <Text className="text-[11px] font-sans-bold text-primary tracking-wider uppercase">
+                      {category}
                     </Text>
                   </View>
-                </View>
 
-                {liveItems.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => handleNavigate(item.route)}
-                    className="flex-row items-center gap-3 p-3 mb-1.5 rounded-xl bg-card border border-border/60 active:bg-surface"
-                  >
-                    <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
-                      <Ionicons name={item.icon as never} size={18} color={theme.primary} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-sm font-sans-semibold text-foreground">
-                        {item.label}
-                      </Text>
-                      {item.subtitle && (
-                        <Text className="text-[11px] font-sans text-muted" numberOfLines={1}>
-                          {item.subtitle}
-                        </Text>
-                      )}
-                    </View>
-                    <Ionicons name="chevron-forward" size={14} color={theme.muted} />
-                  </Pressable>
-                ))}
-              </View>
-
-              {/* Category: Backend Ready Dummy Features */}
-              {backendItems.length > 0 && (
-                <View className="mb-4">
-                  <View className="flex-row items-center justify-between mb-2.5 px-2">
-                    <Text className="text-[11px] font-sans-bold text-amber-600 dark:text-amber-400 tracking-wider uppercase">
-                      Backend Built (Preview)
-                    </Text>
-                    <View className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30">
-                      <Text className="text-[9px] font-sans-bold text-amber-600 dark:text-amber-400">
-                        API READY
-                      </Text>
-                    </View>
-                  </View>
-
-                  {backendItems.map((item) => (
+                  {itemsByCategory.get(category)!.map((item) => (
                     <Pressable
                       key={item.id}
                       onPress={() => handleNavigate(item.route)}
-                      className="flex-row items-center gap-3 p-3 mb-1.5 rounded-xl bg-surface border border-border/40 active:bg-card opacity-90"
+                      className="flex-row items-center gap-3 p-3 mb-1.5 rounded-xl bg-card border border-border/60 active:bg-surface"
                     >
-                      <View className="w-9 h-9 rounded-lg bg-amber-500/10 items-center justify-center">
-                        <Ionicons
-                          name={item.icon as never}
-                          size={18}
-                          color={colorScheme === 'dark' ? '#fbbf24' : '#d97706'}
-                        />
+                      <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
+                        <Ionicons name={item.icon as never} size={18} color={theme.primary} />
                       </View>
                       <View className="flex-1">
-                        <View className="flex-row items-center gap-1.5">
-                          <Text className="text-sm font-sans-medium text-foreground">
-                            {item.label}
-                          </Text>
-                        </View>
+                        <Text className="text-sm font-sans-semibold text-foreground">
+                          {item.label}
+                        </Text>
                         {item.subtitle && (
                           <Text className="text-[11px] font-sans text-muted" numberOfLines={1}>
                             {item.subtitle}
                           </Text>
                         )}
                       </View>
-                      <Ionicons name="sparkles-outline" size={14} color={theme.primary} />
+                      <Ionicons name="chevron-forward" size={14} color={theme.muted} />
                     </Pressable>
                   ))}
                 </View>
-              )}
+              ))}
             </ScrollView>
 
             {/* Footer Actions */}

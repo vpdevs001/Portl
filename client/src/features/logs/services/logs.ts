@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api';
+import { apiRequestOfflineAware } from '@/lib/offline-mutation';
 
 export type GateLog = {
   id: string;
@@ -64,15 +65,19 @@ export async function fetchGateStaff(search?: string) {
 }
 
 export async function logResidentEntry(userId: string, action: 'entry' | 'exit') {
-  return apiRequest<{ id: string }>('/api/logs/resident', {
-    method: 'POST',
-    body: JSON.stringify({ userId, action })
-  });
+  // Chapter 17 — one of the four gate-side writes that queues locally
+  // (SQLite) instead of failing outright when the gate loses connectivity.
+  return apiRequestOfflineAware<{ id: string }>(
+    '/api/logs/resident',
+    { method: 'POST', body: JSON.stringify({ userId, action }) },
+    { id: 'queued-offline' }
+  );
 }
 
 export async function logStaffEntry(staffId: string, action: 'entry' | 'exit') {
-  return apiRequest<{ id: string }>('/api/logs/staff', {
-    method: 'POST',
-    body: JSON.stringify({ staffId, action })
-  });
+  return apiRequestOfflineAware<{ id: string }>(
+    '/api/logs/staff',
+    { method: 'POST', body: JSON.stringify({ staffId, action }) },
+    { id: 'queued-offline' }
+  );
 }

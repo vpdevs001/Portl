@@ -15,6 +15,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 import { useCreatePoll } from '@/features/polls/hooks/use-polls';
 
 function formatDate(date: Date) {
@@ -101,7 +102,7 @@ export default function CreatePollScreen() {
 
       router.replace('/(app)/polls');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create poll');
+      setError(getErrorMessage(e));
     }
   }
 

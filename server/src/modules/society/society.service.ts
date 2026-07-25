@@ -7,7 +7,8 @@ import type {
   CreateSocietyInput,
   CreateTowerInput,
   CreateFlatInput,
-  UpdateFlatInput
+  UpdateFlatInput,
+  UpdateSocietyDetailsInput
 } from './society.schema';
 
 export async function createSocietyAndAssignAdmin(userId: string, dto: CreateSocietyInput) {
@@ -251,6 +252,24 @@ export async function updateSocietyUpiId(societyId: string, upiId: string) {
   const [updated] = await db
     .update(societies)
     .set({ upiId })
+    .where(eq(societies.id, societyId))
+    .returning();
+
+  if (!updated) {
+    throw AppError.notFound('Society not found');
+  }
+
+  return updated;
+}
+
+export async function updateSocietyDetails(societyId: string, dto: UpdateSocietyDetailsInput) {
+  if (Object.keys(dto).length === 0) {
+    throw AppError.badRequest('Provide at least one field to update');
+  }
+
+  const [updated] = await db
+    .update(societies)
+    .set(dto)
     .where(eq(societies.id, societyId))
     .returning();
 

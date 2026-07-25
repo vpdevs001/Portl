@@ -37,7 +37,9 @@ export function useConfirmPayment() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: DUES_KEY });
-    }
+    },
+    // payments/index.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 

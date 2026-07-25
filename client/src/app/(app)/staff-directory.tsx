@@ -15,7 +15,6 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { FilterPill } from '@/components/FilterPill';
 import { useStaff, useRemoveStaff } from '@/features/staff/hooks/use-staff';
 import { useAppSession } from '@/lib/auth-client';
 import type { StaffMember } from '@/features/staff/services/staff';
@@ -115,12 +114,20 @@ export default function StaffDirectoryScreen() {
             keyExtractor={(item) => item}
             contentContainerClassName="gap-2"
             renderItem={({ item }) => (
-              <FilterPill
-                label={item}
-                active={selectedRole === item}
+              <Pressable
                 onPress={() => setSelectedRole(item)}
-                className="mr-0"
-              />
+                className={`self-start p-2 rounded-md border ${
+                  selectedRole === item ? 'bg-primary border-primary' : 'bg-card border-border'
+                }`}
+              >
+                <Text
+                  className={`text-xs font-sans-bold ${
+                    selectedRole === item ? 'text-primary-foreground' : 'text-foreground-secondary'
+                  }`}
+                >
+                  {item}
+                </Text>
+              </Pressable>
             )}
           />
         </View>

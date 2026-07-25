@@ -28,7 +28,12 @@ export async function visitorsRoutes(app: FastifyInstance) {
 
   app.put(
     '/api/visitors/request/:id/respond',
-    { preHandler: [requireAuth, requireSociety, requireRole('resident', 'society_admin')] },
+    {
+      preHandler: [requireAuth, requireSociety, requireRole('resident', 'society_admin')],
+      // Chapter 17 — backstop against a buggy approve/reject retry-loop
+      // rather than a real attack surface (already auth'd + tenant-scoped).
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } }
+    },
     respondToVisitorRequest
   );
 
@@ -72,7 +77,20 @@ export async function visitorsRoutes(app: FastifyInstance) {
 
   app.post(
     '/api/visitors/verify-pass',
-    { preHandler: [requireAuth, requireSociety, requireRole('security_guard')] },
+    {
+      preHandler: [requireAuth, requireSociety, requireRole('security_guard')],
+      // Chapter 17 — the one genuinely brute-forceable endpoint in the API:
+      // a 6-char alphanumeric passCode is guessable via repeated calls.
+      // Keyed by societyId + IP (not IP alone) so one guard device hammering
+      // it doesn't rate-limit a neighboring society off the same endpoint.
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute',
+          keyGenerator: (request) => `${request.user?.societyId ?? 'anon'}:${request.ip}`
+        }
+      }
+    },
     verifyPass
   );
 

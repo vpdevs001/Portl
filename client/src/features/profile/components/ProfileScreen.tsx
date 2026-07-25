@@ -6,15 +6,17 @@ import { useUnregisterPushToken } from '@/features/notifications/hooks/use-notif
 import { authClient, useAppSession } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
+import { useAppLock } from '@/hooks/useAppLock';
 import { DrawerButton } from '@/components/DrawerButton';
 import { ResidentEntryHistoryCard } from '@/features/logs/components/ResidentEntryHistoryCard';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const APPEARANCE_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'sunny-outline' },
@@ -28,10 +30,18 @@ export function ProfileScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { preference, setPreference } = useThemePreference();
+  const { enabled: appLockEnabled, setEnabled: setAppLockEnabled } = useAppLock();
+  const [biometricAvailable, setBiometricAvailable] = useState<boolean | null>(null);
   const leaveSocietyMutation = useLeaveSociety();
   const unregisterPushToken = useUnregisterPushToken();
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
+
+  useEffect(() => {
+    Promise.all([LocalAuthentication.hasHardwareAsync(), LocalAuthentication.isEnrolledAsync()])
+      .then(([hasHardware, isEnrolled]) => setBiometricAvailable(hasHardware && isEnrolled))
+      .catch(() => setBiometricAvailable(false));
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -217,6 +227,38 @@ export function ProfileScreen() {
                 </Pressable>
               );
             })}
+          </View>
+        </View>
+
+        {/* Security */}
+        <View className="bg-card border border-border rounded-2xl p-6 mb-5 gap-3">
+          <View className="flex-row items-center gap-2 mb-1">
+            <Ionicons name="finger-print-outline" size={14} color={theme.primary} />
+            <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
+              Security
+            </Text>
+          </View>
+
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="flex-1">
+              <Text className="text-sm font-sans-semibold text-foreground">App Lock</Text>
+              <Text className="text-xs font-sans text-muted mt-0.5">
+                {biometricAvailable === false
+                  ? 'Set up Face ID, fingerprint, or a passcode on this device to enable.'
+                  : 'Require Face ID, fingerprint, or your passcode to open Portl.'}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setAppLockEnabled(!appLockEnabled)}
+              disabled={biometricAvailable === false}
+              className={`w-12 h-7 rounded-full justify-center px-0.5 ${
+                appLockEnabled ? 'bg-primary' : 'bg-surface border border-border/60'
+              } ${biometricAvailable === false ? 'opacity-40' : ''}`}
+            >
+              <View
+                className={`w-6 h-6 rounded-full bg-card shadow ${appLockEnabled ? 'ml-auto' : ''}`}
+              />
+            </Pressable>
           </View>
         </View>
 

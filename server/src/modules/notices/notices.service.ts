@@ -7,6 +7,7 @@ import { sendPushToUsers } from '../../common/services/push.service';
 import type {
   Caller,
   CreateNoticeInput,
+  EmergencyAlertInput,
   ListNoticesQuery,
   UpdateNoticeInput
 } from './notices.types';
@@ -35,7 +36,34 @@ export async function createNotice(caller: Caller, dto: CreateNoticeInput) {
   return created;
 }
 
-async function notifySociety(notice: typeof notices.$inferSelect) {
+// Chapter 17 — guard-triggered broadcast. Reuses the notices table/feed
+// (category: 'emergency' was already reserved in the enum since Chapter
+// 10, just never had a way to be created) rather than standing up a
+// parallel alerting system, so it shows up in the same notice feed
+// residents/admins already check, just with urgent copy in the push.
+export async function createEmergencyAlert(caller: Caller, dto: EmergencyAlertInput) {
+  const [created] = await db
+    .insert(notices)
+    .values({
+      societyId: caller.societyId,
+      createdBy: caller.id,
+      title: dto.title,
+      description: dto.description,
+      category: 'emergency',
+      expiresAt: null
+    })
+    .returning();
+
+  if (!created) {
+    throw new AppError(500, ERROR_CODES.DATABASE_ERROR, 'Failed to create emergency alert');
+  }
+
+  void notifySociety(created, { urgent: true }).catch(() => undefined);
+
+  return created;
+}
+
+async function notifySociety(notice: typeof notices.$inferSelect, options?: { urgent?: boolean }) {
   const recipients = await db.query.user.findMany({
     where: { societyId: notice.societyId },
     columns: { id: true }
@@ -44,8 +72,8 @@ async function notifySociety(notice: typeof notices.$inferSelect) {
   await sendPushToUsers(
     recipients.map((row) => row.id),
     {
-      title: 'New society notice',
-      body: notice.title,
+      title: options?.urgent ? `🚨 Emergency alert: ${notice.title}` : 'New society notice',
+      body: options?.urgent ? notice.description : notice.title,
       screen: '/(app)/notices',
       params: { noticeId: notice.id }
     }

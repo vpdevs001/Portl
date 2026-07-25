@@ -6,6 +6,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import dbPlugin from './src/common/plugins/db.plugin.ts';
 import sessionPlugin from './src/common/plugins/session.plugin.ts';
 import errorHandlerPlugin from './src/common/plugins/error-handler.plugin.ts';
+import rateLimitPlugin from './src/common/plugins/rate-limit.plugin.ts';
 
 import { sendError } from './src/common/http/app-response.ts';
 import { ERROR_CODES } from './src/common/errors/error-codes.ts';
@@ -83,6 +84,11 @@ async function buildServer() {
 
   // ── Session Hook ─────────────────────────────────────────────────────────────
   await app.register(sessionPlugin);
+
+  // ── Rate Limiting (Chapter 17) ────────────────────────────────────────────────
+  // Registered after the session hook so per-route keyGenerators (e.g.
+  // verify-pass keying on societyId) can read request.user.
+  await app.register(rateLimitPlugin);
 
   // ── Not Found handler ─────────────────────────────────────────────────────────
   // Case 5a: routing-layer 404 — no path/method combination is registered.

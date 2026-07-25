@@ -19,7 +19,6 @@ import {
   View
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { FilterPill } from '@/components/FilterPill';
 
 const FLAT_TYPES: { value: FlatType; label: string }[] = [
   { value: '1bhk', label: '1BHK' },
@@ -124,12 +123,25 @@ export function SetupFlatsScreen() {
               className="flex-row gap-2"
             >
               {towers.map((t) => (
-                <FilterPill
+                <Pressable
                   key={t.id}
-                  label={t.name}
-                  active={effectiveTowerId === t.id}
                   onPress={() => setSelectedTowerId(t.id)}
-                />
+                  className={`self-start p-2 rounded-md border mr-2 ${
+                    effectiveTowerId === t.id
+                      ? 'bg-primary border-primary'
+                      : 'bg-card border-border'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-sans-bold ${
+                      effectiveTowerId === t.id
+                        ? 'text-primary-foreground'
+                        : 'text-foreground-secondary'
+                    }`}
+                  >
+                    {t.name}
+                  </Text>
+                </Pressable>
               ))}
             </ScrollView>
           ) : (
@@ -193,13 +205,21 @@ export function SetupFlatsScreen() {
             <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat Type</Text>
             <View className="flex-row flex-wrap">
               {FLAT_TYPES.map((t) => (
-                <FilterPill
+                <Pressable
                   key={t.value}
-                  label={t.label}
-                  active={flatType === t.value}
                   onPress={() => setFlatType(t.value)}
-                  className="mb-2"
-                />
+                  className={`self-start p-2 rounded-md border mr-2 mb-2 ${
+                    flatType === t.value ? 'bg-primary border-primary' : 'bg-card border-border'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-sans-bold ${
+                      flatType === t.value ? 'text-primary-foreground' : 'text-foreground-secondary'
+                    }`}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
               ))}
             </View>
           </View>

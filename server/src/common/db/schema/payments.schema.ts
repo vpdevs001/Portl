@@ -1,4 +1,13 @@
-import { numeric, pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  varchar,
+  index
+} from 'drizzle-orm/pg-core';
 import { user } from './auth.schema';
 import { societies, flats } from './identity.schema';
 import { dueStatusEnum, paymentConfirmationStatusEnum } from './enums';
@@ -29,30 +38,44 @@ export const maintenanceDues = pgTable(
       .notNull()
       .$onUpdate(() => new Date())
   },
-  (table) => [unique('maintenance_dues_flat_period_unique').on(table.flatId, table.period)]
+  (table) => [
+    unique('maintenance_dues_flat_period_unique').on(table.flatId, table.period),
+    index('maintenance_dues_society_id_idx').on(table.societyId),
+    // "unpaid dues for my society/flat" is polled/filtered constantly on
+    // both the resident and admin sides (Chapter 15) — same rationale as
+    // the visitor_requests (society_id, status) composite above.
+    index('maintenance_dues_society_id_status_idx').on(table.societyId, table.status)
+  ]
 );
 
-export const paymentConfirmations = pgTable('payment_confirmations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  dueId: uuid('due_id')
-    .notNull()
-    .references(() => maintenanceDues.id, { onDelete: 'cascade' }),
-  flatId: uuid('flat_id')
-    .notNull()
-    .references(() => flats.id, { onDelete: 'cascade' }),
-  raisedBy: uuid('raised_by')
-    .notNull()
-    .references(() => user.id),
-  amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
-  screenshot: text('screenshot').notNull(),
-  upiRef: varchar('upi_ref', { length: 100 }),
-  status: paymentConfirmationStatusEnum('status').notNull().default('pending'),
-  reviewedBy: uuid('reviewed_by').references(() => user.id),
-  rejectionReason: text('rejection_reason'),
+export const paymentConfirmations = pgTable(
+  'payment_confirmations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    dueId: uuid('due_id')
+      .notNull()
+      .references(() => maintenanceDues.id, { onDelete: 'cascade' }),
+    flatId: uuid('flat_id')
+      .notNull()
+      .references(() => flats.id, { onDelete: 'cascade' }),
+    raisedBy: uuid('raised_by')
+      .notNull()
+      .references(() => user.id),
+    amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+    screenshot: text('screenshot').notNull(),
+    upiRef: varchar('upi_ref', { length: 100 }),
+    status: paymentConfirmationStatusEnum('status').notNull().default('pending'),
+    reviewedBy: uuid('reviewed_by').references(() => user.id),
+    rejectionReason: text('rejection_reason'),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => new Date())
-});
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date())
+  },
+  (table) => [
+    index('payment_confirmations_due_id_idx').on(table.dueId),
+    index('payment_confirmations_flat_id_idx').on(table.flatId)
+  ]
+);

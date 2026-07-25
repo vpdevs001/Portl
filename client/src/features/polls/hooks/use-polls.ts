@@ -73,7 +73,9 @@ export function useCreatePoll() {
       // connected client; invalidating here covers this device in case its
       // own socket connection hasn't finished (re)establishing yet.
       queryClient.invalidateQueries({ queryKey: POLLS_KEY });
-    }
+    },
+    // polls/create.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 
@@ -92,6 +94,8 @@ export function useCastVote() {
             : poll
         )
       );
-    }
+    },
+    // polls/index.tsx renders its own inline error text for this action.
+    meta: { suppressErrorToast: true }
   });
 }

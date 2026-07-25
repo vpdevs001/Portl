@@ -41,7 +41,10 @@ export const ERROR_CODES = {
   AUTH_FAILURE: 'AUTH_FAILURE',
 
   // 502 – an upstream file-storage provider (ImageKit) rejected or failed an upload
-  UPLOAD_FAILED: 'UPLOAD_FAILED'
+  UPLOAD_FAILED: 'UPLOAD_FAILED',
+
+  // 429 – Chapter 17: caller exceeded the request budget for this route (@fastify/rate-limit)
+  RATE_LIMITED: 'RATE_LIMITED'
 } as const;
 
 /** Union type of every valid error code string. */

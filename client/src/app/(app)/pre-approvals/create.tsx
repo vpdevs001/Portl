@@ -15,6 +15,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 import { useCreatePreApproval } from '@/features/visitors/hooks/use-visitors';
 
 type VisitorType = 'guest' | 'delivery' | 'cab' | 'service_staff';
@@ -102,7 +103,7 @@ export default function CreatePreApprovalScreen() {
 
       router.replace('/(app)/pre-approvals');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create pre-approval');
+      setError(getErrorMessage(e));
     }
   }
 

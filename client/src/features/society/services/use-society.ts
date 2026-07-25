@@ -54,6 +54,24 @@ export function useUpdateSocietyUpiId() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    },
+    // admin/payments/review.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
+  });
+}
+
+// Chapter 17 — Society Settings screen. Partial update: send only the
+// fields that changed.
+export function useUpdateSocietyDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Pick<Society, 'name' | 'address' | 'city' | 'state' | 'pincode'>>) =>
+      apiRequest<Society>('/api/societies/me', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
     }
   });
 }

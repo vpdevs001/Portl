@@ -491,21 +491,50 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 17 — Polish & Production Readiness
+## Chapter 17 — Polish & Production Readiness ✅
 
 `(server + client)` · Branch: `feature/production-polish`
 
+Closing chapter — no new domain features, just hardening what Chapters 1–16 already shipped so the submission holds up under real gate traffic and a flaky network.
+
 ### Security & DB Hardening
 
-- **Rate Limiting**: Integrate `@fastify/rate-limit` on security-sensitive routes (login callbacks, pass code verifications).
-- **Indexes**: Explicitly verify/add indexes on frequently-queried columns (`society_id`, `flat_id`, `status`) in schemas.
-- **Biometric Lock**: Integrate `expo-local-authentication` into client login/initialization.
-- **Postgres Row-Level Security** — upgrade the Chapter 5 hybrid tenant-scoping approach to DB-enforced isolation, if time permits. Not a hard requirement for submission, but the natural next step if there's time left after the above.
+**Server Architecture (Fastify)**
+
+- **Rate limiting (`server/src/common/plugins/rate-limit.plugin.ts`)** — register `@fastify/rate-limit` globally with a generous default (e.g. 300 req/min per IP), then override per-route via each route's `config.rateLimit` rather than writing bespoke throttling logic:
+  - `POST /api/auth/**` (Better Auth's own handler, mounted at the catch-all) — tight limit, keyed by IP, to blunt abuse on the OAuth callback surface.
+  - `POST /api/visitors/verify-pass` — the one **unauthenticated-adjacent, brute-forceable** endpoint in the whole API (6-digit alphanumeric `pass_code`, guessable via repeated calls) — tightest limit, keyed by `society_id` + IP so one guard device hammering it doesn't lock out a neighboring society.
+  - `PUT /api/visitors/request/:id/respond` and the poll-vote/complaint-status mutation routes — moderate limit, mostly a backstop against a buggy client retry-loop rather than a real attack surface.
+  - Rate-limit responses go through the existing `sendError()` envelope (429, `RATE_LIMITED`) so the client's existing error-handling path doesn't need a special case.
+- **Indexes** — audit `src/common/db/schema/*.ts` against actual query patterns from Chapters 5–16 and add what's missing (only `session`/`account`/`verification` have explicit indexes today, from Better Auth's own schema):
+  - `society_id` on every direct-scoped table (`towers`, `flats`, `visitor_requests`, `notices`, `polls`, `complaints`, `amenities`, `maintenance_dues`, `staff_directory`, `resident_entry_logs`, `staff_entry_logs`) — every list/scope query filters on this first.
+  - `flat_id` on `visitor_requests`, `amenity_bookings`, `maintenance_dues` — the resident-facing "my flat's data" queries.
+  - `status` on `visitor_requests` (pending-queue polling, Chapter 7) and `maintenance_dues` (unpaid-dues listing, Chapter 15) — both are polled/filtered constantly.
+  - `(user_id, expo_push_token)` unique index on `push_tokens` — called out as a should-be-unique pair back in Chapter 7 but never actually enforced at the DB level; add it now instead of relying on app-level dedup.
+  - Composite `(society_id, status)` on `visitor_requests` specifically, since "pending requests for my society" is the single hottest query in the app (5-second poll fallback from Chapter 7, plus every push-fanout lookup).
+  - One Drizzle migration, reviewed for redundancy against any indexes Drizzle already creates implicitly for FKs.
+- **Postgres Row-Level Security** — optional upgrade of the Chapter 5 hybrid tenant-scoping approach to DB-enforced isolation, **if time permits only**. Not a submission blocker. If attempted: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` on the direct-`society_id` tables, one `USING (society_id = current_setting('app.current_society_id')::uuid)` policy per table, and a Fastify hook that runs `SET LOCAL app.current_society_id` at the start of every request's DB transaction. Left as a stretch goal rather than executed by default, since it touches every existing route's transaction handling.
+
+**Client Architecture (Expo)**
+
+- **Biometric lock (`client/src/features/profile/components/ProfileScreen.tsx`)** — new toggle row added next to the existing Appearance section, same visual pattern (icon + label + segmented control), backed by `expo-local-authentication`:
+  - Preference stored via the same `@react-native-async-storage/async-storage` already used for the Appearance setting (Chapter 3) — a lock-enabled flag isn't sensitive either, and it needs to be readable _before_ the Better Auth session check on cold start.
+  - `client/src/app/_layout.tsx` gains an app-lock gate: on cold start and on `AppState` transition from `background` → `active`, if the stored preference is on, call `LocalAuthentication.authenticateAsync()` before rendering past a blocking lock screen; falls back to the device passcode automatically if Face ID/fingerprint isn't enrolled (native behavior, no extra code needed).
+  - Off by default, matching the original Chapter 3 native-module note; `NSFaceIDUsageDescription` was already reserved in `app.json`'s `ios.infoPlist` back in that chapter, so this is just JS wiring plus the settings toggle — no new native config.
 
 ### Offline Guard Queue
 
-- Implement offline storage (e.g. SQLite or AsyncStorage) in the Guard app.
-- If gate connection drops, keep logs locally. Set up a background sync task that runs when network state switches back to online (`NetInfo` API) and flushes the queue to the backend.
+Guard devices sit at a gate with the flakiest connectivity of any role in the app, and gate logging (Chapter 9) can't simply fail when the network drops.
+
+**Client Architecture (Expo)**
+
+- **Local queue (`client/src/lib/offline-queue.ts`)** — `expo-sqlite` chosen over AsyncStorage specifically, since the queue needs structured querying (pending vs. synced, ordered replay) rather than a single blob. Installed with `npm install expo-sqlite@~57.0.1` (`npx expo install` couldn't reach the Expo version-resolution API in this environment's network sandbox, so the SDK 57-matching version was pinned by hand instead, same as every other `expo-*` entry already in `package.json`).
+  - Connectivity comes from **`expo-network`** instead — it turned out to already be a project dependency (installed in an earlier chapter's native-module batch) and exposes `getNetworkStateAsync()` / `addNetworkStateListener`, which covers everything `@react-native-community/netinfo` would have here. Using it avoided adding a second connectivity library and the extra native rebuild that would've come with it — a deliberate deviation from the original plan below.
+  - One `offline_actions` table: `id` (local autoincrement), `endpoint`, `method`, `payload` (JSON string), `created_at`, `synced` (boolean). Deliberately generic (endpoint + payload) rather than one table per action type, since the set of guard actions needing offline support is small but shouldn't require a schema migration to extend later.
+  - Actions covered: `POST /api/logs/resident`, `POST /api/logs/staff` (Chapter 9), `POST /api/visitors/request/:id/log-entry`, `POST /api/visitors/request/:id/log-exit` (Chapter 7) — the four gate-side writes a guard performs continuously through a shift. Reads (visitor queue, resident search) are **not** queued — they just show cached TanStack Query data plus an offline banner, since serving stale reads is safe but silently queuing a read isn't meaningful.
+- **Write-through wrapper (`client/src/lib/offline-mutation.ts`)** — `apiRequestOfflineAware()` wraps the existing `apiRequest()` calls for those four endpoints (in `logs/services/logs.ts` and `visitors/services/visitors.ts`): attempt the real request first; on a network-layer failure specifically — detected as `error instanceof TypeError`, which is how React Native's `fetch` signals "never reached the network" versus `apiRequest`'s own `Error` for a real 4xx/5xx that did reach the backend (queuing that would risk a double-write) — fall back to inserting into `offline_actions` and resolving with a synthetic success so the guard's UI doesn't stall on a socket-less gate.
+- **Sync (`client/src/hooks/useOfflineSync.ts`)** — subscribes to `Network.addNetworkStateListener`; on a disconnected → connected transition, reads all `synced = false` rows in `created_at` order and replays them sequentially against their original endpoint, marking each `synced = true` on success and stopping at the first failure (rather than skipping ahead) so a mid-replay reconnect drop doesn't let a later action jump the queue. Sequential (not parallel) replay matters specifically for entry/exit pairs — an exit log replayed before its matching entry log would hit the server out of order.
+- **Guard UI (`client/src/components/OfflineSyncBanner.tsx`, wired into `client/src/app/(app)/guard/_layout.tsx`)** — persistent banner across all guard screens: hidden when online with an empty queue, otherwise shows either the offline state with the live queued count or the "syncing N…" state while the queue drains, so a guard can see their taps registering rather than wondering if they were lost.
 
 ---
 

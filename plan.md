@@ -518,7 +518,7 @@ Closing chapter — no new domain features, just hardening what Chapters 1–16 
 **Client Architecture (Expo)**
 
 - **Biometric lock (`client/src/features/profile/components/ProfileScreen.tsx`)** — new toggle row added next to the existing Appearance section, same visual pattern (icon + label + segmented control), backed by `expo-local-authentication`:
-  - Preference stored via the same `@react-native-async-storage/async-storage` already used for the Appearance setting (Chapter 3) — a lock-enabled flag isn't sensitive either, and it needs to be readable *before* the Better Auth session check on cold start.
+  - Preference stored via the same `@react-native-async-storage/async-storage` already used for the Appearance setting (Chapter 3) — a lock-enabled flag isn't sensitive either, and it needs to be readable _before_ the Better Auth session check on cold start.
   - `client/src/app/_layout.tsx` gains an app-lock gate: on cold start and on `AppState` transition from `background` → `active`, if the stored preference is on, call `LocalAuthentication.authenticateAsync()` before rendering past a blocking lock screen; falls back to the device passcode automatically if Face ID/fingerprint isn't enrolled (native behavior, no extra code needed).
   - Off by default, matching the original Chapter 3 native-module note; `NSFaceIDUsageDescription` was already reserved in `app.json`'s `ios.infoPlist` back in that chapter, so this is just JS wiring plus the settings toggle — no new native config.
 

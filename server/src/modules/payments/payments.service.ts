@@ -62,6 +62,17 @@ async function ensureDueForFlat(societyId: string, flatId: string) {
   return winner;
 }
 
+// A flat only "counts" for billing once someone actually lives there — a
+// resident user whose flatId points at it. Newly-added flats with no
+// resident assigned yet shouldn't accrue maintenance dues nobody can pay.
+async function getOccupiedFlatIds(societyId: string): Promise<Set<string>> {
+  const residents = await db.query.user.findMany({
+    where: { societyId, role: 'resident' },
+    columns: { flatId: true }
+  });
+  return new Set(residents.map((r) => r.flatId).filter((flatId): flatId is string => !!flatId));
+}
+
 async function ensureDuesForSociety(societyId: string) {
   const period = currentPeriod();
 
@@ -71,13 +82,17 @@ async function ensureDuesForSociety(societyId: string) {
   });
   if (flats.length === 0) return;
 
+  const occupiedFlatIds = await getOccupiedFlatIds(societyId);
+  const occupiedFlats = flats.filter((f) => occupiedFlatIds.has(f.id));
+  if (occupiedFlats.length === 0) return;
+
   const existing = await db.query.maintenanceDues.findMany({
     where: { societyId, period },
     columns: { flatId: true }
   });
   const existingFlatIds = new Set(existing.map((d) => d.flatId));
 
-  const missing = flats.filter((f) => !existingFlatIds.has(f.id));
+  const missing = occupiedFlats.filter((f) => !existingFlatIds.has(f.id));
   if (missing.length === 0) return;
 
   await db

@@ -33,9 +33,7 @@ export default function VisitorHistoryScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12}>
             <Ionicons name="chevron-back" size={24} color={theme.foreground} />
           </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">
-            Visitor Entry History
-          </Text>
+          <Text className="text-lg font-serif-semibold text-foreground">Visitor Entry History</Text>
           <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => refetch()}

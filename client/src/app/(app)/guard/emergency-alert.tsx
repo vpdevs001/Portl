@@ -55,8 +55,8 @@ export default function EmergencyAlertScreen() {
             Alert sent to the whole society
           </Text>
           <Text className="text-sm font-sans text-muted text-center mb-8">
-            Every resident and admin has been pushed a notification and it's live on the
-            Notices feed.
+            Every resident and admin has been pushed a notification and it's live on the Notices
+            feed.
           </Text>
           <Pressable
             onPress={() => router.back()}
@@ -80,12 +80,15 @@ export default function EmergencyAlertScreen() {
           <DrawerButton />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 32 }}
+        >
           <View className="p-4 rounded-2xl bg-danger/10 border border-danger/20 flex-row gap-3 mb-5">
             <Ionicons name="warning-outline" size={20} color={theme.danger} />
             <Text className="flex-1 text-xs font-sans text-danger leading-5">
-              This immediately pushes a notification to every resident and admin in the society
-              and posts to the Notices feed. Use only for genuine emergencies.
+              This immediately pushes a notification to every resident and admin in the society and
+              posts to the Notices feed. Use only for genuine emergencies.
             </Text>
           </View>
 
@@ -155,9 +158,7 @@ export default function EmergencyAlertScreen() {
                   size={18}
                   color={canSend ? '#fff' : theme.muted}
                 />
-                <Text
-                  className={`font-sans-bold text-sm ${canSend ? 'text-white' : 'text-muted'}`}
-                >
+                <Text className={`font-sans-bold text-sm ${canSend ? 'text-white' : 'text-muted'}`}>
                   Broadcast Emergency Alert
                 </Text>
               </>

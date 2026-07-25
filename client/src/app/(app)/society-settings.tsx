@@ -15,7 +15,10 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import { useSocietyDetails, useUpdateSocietyDetails } from '@/features/society/services/use-society';
+import {
+  useSocietyDetails,
+  useUpdateSocietyDetails
+} from '@/features/society/services/use-society';
 
 export default function SocietySettingsScreen() {
   const router = useRouter();
@@ -89,9 +92,7 @@ export default function SocietySettingsScreen() {
 
           {/* Hero */}
           <View className="mb-8 mt-2">
-            <Text className="text-3xl font-serif-bold text-foreground mb-3">
-              Society Details
-            </Text>
+            <Text className="text-3xl font-serif-bold text-foreground mb-3">Society Details</Text>
             <Text className="text-sm font-sans text-foreground-secondary leading-5">
               Update your society's name and registered address. These details appear across
               notices, receipts, and member-facing screens.

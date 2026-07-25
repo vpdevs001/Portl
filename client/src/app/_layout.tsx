@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { ToastProvider } from '@/components/Toast';
 import { ThemeProvider } from '@/hooks/useColorScheme';
 import { AppLockProvider, useAppLock } from '@/hooks/useAppLock';
 import { AppLockScreen } from '@/components/AppLockScreen';
@@ -90,9 +91,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <QueryProvider>
-          <AppLockProvider>
-            <RootNavigation />
-          </AppLockProvider>
+          <ToastProvider>
+            <AppLockProvider>
+              <RootNavigation />
+            </AppLockProvider>
+          </ToastProvider>
         </QueryProvider>
       </ThemeProvider>
     </SafeAreaProvider>

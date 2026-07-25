@@ -20,6 +20,7 @@ import { DrawerButton } from '@/components/DrawerButton';
 import { useSocietyDetails } from '@/features/society/services/use-society';
 import { useConfirmPayment, useDues } from '@/features/payments/hooks/use-payments';
 import type { DueStatus, MaintenanceDue } from '@/features/payments/services/payments';
+import { getErrorMessage } from '@/lib/errors';
 
 const STATUS_META: Record<
   DueStatus,
@@ -101,7 +102,11 @@ export default function PaymentsScreen() {
             </Text>
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerClassName="pb-20"
+            className="flex-1"
+          >
             {dues.map((due) => (
               <DueCard key={due.id} due={due} onPay={() => setActiveDue(due)} />
             ))}
@@ -267,7 +272,7 @@ function ConfirmPaymentModal({
       });
       handleClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to submit payment proof');
+      setError(getErrorMessage(e));
     }
   }
 

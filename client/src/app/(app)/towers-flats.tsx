@@ -24,7 +24,6 @@ import {
 } from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { DrawerButton } from '@/components/DrawerButton';
-import { FilterPill } from '@/components/FilterPill';
 
 const FLAT_TYPES: { value: FlatType; label: string }[] = [
   { value: '1bhk', label: '1BHK' },
@@ -290,12 +289,25 @@ export default function TowersFlatsScreen() {
                   className="flex-row gap-2"
                 >
                   {towers?.map((t) => (
-                    <FilterPill
+                    <Pressable
                       key={t.id}
-                      label={t.name}
-                      active={selectedTowerId === t.id}
                       onPress={() => setSelectedTowerId(t.id)}
-                    />
+                      className={`self-start p-2 rounded-md border mr-2 ${
+                        selectedTowerId === t.id
+                          ? 'bg-primary border-primary'
+                          : 'bg-card border-border'
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-sans-bold ${
+                          selectedTowerId === t.id
+                            ? 'text-primary-foreground'
+                            : 'text-foreground-secondary'
+                        }`}
+                      >
+                        {t.name}
+                      </Text>
+                    </Pressable>
                   ))}
                 </ScrollView>
 
@@ -311,13 +323,25 @@ export default function TowersFlatsScreen() {
                 <Text className="text-xs font-sans-semibold text-foreground mt-2">Flat Type</Text>
                 <View className="flex-row flex-wrap">
                   {FLAT_TYPES.map((t) => (
-                    <FilterPill
+                    <Pressable
                       key={t.value}
-                      label={t.label}
-                      active={newFlatType === t.value}
                       onPress={() => setNewFlatType(t.value)}
-                      className="mb-2"
-                    />
+                      className={`self-start p-2 rounded-md border mr-2 mb-2 ${
+                        newFlatType === t.value
+                          ? 'bg-primary border-primary'
+                          : 'bg-card border-border'
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-sans-bold ${
+                          newFlatType === t.value
+                            ? 'text-primary-foreground'
+                            : 'text-foreground-secondary'
+                        }`}
+                      >
+                        {t.label}
+                      </Text>
+                    </Pressable>
                   ))}
                 </View>
 
@@ -413,13 +437,23 @@ export default function TowersFlatsScreen() {
             </Text>
             <View className="flex-row flex-wrap mb-4">
               {FLAT_TYPES.map((t) => (
-                <FilterPill
+                <Pressable
                   key={t.value}
-                  label={t.label}
-                  active={editFlatType === t.value}
                   onPress={() => setEditFlatType(t.value)}
-                  className="mb-2"
-                />
+                  className={`self-start p-2 rounded-md border mr-2 mb-2 ${
+                    editFlatType === t.value ? 'bg-primary border-primary' : 'bg-card border-border'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-sans-bold ${
+                      editFlatType === t.value
+                        ? 'text-primary-foreground'
+                        : 'text-foreground-secondary'
+                    }`}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
               ))}
             </View>
 

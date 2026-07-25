@@ -55,8 +55,8 @@ export default function EmergencyAlertScreen() {
             Alert sent to the whole society
           </Text>
           <Text className="text-sm font-sans text-muted text-center mb-8">
-            Every resident and admin has been pushed a notification and it's live on the Notices
-            feed.
+            Every resident and admin has been pushed a notification and it&apos;s live on the
+            Notices feed.
           </Text>
           <Pressable
             onPress={() => router.back()}
@@ -167,7 +167,7 @@ export default function EmergencyAlertScreen() {
 
           {createAlert.isError && (
             <Text className="text-xs font-sans text-danger text-center mt-3">
-              Couldn't send the alert. Please try again.
+              Couldn&apos;t send the alert. Please try again.
             </Text>
           )}
         </ScrollView>

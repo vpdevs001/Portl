@@ -24,7 +24,9 @@ export function useCreateAmenity() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: AMENITIES_KEY });
-    }
+    },
+    // admin/amenities/create.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 
@@ -45,6 +47,8 @@ export function useBookAmenity() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Invalidate both the general bookings list and any amenity-specific cache
       queryClient.invalidateQueries({ queryKey: BOOKINGS_KEY });
-    }
+    },
+    // amenities/book.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }

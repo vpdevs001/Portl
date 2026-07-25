@@ -9,6 +9,7 @@ import { DrawerButton } from '@/components/DrawerButton';
 import { useAppSession } from '@/lib/auth-client';
 import { useCastVote, usePolls } from '@/features/polls/hooks/use-polls';
 import type { Poll } from '@/features/polls/services/polls';
+import { getErrorMessage } from '@/lib/errors';
 
 function isClosed(poll: Poll) {
   return new Date(poll.endsAt).getTime() <= Date.now();
@@ -206,7 +207,7 @@ function PollCard({ poll }: { poll: Poll }) {
 
           {castVote.isError ? (
             <Text className="text-xs font-sans text-danger mt-1">
-              {castVote.error instanceof Error ? castVote.error.message : 'Failed to cast vote'}
+              {getErrorMessage(castVote.error)}
             </Text>
           ) : null}
         </View>

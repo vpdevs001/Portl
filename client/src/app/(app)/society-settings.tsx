@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -36,15 +36,19 @@ export default function SocietySettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Prefill once details load.
-  useEffect(() => {
-    if (!society) return;
+  // Prefill once details load. Adjusting state directly during render (guarded
+  // by the id so it only fires the one time the data actually arrives) is the
+  // pattern React recommends over an effect here — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
+  const [prefilledSocietyId, setPrefilledSocietyId] = useState<string | null>(null);
+  if (society && society.id !== prefilledSocietyId) {
+    setPrefilledSocietyId(society.id);
     setName(society.name ?? '');
     setAddress(society.address ?? '');
     setCity(society.city ?? '');
     setState(society.state ?? '');
     setPincode(society.pincode ?? '');
-  }, [society]);
+  }
 
   const handleSave = async () => {
     if (!name.trim() || !address.trim() || !city.trim() || !state.trim() || !pincode.trim()) {
@@ -94,7 +98,7 @@ export default function SocietySettingsScreen() {
           <View className="mb-8 mt-2">
             <Text className="text-3xl font-serif-bold text-foreground mb-3">Society Details</Text>
             <Text className="text-sm font-sans text-foreground-secondary leading-5">
-              Update your society's name and registered address. These details appear across
+              Update your society&apos;s name and registered address. These details appear across
               notices, receipts, and member-facing screens.
             </Text>
           </View>
@@ -218,7 +222,7 @@ export default function SocietySettingsScreen() {
                 Looking for the UPI ID?
               </Text>
               <Text className="text-[11px] font-sans text-muted" numberOfLines={2}>
-                That's managed from Maintenance &amp; Dues, not here.
+                That&apos;s managed from Maintenance &amp; Dues, not here.
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={14} color={theme.muted} />

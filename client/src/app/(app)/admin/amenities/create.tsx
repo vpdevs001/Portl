@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 import { useCreateAmenity } from '@/features/amenities/hooks/use-amenities';
 
 export default function CreateAmenityScreen() {
@@ -43,7 +44,7 @@ export default function CreateAmenityScreen() {
 
       router.replace('/(app)/admin/amenities/logs');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create amenity.');
+      setError(getErrorMessage(e));
     }
   }
 

@@ -15,6 +15,7 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 import { useCreateNotice } from '@/features/notices/hooks/use-notices';
 import type { NoticeCategory } from '@/features/notices/services/notices';
 
@@ -104,7 +105,7 @@ export default function CreateNoticeScreen() {
 
       router.replace('/(app)/notices');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create notice');
+      setError(getErrorMessage(e));
     }
   }
 

@@ -25,7 +25,9 @@ export function useCreateNotice() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ['notices'] });
-    }
+    },
+    // notices/create.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 

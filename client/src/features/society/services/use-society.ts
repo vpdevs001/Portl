@@ -54,7 +54,9 @@ export function useUpdateSocietyUpiId() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
-    }
+    },
+    // admin/payments/review.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 

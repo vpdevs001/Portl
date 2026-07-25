@@ -22,7 +22,9 @@ export function useCreateComplaint() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: COMPLAINTS_KEY });
-    }
+    },
+    // complaints/create.tsx renders its own inline error banner for this action.
+    meta: { suppressErrorToast: true }
   });
 }
 

@@ -15,13 +15,13 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { FilterPill } from '@/components/FilterPill';
 import { useFlats } from '@/features/society/services/use-society';
 import {
   useCreateVisitorRequest,
   useUploadVisitorPhoto
 } from '@/features/visitors/hooks/use-visitors';
 import { DrawerButton } from '@/components/DrawerButton';
+import { getErrorMessage } from '@/lib/errors';
 
 type VisitorType = 'guest' | 'delivery' | 'cab' | 'service_staff' | 'admin_visitor';
 
@@ -163,7 +163,7 @@ export function RegisterVisitorScreen() {
       resetForm();
       router.back();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to register visitor');
+      setError(getErrorMessage(e));
     }
   }
 
@@ -385,12 +385,21 @@ export function RegisterVisitorScreen() {
                 contentContainerClassName="gap-2"
               >
                 {filteredFlats.slice(0, 20).map((flat) => (
-                  <FilterPill
+                  <Pressable
                     key={flat.id}
-                    label={flat.flatNumber}
-                    active={flatId === flat.id}
                     onPress={() => setFlatId(flat.id)}
-                  />
+                    className={`self-start p-2 rounded-md border mr-2 ${
+                      flatId === flat.id ? 'bg-primary border-primary' : 'bg-card border-border'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-sans-bold ${
+                        flatId === flat.id ? 'text-primary-foreground' : 'text-foreground-secondary'
+                      }`}
+                    >
+                      {flat.flatNumber}
+                    </Text>
+                  </Pressable>
                 ))}
               </ScrollView>
             )}

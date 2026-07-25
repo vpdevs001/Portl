@@ -14,7 +14,6 @@ import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import { FilterPill } from '@/components/FilterPill';
 import {
   useComplaints,
   useUpdateComplaintStatus
@@ -99,12 +98,21 @@ export default function ManageComplaintsScreen() {
           contentContainerClassName="gap-2"
         >
           {FILTERS.map((f) => (
-            <FilterPill
+            <Pressable
               key={f.value}
-              label={f.label}
-              active={filter === f.value}
               onPress={() => setFilter(f.value)}
-            />
+              className={`self-start p-2 rounded-md border mr-2 ${
+                filter === f.value ? 'bg-primary border-primary' : 'bg-card border-border'
+              }`}
+            >
+              <Text
+                className={`text-xs font-sans-bold ${
+                  filter === f.value ? 'text-primary-foreground' : 'text-foreground-secondary'
+                }`}
+              >
+                {f.label}
+              </Text>
+            </Pressable>
           ))}
         </ScrollView>
 

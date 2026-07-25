@@ -5,7 +5,6 @@ import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import { FilterPill } from '@/components/FilterPill';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTowers } from '@/features/society/services/use-society';
@@ -83,18 +82,36 @@ export function ResidentSearchScreen() {
 
         {tab === 'residents' && towers && towers.length > 0 ? (
           <View className="flex-row flex-wrap gap-2 mb-4">
-            <FilterPill
-              label="All towers"
-              active={!towerId}
+            <Pressable
               onPress={() => setTowerId(undefined)}
-            />
+              className={`self-start p-2 rounded-md border mr-2 ${
+                !towerId ? 'bg-primary border-primary' : 'bg-card border-border'
+              }`}
+            >
+              <Text
+                className={`text-xs font-sans-bold ${
+                  !towerId ? 'text-primary-foreground' : 'text-foreground-secondary'
+                }`}
+              >
+                All towers
+              </Text>
+            </Pressable>
             {towers.map((tower) => (
-              <FilterPill
+              <Pressable
                 key={tower.id}
-                label={tower.name}
-                active={towerId === tower.id}
                 onPress={() => setTowerId(tower.id)}
-              />
+                className={`self-start p-2 rounded-md border mr-2 ${
+                  towerId === tower.id ? 'bg-primary border-primary' : 'bg-card border-border'
+                }`}
+              >
+                <Text
+                  className={`text-xs font-sans-bold ${
+                    towerId === tower.id ? 'text-primary-foreground' : 'text-foreground-secondary'
+                  }`}
+                >
+                  {tower.name}
+                </Text>
+              </Pressable>
             ))}
           </View>
         ) : null}

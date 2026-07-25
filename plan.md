@@ -428,7 +428,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 15 — Maintenance Dues & Payment Confirmations
+## Chapter 15 — Maintenance Dues & Payment Confirmations ✅
 
 `(server + client)` · Branch: `feature/maintenance-dues`
 
@@ -454,7 +454,7 @@ Three separate checks, not one combined middleware:
 
 ---
 
-## Chapter 16 — Push Notification Consolidation
+## Chapter 16 — Push Notification Consolidation ✅
 
 `(server + client)` · Branch: `feature/push-consolidation`
 

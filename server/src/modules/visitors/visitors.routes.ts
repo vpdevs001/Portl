@@ -7,7 +7,6 @@ import {
   listPreApprovals,
   logVisitorEntry,
   logVisitorExit,
-  registerPushToken,
   respondToVisitorRequest,
   uploadVisitorPhoto,
   verifyPass
@@ -54,11 +53,8 @@ export async function visitorsRoutes(app: FastifyInstance) {
     uploadVisitorPhoto
   );
 
-  app.post(
-    '/api/notifications/register',
-    { preHandler: [requireAuth, requireSociety] },
-    registerPushToken
-  );
+  // POST /api/notifications/register moved to the notifications module
+  // (Chapter 16) — see notifications.routes.ts.
 
   // ─── Chapter 8 — Pre-Approvals ────────────────────────────────────────────
 

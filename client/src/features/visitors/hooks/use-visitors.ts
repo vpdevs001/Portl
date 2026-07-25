@@ -7,7 +7,6 @@ import {
   fetchPreApprovals,
   logVisitorEntry,
   logVisitorExit,
-  registerPushToken,
   respondToVisitorRequest,
   uploadVisitorPhoto,
   verifyPass
@@ -100,11 +99,7 @@ export function useUploadVisitorPhoto() {
   });
 }
 
-export function useRegisterPushToken() {
-  return useMutation({
-    mutationFn: registerPushToken
-  });
-}
+// useRegisterPushToken moved to features/notifications/hooks/use-notifications.ts (Chapter 16)
 
 // ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
 

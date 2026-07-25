@@ -61,12 +61,7 @@ export async function uploadVisitorPhoto(payload: {
   });
 }
 
-export async function registerPushToken(payload: { expoPushToken: string; deviceId?: string }) {
-  return apiRequest<{ id: string }>('/api/notifications/register', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-}
+// registerPushToken moved to features/notifications/services/notifications.ts (Chapter 16)
 
 // ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
 

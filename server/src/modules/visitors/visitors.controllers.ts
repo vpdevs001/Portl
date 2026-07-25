@@ -5,7 +5,6 @@ import * as service from './visitors.service';
 import {
   createPreApprovalSchema,
   createVisitorRequestSchema,
-  registerPushTokenSchema,
   respondVisitorRequestSchema,
   uploadVisitorPhotoSchema,
   verifyPassSchema
@@ -85,17 +84,6 @@ export async function uploadVisitorPhoto(request: FastifyRequest, reply: Fastify
   const result = await service.uploadVisitorPhoto(dto);
 
   return sendSuccess(reply, 201, result);
-}
-
-export async function registerPushToken(request: FastifyRequest, reply: FastifyReply) {
-  if (!request.user) {
-    throw AppError.unauthorized('Authentication required');
-  }
-
-  const dto = registerPushTokenSchema.parse(request.body);
-  const token = await service.registerPushToken(request.user.id, dto);
-
-  return sendSuccess(reply, 201, token);
 }
 
 // ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────

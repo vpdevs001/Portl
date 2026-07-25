@@ -2,12 +2,16 @@ import { Screen } from '@/components/Screen';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Colors } from '@/constants/colors';
 import { useLeaveSociety, useSocietyDetails } from '@/features/society/services/use-society';
+import { useUnregisterPushToken } from '@/features/notifications/hooks/use-notifications';
 import { authClient, useAppSession } from '@/lib/auth-client';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { useColorScheme, useThemePreference, type ThemePreference } from '@/hooks/useColorScheme';
 import { DrawerButton } from '@/components/DrawerButton';
 import { ResidentEntryHistoryCard } from '@/features/logs/components/ResidentEntryHistoryCard';
@@ -25,6 +29,7 @@ export function ProfileScreen() {
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { preference, setPreference } = useThemePreference();
   const leaveSocietyMutation = useLeaveSociety();
+  const unregisterPushToken = useUnregisterPushToken();
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [confirmingLeave, setConfirmingLeave] = useState(false);
 
@@ -32,6 +37,20 @@ export function ProfileScreen() {
     try {
       WebBrowser.dismissAuthSession();
     } catch {}
+
+    // Best-effort — remove this device's token so it stops receiving pushes
+    // for a session that's about to end. Never blocks sign-out on failure.
+    try {
+      if (Device.isDevice) {
+        const projectId =
+          Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+        const { data: token } = await Notifications.getExpoPushTokenAsync(
+          projectId ? { projectId } : undefined
+        );
+        await unregisterPushToken.mutateAsync(token);
+      }
+    } catch {}
+
     await authClient.signOut();
   };
 

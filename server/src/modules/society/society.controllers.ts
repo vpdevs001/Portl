@@ -113,6 +113,33 @@ export async function listMembers(request: FastifyRequest, reply: FastifyReply) 
   return sendSuccess(reply, 200, members);
 }
 
+export async function leaveSociety(request: FastifyRequest, reply: FastifyReply) {
+  if (!request.user) {
+    throw AppError.unauthorized('Authentication required');
+  }
+
+  const result = await service.leaveSociety(request.user.id);
+  return sendSuccess(reply, 200, result);
+}
+
+const removeMemberParamsSchema = z.object({ userId: z.string().uuid() });
+
+export async function removeMember(request: FastifyRequest, reply: FastifyReply) {
+  if (!request.user) {
+    throw AppError.unauthorized('Authentication required');
+  }
+
+  const societyId = request.user.societyId;
+  if (!societyId) {
+    throw AppError.forbidden('No society assigned');
+  }
+
+  const { userId } = removeMemberParamsSchema.parse(request.params);
+  const result = await service.removeMember(societyId, request.user.id, userId);
+
+  return sendSuccess(reply, 200, result);
+}
+
 export async function updateSocietyUpiId(request: FastifyRequest, reply: FastifyReply) {
   const societyId = request.user?.societyId;
   if (!societyId) {

@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { societies, towers, flats } from '../../common/db/schema/identity.schema';
 import { user } from '../../common/db/schema/auth.schema';
@@ -172,6 +172,78 @@ export async function listMembers(
   return await db.query.user.findMany({
     where: role ? { societyId, role } : { societyId },
     orderBy: (u, { asc }) => [asc(u.name)]
+  });
+}
+
+export async function leaveSociety(userId: string) {
+  return await db.transaction(async (tx) => {
+    const currentUser = await tx.query.user.findFirst({ where: { id: userId } });
+
+    if (!currentUser || !currentUser.societyId) {
+      throw AppError.forbidden('User does not belong to a society');
+    }
+
+    // A sole admin leaving would strand the society with no one able to
+    // manage it — require them to hand off admin duties to another member
+    // first (Chapter 17+ concern; for now this just blocks the action).
+    if (currentUser.role === 'society_admin') {
+      const [otherAdmin] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(user)
+        .where(
+          and(
+            eq(user.societyId, currentUser.societyId),
+            eq(user.role, 'society_admin'),
+            ne(user.id, userId)
+          )
+        );
+
+      if (!otherAdmin || otherAdmin.count === 0) {
+        throw AppError.conflict(
+          'You are the only admin in this society. Promote another member to admin before leaving.'
+        );
+      }
+    }
+
+    const [updated] = await tx
+      .update(user)
+      .set({ societyId: null, flatId: null, role: null })
+      .where(eq(user.id, userId))
+      .returning();
+
+    if (!updated) {
+      throw new AppError(500, 'DATABASE_ERROR', 'Failed to leave society');
+    }
+
+    return updated;
+  });
+}
+
+export async function removeMember(societyId: string, actorId: string, targetUserId: string) {
+  if (targetUserId === actorId) {
+    throw AppError.badRequest('Use the leave endpoint to remove yourself from a society');
+  }
+
+  return await db.transaction(async (tx) => {
+    const targetUser = await tx.query.user.findFirst({
+      where: { id: targetUserId, societyId }
+    });
+
+    if (!targetUser) {
+      throw AppError.notFound('Member not found in this society');
+    }
+
+    const [updated] = await tx
+      .update(user)
+      .set({ societyId: null, flatId: null, role: null })
+      .where(eq(user.id, targetUserId))
+      .returning();
+
+    if (!updated) {
+      throw new AppError(500, 'DATABASE_ERROR', 'Failed to remove member');
+    }
+
+    return updated;
   });
 }
 

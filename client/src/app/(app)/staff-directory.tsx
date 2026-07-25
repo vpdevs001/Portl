@@ -15,6 +15,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { FilterPill } from '@/components/FilterPill';
 import { useStaff, useRemoveStaff } from '@/features/staff/hooks/use-staff';
 import { useAppSession } from '@/lib/auth-client';
 import type { StaffMember } from '@/features/staff/services/staff';
@@ -113,25 +114,14 @@ export default function StaffDirectoryScreen() {
             data={ROLE_FILTERS}
             keyExtractor={(item) => item}
             contentContainerClassName="gap-2"
-            renderItem={({ item }) => {
-              const active = selectedRole === item;
-              return (
-                <Pressable
-                  onPress={() => setSelectedRole(item)}
-                  className={`rounded-full border px-3.5 py-1.5 ${
-                    active ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            }}
+            renderItem={({ item }) => (
+              <FilterPill
+                label={item}
+                active={selectedRole === item}
+                onPress={() => setSelectedRole(item)}
+                className="mr-0"
+              />
+            )}
           />
         </View>
 

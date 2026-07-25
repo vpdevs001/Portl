@@ -193,7 +193,7 @@ export function RegisterVisitorScreen() {
               <Pressable
                 key={t.value}
                 onPress={() => setVisitorType(t.value)}
-                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full border mr-2 ${
+                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border mr-2 ${
                   active ? 'bg-primary border-primary' : 'bg-card border-border'
                 }`}
               >

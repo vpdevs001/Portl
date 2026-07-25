@@ -3,29 +3,27 @@ import * as Haptics from 'expo-haptics';
 import {
   confirmPayment,
   fetchDues,
-  fetchPaymentConfirmations,
-  generateDues,
+  setDueStatus,
   verifyPayment,
   type ConfirmPaymentInput,
   type DueStatus,
-  type GenerateDuesInput,
   type VerifyPaymentInput
 } from '@/features/payments/services/payments';
 
 const DUES_KEY = ['payments', 'dues'];
-const CONFIRMATIONS_KEY = ['payments', 'confirmations'];
 
 export function useDues(status?: DueStatus) {
   return useQuery({ queryKey: [...DUES_KEY, status ?? 'all'], queryFn: () => fetchDues(status) });
 }
 
-export function useGenerateDues() {
+export function useSetDueStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: GenerateDuesInput) => generateDues(payload),
+    mutationFn: ({ id, status }: { id: string; status: 'pending' | 'paid' }) =>
+      setDueStatus(id, status),
     onSuccess: () => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       queryClient.invalidateQueries({ queryKey: DUES_KEY });
     }
   });
@@ -39,13 +37,8 @@ export function useConfirmPayment() {
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: DUES_KEY });
-      queryClient.invalidateQueries({ queryKey: CONFIRMATIONS_KEY });
     }
   });
-}
-
-export function usePaymentConfirmations() {
-  return useQuery({ queryKey: CONFIRMATIONS_KEY, queryFn: fetchPaymentConfirmations });
 }
 
 export function useVerifyPayment() {
@@ -56,7 +49,6 @@ export function useVerifyPayment() {
       verifyPayment(id, payload),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      queryClient.invalidateQueries({ queryKey: CONFIRMATIONS_KEY });
       queryClient.invalidateQueries({ queryKey: DUES_KEY });
     }
   });

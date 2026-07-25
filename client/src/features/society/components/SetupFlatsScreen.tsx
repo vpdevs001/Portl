@@ -1,10 +1,25 @@
-import { useCreateFlat, useFlats, useTowers } from '@/features/society/services/use-society';
+import {
+  useCreateFlat,
+  useFlats,
+  useTowers,
+  type FlatType
+} from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { FilterPill } from '@/components/FilterPill';
+
+const FLAT_TYPES: { value: FlatType; label: string }[] = [
+  { value: '1bhk', label: '1BHK' },
+  { value: '2bhk', label: '2BHK' },
+  { value: '3bhk', label: '3BHK' },
+  { value: '4bhk', label: '4BHK' },
+  { value: '5bhk', label: '5BHK' },
+  { value: 'other', label: 'Other' }
+];
 
 export function SetupFlatsScreen() {
   const router = useRouter();
@@ -21,6 +36,8 @@ export function SetupFlatsScreen() {
 
   const [flatNumber, setFlatNumber] = useState('');
   const [floor, setFloor] = useState('');
+  const [flatType, setFlatType] = useState<FlatType>('1bhk');
+  const [monthlyAmount, setMonthlyAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -42,14 +59,24 @@ export function SetupFlatsScreen() {
       return;
     }
 
+    const parsedAmount = monthlyAmount.trim() ? Number(monthlyAmount.trim()) : 0;
+    if (monthlyAmount.trim() && (isNaN(parsedAmount) || parsedAmount < 0)) {
+      setError('Monthly amount must be a valid number');
+      return;
+    }
+
     try {
       await createFlatMutation.mutateAsync({
         towerId: effectiveTowerId,
         flatNumber: flatNumber.trim(),
-        floor: parsedFloor
+        floor: parsedFloor,
+        flatType,
+        monthlyAmount: parsedAmount
       });
       setFlatNumber('');
       setFloor('');
+      setFlatType('1bhk');
+      setMonthlyAmount('');
     } catch (e: any) {
       setError(e.message ?? 'Failed to add flat');
     }
@@ -154,6 +181,35 @@ export function SetupFlatsScreen() {
             </Pressable>
           </View>
         </View>
+
+        <View className="gap-1">
+          <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat Type</Text>
+          <View className="flex-row flex-wrap">
+            {FLAT_TYPES.map((t) => (
+              <FilterPill
+                key={t.value}
+                label={t.label}
+                active={flatType === t.value}
+                onPress={() => setFlatType(t.value)}
+                className="mb-2"
+              />
+            ))}
+          </View>
+        </View>
+
+        <View className="gap-1">
+          <Text className="text-[10px] font-sans-semibold text-muted uppercase">
+            Monthly Amount (₹)
+          </Text>
+          <TextInput
+            value={monthlyAmount}
+            onChangeText={setMonthlyAmount}
+            placeholder="e.g. 2500"
+            placeholderTextColor="#93a08d"
+            keyboardType="numeric"
+            className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+          />
+        </View>
       </View>
 
       {/* Flats List */}
@@ -174,6 +230,12 @@ export function SetupFlatsScreen() {
               >
                 <Text className="text-xs font-sans-medium text-foreground">{flat.flatNumber}</Text>
                 <Text className="text-[10px] font-sans text-muted">(Fl: {flat.floor ?? 'G'})</Text>
+                <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                  <Text className="text-[9px] font-sans-bold text-primary uppercase">
+                    {FLAT_TYPES.find((t) => t.value === flat.flatType)?.label ?? flat.flatType}
+                  </Text>
+                </View>
+                <Text className="text-[10px] font-sans-bold text-muted">₹{flat.monthlyAmount}</Text>
               </View>
             ))}
           </View>

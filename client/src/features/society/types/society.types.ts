@@ -28,12 +28,16 @@ export interface Tower {
   updatedAt: string;
 }
 
+export type FlatType = '1bhk' | '2bhk' | '3bhk' | '4bhk' | '5bhk' | 'other';
+
 export interface Flat {
   id: string;
   societyId: string;
   towerId: string;
   flatNumber: string;
   floor: number | null;
+  flatType: FlatType;
+  monthlyAmount: string;
   createdAt: string;
   updatedAt: string;
 }

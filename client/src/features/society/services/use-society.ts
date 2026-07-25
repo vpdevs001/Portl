@@ -4,9 +4,16 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
-import type { Flat, Society, SocietyDetails, Tower, UserMember } from '../types/society.types';
+import type {
+  Flat,
+  FlatType,
+  Society,
+  SocietyDetails,
+  Tower,
+  UserMember
+} from '../types/society.types';
 
-export type { Flat, Society, SocietyDetails, Tower, UserMember };
+export type { Flat, FlatType, Society, SocietyDetails, Tower, UserMember };
 
 export function useCreateSociety() {
   return useMutation({
@@ -76,7 +83,13 @@ export function useTowers() {
 export function useCreateFlat() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { towerId: string; flatNumber: string; floor?: number }) =>
+    mutationFn: (data: {
+      towerId: string;
+      flatNumber: string;
+      floor?: number;
+      flatType: FlatType;
+      monthlyAmount: number;
+    }) =>
       apiRequest<Flat>('/api/societies/flats', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -84,6 +97,21 @@ export function useCreateFlat() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['flats'] });
       queryClient.invalidateQueries({ queryKey: ['society', 'me'] });
+    }
+  });
+}
+
+export function useUpdateFlat() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; flatType?: FlatType; monthlyAmount?: number }) =>
+      apiRequest<Flat>(`/api/societies/flats/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flats'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
     }
   });
 }

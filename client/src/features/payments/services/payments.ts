@@ -1,6 +1,7 @@
 import { apiRequest } from '@/lib/api';
+import type { Flat } from '@/features/society/services/use-society';
 
-export type DueStatus = 'pending' | 'paid' | 'overdue';
+export type DueStatus = 'pending' | 'review' | 'paid';
 export type ConfirmationStatus = 'pending' | 'approved' | 'rejected';
 
 export type MaintenanceDue = {
@@ -9,14 +10,13 @@ export type MaintenanceDue = {
   flatId: string;
   period: string;
   amount: string;
-  dueDate: string;
   status: DueStatus;
   createdAt: string;
   updatedAt: string;
-  flat?: { id: string; flatNumber: string } | null;
-  // Only present on the resident's own list (GET /api/payments/dues), most
-  // recent confirmation first — lets the UI show "verification pending"
-  // even while status is still technically 'pending'.
+  flat?: Flat | null;
+  // Latest submission for this due, most recent first — present once a
+  // resident has submitted proof at least once this month (even if it
+  // was later rejected and the due went back to 'pending').
   paymentConfirmations?: PaymentConfirmation[];
 };
 
@@ -33,16 +33,7 @@ export type PaymentConfirmation = {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
-  due?: MaintenanceDue | null;
-  flat?: { id: string; flatNumber: string } | null;
   raisedByUser?: { id: string; name: string } | null;
-};
-
-export type GenerateDuesInput = {
-  period: string;
-  amount: number;
-  dueDate: string;
-  flatIds?: string[];
 };
 
 export type ConfirmPaymentInput = {
@@ -62,10 +53,10 @@ export async function fetchDues(status?: DueStatus) {
   return apiRequest<MaintenanceDue[]>(`/api/payments/dues${query}`);
 }
 
-export async function generateDues(payload: GenerateDuesInput) {
-  return apiRequest<MaintenanceDue[]>('/api/payments/dues', {
-    method: 'POST',
-    body: JSON.stringify(payload)
+export async function setDueStatus(id: string, status: 'pending' | 'paid') {
+  return apiRequest<MaintenanceDue>(`/api/payments/dues/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
   });
 }
 
@@ -74,10 +65,6 @@ export async function confirmPayment(payload: ConfirmPaymentInput) {
     method: 'POST',
     body: JSON.stringify(payload)
   });
-}
-
-export async function fetchPaymentConfirmations() {
-  return apiRequest<PaymentConfirmation[]>('/api/payments/confirmations');
 }
 
 export async function verifyPayment(id: string, payload: VerifyPaymentInput) {

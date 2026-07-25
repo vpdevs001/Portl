@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Image,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -11,38 +10,39 @@ import {
   View
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
 import { DrawerButton } from '@/components/DrawerButton';
-import {
-  useGenerateDues,
-  usePaymentConfirmations,
-  useVerifyPayment
-} from '@/features/payments/hooks/use-payments';
+import { FilterPill } from '@/components/FilterPill';
+import { useDues, useSetDueStatus, useVerifyPayment } from '@/features/payments/hooks/use-payments';
 import { useSocietyDetails, useUpdateSocietyUpiId } from '@/features/society/services/use-society';
-import type {
-  ConfirmationStatus,
-  PaymentConfirmation
-} from '@/features/payments/services/payments';
+import type { DueStatus, MaintenanceDue } from '@/features/payments/services/payments';
 
 const STATUS_META: Record<
-  ConfirmationStatus,
+  DueStatus,
   { label: string; icon: string; token: 'danger' | 'warning' | 'success' | 'muted' }
 > = {
-  pending: { label: 'Pending review', icon: 'time-outline', token: 'warning' },
-  approved: { label: 'Approved', icon: 'checkmark-circle-outline', token: 'success' },
-  rejected: { label: 'Rejected', icon: 'close-circle-outline', token: 'danger' }
+  pending: { label: 'Pending', icon: 'time-outline', token: 'warning' },
+  review: { label: 'In review', icon: 'hourglass-outline', token: 'muted' },
+  paid: { label: 'Paid', icon: 'checkmark-circle-outline', token: 'success' }
 };
 
-const FILTERS: { value: ConfirmationStatus | 'all'; label: string }[] = [
+const FILTERS: { value: DueStatus; label: string }[] = [
   { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'all', label: 'All' }
+  { value: 'review', label: 'Review' },
+  { value: 'paid', label: 'Paid' }
 ];
+
+function formatPeriod(period: string) {
+  const [year, month] = period.split('-').map(Number);
+  if (!year || !month) return period;
+  return new Date(year, month - 1, 1).toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric'
+  });
+}
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString(undefined, {
@@ -57,13 +57,12 @@ export default function ReviewPaymentsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const [filter, setFilter] = useState<ConfirmationStatus | 'all'>('pending');
-  const [generateOpen, setGenerateOpen] = useState(false);
+  const [filter, setFilter] = useState<DueStatus>('pending');
   const [upiModalOpen, setUpiModalOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
-  const { data, isLoading, refetch, isRefetching } = usePaymentConfirmations();
-  const confirmations = (data ?? []).filter((c) => filter === 'all' || c.status === filter);
+  const { data, isLoading, refetch, isRefetching } = useDues(filter);
+  const dues = data ?? [];
 
   return (
     <Screen>
@@ -72,19 +71,13 @@ export default function ReviewPaymentsScreen() {
           <Pressable onPress={() => router.back()} hitSlop={12}>
             <Ionicons name="chevron-back" size={24} color={theme.foreground} />
           </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Payment reviews</Text>
+          <Text className="text-lg font-serif-semibold text-foreground">Maintenance dues</Text>
           <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => setUpiModalOpen(true)}
               className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
             >
               <Ionicons name="qr-code-outline" size={18} color={theme.foreground} />
-            </Pressable>
-            <Pressable
-              onPress={() => setGenerateOpen(true)}
-              className="w-10 h-10 rounded-xl bg-primary items-center justify-center"
-            >
-              <Ionicons name="add" size={20} color={theme.primaryForeground} />
             </Pressable>
             <Pressable
               onPress={() => refetch()}
@@ -106,35 +99,23 @@ export default function ReviewPaymentsScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="my-4"
-          contentContainerClassName="gap-2"
+          contentContainerClassName="gap-0"
         >
-          {FILTERS.map((f) => {
-            const active = filter === f.value;
-            return (
-              <Pressable
-                key={f.value}
-                onPress={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-full border mr-2 ${
-                  active ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {FILTERS.map((f) => (
+            <FilterPill
+              key={f.value}
+              label={f.label}
+              active={filter === f.value}
+              onPress={() => setFilter(f.value)}
+            />
+          ))}
         </ScrollView>
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color={theme.primary} />
           </View>
-        ) : confirmations.length === 0 ? (
+        ) : dues.length === 0 ? (
           <View className="flex-1 items-center justify-center gap-3 pb-20">
             <View className="w-14 h-14 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
               <Ionicons name="cash-outline" size={24} color={theme.primary} />
@@ -144,8 +125,10 @@ export default function ReviewPaymentsScreen() {
             </Text>
             <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
               {filter === 'pending'
-                ? 'No payment proofs waiting for review.'
-                : `No ${filter === 'all' ? '' : filter} confirmations yet.`}
+                ? 'No dues pending this month.'
+                : filter === 'review'
+                  ? 'No payment proofs waiting for review.'
+                  : 'No dues marked paid yet.'}
             </Text>
           </View>
         ) : (
@@ -154,100 +137,148 @@ export default function ReviewPaymentsScreen() {
             contentContainerClassName="pb-20"
             className="mt-1"
           >
-            {confirmations.map((confirmation) => (
-              <ConfirmationCard
-                key={confirmation.id}
-                confirmation={confirmation}
-                onViewScreenshot={() => setLightboxUrl(confirmation.screenshot)}
-              />
+            {dues.map((due) => (
+              <DueCard key={due.id} due={due} onViewScreenshot={(url) => setLightboxUrl(url)} />
             ))}
           </ScrollView>
         )}
       </View>
 
-      <GenerateDuesModal visible={generateOpen} onClose={() => setGenerateOpen(false)} />
-      <UpiSettingsModal key={upiModalOpen ? 'open' : 'closed'} visible={upiModalOpen} onClose={() => setUpiModalOpen(false)} />
+      <UpiSettingsModal
+        key={upiModalOpen ? 'open' : 'closed'}
+        visible={upiModalOpen}
+        onClose={() => setUpiModalOpen(false)}
+      />
       <ScreenshotLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </Screen>
   );
 }
 
-function ConfirmationCard({
-  confirmation,
+function DueCard({
+  due,
   onViewScreenshot
 }: {
-  confirmation: PaymentConfirmation;
-  onViewScreenshot: () => void;
+  due: MaintenanceDue;
+  onViewScreenshot: (url: string) => void;
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const meta = STATUS_META[confirmation.status];
+  const meta = STATUS_META[due.status];
   const badgeColor = theme[meta.token];
 
   const [rejecting, setRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  const setDueStatus = useSetDueStatus();
   const verifyPayment = useVerifyPayment();
-  const isPending = confirmation.status === 'pending';
+
+  const latestConfirmation = due.paymentConfirmations?.[0];
 
   function handleApprove() {
-    verifyPayment.mutate({ id: confirmation.id, payload: { status: 'approved' } });
+    if (!latestConfirmation) return;
+    verifyPayment.mutate({ id: latestConfirmation.id, payload: { status: 'approved' } });
   }
 
   function handleReject() {
-    if (!rejectionReason.trim()) return;
+    if (!latestConfirmation || !rejectionReason.trim()) return;
     verifyPayment.mutate(
-      { id: confirmation.id, payload: { status: 'rejected', rejectionReason: rejectionReason.trim() } },
+      {
+        id: latestConfirmation.id,
+        payload: { status: 'rejected', rejectionReason: rejectionReason.trim() }
+      },
       { onSuccess: () => setRejecting(false) }
     );
+  }
+
+  function handleMarkPaid() {
+    setDueStatus.mutate({ id: due.id, status: 'paid' });
+  }
+
+  function handleMarkPending() {
+    setDueStatus.mutate({ id: due.id, status: 'pending' });
   }
 
   return (
     <View className="bg-card border border-border rounded-2xl p-4 mb-3">
       <View className="flex-row items-center justify-between mb-2">
         <View
-          className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
+          className="flex-row items-center gap-1.5 rounded-lg px-2.5 py-1"
           style={{ backgroundColor: `${badgeColor}1a` }}
         >
           <Ionicons name={meta.icon as never} size={12} color={badgeColor} />
-          <Text className="text-[10px] font-sans-bold uppercase tracking-wider" style={{ color: badgeColor }}>
+          <Text
+            className="text-[10px] font-sans-bold uppercase tracking-wider"
+            style={{ color: badgeColor }}
+          >
             {meta.label}
           </Text>
         </View>
         <Text className="text-[11px] font-sans text-muted uppercase tracking-wider">
-          {formatDate(confirmation.createdAt)}
+          {formatPeriod(due.period)}
         </Text>
       </View>
 
-      <View className="flex-row gap-3">
-        <Pressable onPress={onViewScreenshot}>
-          <Image source={{ uri: confirmation.screenshot }} className="w-16 h-16 rounded-xl" />
-        </Pressable>
-        <View className="flex-1">
+      <View className="flex-row items-center justify-between">
+        <View>
           <Text className="text-base font-serif-semibold text-foreground">
-            ₹{confirmation.amount} · {confirmation.due?.period ?? 'Maintenance'}
+            Flat {due.flat?.flatNumber ?? '—'}
           </Text>
-          <Text className="text-sm font-sans text-foreground-secondary mt-1">
-            {confirmation.raisedByUser?.name ?? 'Resident'}
-            {confirmation.flat?.flatNumber ? ` · Flat ${confirmation.flat.flatNumber}` : ''}
-          </Text>
-          {confirmation.upiRef ? (
-            <Text className="text-[11px] font-sans text-muted mt-1">UTR: {confirmation.upiRef}</Text>
-          ) : null}
+          <Text className="text-xl font-serif-bold text-foreground mt-0.5">₹{due.amount}</Text>
         </View>
+
+        {due.status === 'pending' ? (
+          <Pressable
+            onPress={handleMarkPaid}
+            disabled={setDueStatus.isPending}
+            className="rounded-xl bg-primary px-4 py-2.5 items-center"
+          >
+            {setDueStatus.isPending ? (
+              <ActivityIndicator size="small" color={theme.primaryForeground} />
+            ) : (
+              <Text className="text-xs font-sans-bold text-primary-foreground">Mark paid</Text>
+            )}
+          </Pressable>
+        ) : null}
+
+        {due.status === 'paid' ? (
+          <Pressable
+            onPress={handleMarkPending}
+            disabled={setDueStatus.isPending}
+            className="rounded-xl border border-border px-4 py-2.5 items-center"
+          >
+            {setDueStatus.isPending ? (
+              <ActivityIndicator size="small" color={theme.foreground} />
+            ) : (
+              <Text className="text-xs font-sans-bold text-foreground-secondary">Mark pending</Text>
+            )}
+          </Pressable>
+        ) : null}
       </View>
 
-      {confirmation.status === 'rejected' && confirmation.rejectionReason ? (
-        <View className="flex-row items-start gap-2 mt-3 pt-3 border-t border-border/60">
-          <Ionicons name="alert-circle-outline" size={14} color={theme.danger} style={{ marginTop: 1 }} />
-          <Text className="text-xs font-sans text-danger flex-1 leading-5">
-            {confirmation.rejectionReason}
-          </Text>
-        </View>
-      ) : null}
-
-      {isPending ? (
+      {due.status === 'review' && latestConfirmation ? (
         <View className="mt-3 pt-3 border-t border-border/60">
+          <View className="flex-row gap-3 mb-3">
+            <Pressable onPress={() => onViewScreenshot(latestConfirmation.screenshot)}>
+              <Image
+                source={{ uri: latestConfirmation.screenshot }}
+                className="w-16 h-16 rounded-xl"
+              />
+            </Pressable>
+            <View className="flex-1">
+              <Text className="text-sm font-sans-semibold text-foreground">
+                {latestConfirmation.raisedByUser?.name ?? 'Resident'}
+              </Text>
+              <Text className="text-[11px] font-sans text-muted mt-0.5">
+                Submitted {formatDate(latestConfirmation.createdAt)}
+              </Text>
+              {latestConfirmation.upiRef ? (
+                <Text className="text-[11px] font-sans text-muted mt-1">
+                  UTR: {latestConfirmation.upiRef}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
           {rejecting ? (
             <>
               <TextInput
@@ -367,8 +398,8 @@ function UpiSettingsModal({ visible, onClose }: { visible: boolean; onClose: () 
           </View>
 
           <Text className="text-sm font-sans text-foreground-secondary leading-5 mb-4">
-            Every resident sees this UPI ID when they pay their maintenance dues. It stays the
-            same even if a different admin takes over later.
+            Every resident sees this UPI ID when they pay their maintenance dues. It stays the same
+            even if a different admin takes over later.
           </Text>
 
           <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
@@ -395,164 +426,6 @@ function UpiSettingsModal({ visible, onClose }: { visible: boolean; onClose: () 
               <ActivityIndicator size="small" color={theme.primaryForeground} />
             ) : (
               <Text className="text-sm font-sans-bold text-primary-foreground">Save</Text>
-            )}
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function GenerateDuesModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-
-  const [period, setPeriod] = useState('');
-  const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState(() => new Date());
-  const [showPicker, setShowPicker] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const generateDues = useGenerateDues();
-
-  function reset() {
-    setPeriod('');
-    setAmount('');
-    setDueDate(new Date());
-    setError(null);
-  }
-
-  function handleClose() {
-    reset();
-    onClose();
-  }
-
-  function handleDateValueChange(_event: unknown, selected: Date) {
-    if (Platform.OS === 'android') setShowPicker(false);
-    setDueDate(selected);
-  }
-
-  function handleDatePickerDismiss() {
-    if (Platform.OS === 'android') setShowPicker(false);
-  }
-
-  async function handleSubmit() {
-    setError(null);
-
-    const trimmedPeriod = period.trim();
-    const parsedAmount = Number(amount);
-
-    if (!trimmedPeriod) {
-      setError('Billing period is required, e.g. "July 2026"');
-      return;
-    }
-    if (!parsedAmount || parsedAmount <= 0) {
-      setError('Enter a valid amount');
-      return;
-    }
-
-    try {
-      await generateDues.mutateAsync({
-        period: trimmedPeriod,
-        amount: parsedAmount,
-        dueDate: dueDate.toISOString().slice(0, 10)
-      });
-      handleClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate dues');
-    }
-  }
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <View className="flex-1 justify-end bg-black/50">
-        <View className="bg-background rounded-t-3xl px-6 pt-5 pb-8">
-          <View className="items-center mb-4">
-            <View className="w-10 h-1 rounded-full bg-border" />
-          </View>
-
-          <View className="flex-row items-center justify-between mb-5">
-            <Text className="text-lg font-serif-semibold text-foreground">Generate dues</Text>
-            <Pressable onPress={handleClose} hitSlop={12}>
-              <Ionicons name="close" size={22} color={theme.foreground} />
-            </Pressable>
-          </View>
-
-          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-            Billing period
-          </Text>
-          <TextInput
-            value={period}
-            onChangeText={setPeriod}
-            placeholder="e.g. July 2026"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-4"
-          />
-
-          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-            Amount per flat (₹)
-          </Text>
-          <TextInput
-            value={amount}
-            onChangeText={setAmount}
-            placeholder="e.g. 2500"
-            placeholderTextColor={theme.muted}
-            keyboardType="numeric"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-4"
-          />
-
-          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-            Due date
-          </Text>
-          <Pressable
-            onPress={() => setShowPicker(true)}
-            className="flex-row items-center justify-between bg-card border border-border rounded-xl px-4 py-3 mb-2"
-          >
-            <Text className="text-sm font-sans-semibold text-foreground">
-              {dueDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Text>
-            <Ionicons name="calendar-outline" size={18} color={theme.primary} />
-          </Pressable>
-
-          {showPicker ? (
-            <DateTimePicker
-              value={dueDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onValueChange={handleDateValueChange}
-              onDismiss={handleDatePickerDismiss}
-            />
-          ) : null}
-
-          <Text className="text-xs font-sans text-muted mt-3 mb-2 leading-5">
-            This bills every flat in the society for this amount.
-          </Text>
-
-          <Pressable
-            onPress={() => {
-              handleClose();
-              router.push('/(app)/admin/payments/generate-selected');
-            }}
-            className="flex-row items-center justify-center gap-1.5 mb-4"
-          >
-            <Text className="text-xs font-sans-bold text-primary">Bill specific flats instead</Text>
-            <Ionicons name="arrow-forward" size={12} color={theme.primary} />
-          </Pressable>
-
-          {error ? <Text className="text-sm font-sans text-danger mb-4">{error}</Text> : null}
-
-          <Pressable
-            onPress={handleSubmit}
-            disabled={generateDues.isPending}
-            className="rounded-xl bg-primary px-4 py-4 items-center mt-2"
-          >
-            {generateDues.isPending ? (
-              <ActivityIndicator size="small" color={theme.primaryForeground} />
-            ) : (
-              <Text className="text-sm font-sans-bold text-primary-foreground">
-                Generate for all flats
-              </Text>
             )}
           </Pressable>
         </View>

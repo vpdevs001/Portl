@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   TextInput,
+  Modal,
   useColorScheme
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -16,10 +17,23 @@ import {
   useFlats,
   useCreateTower,
   useCreateFlat,
-  useSocietyDetails
+  useUpdateFlat,
+  useSocietyDetails,
+  type Flat,
+  type FlatType
 } from '@/features/society/services/use-society';
 import { Colors } from '@/constants/colors';
 import { DrawerButton } from '@/components/DrawerButton';
+import { FilterPill } from '@/components/FilterPill';
+
+const FLAT_TYPES: { value: FlatType; label: string }[] = [
+  { value: '1bhk', label: '1BHK' },
+  { value: '2bhk', label: '2BHK' },
+  { value: '3bhk', label: '3BHK' },
+  { value: '4bhk', label: '4BHK' },
+  { value: '5bhk', label: '5BHK' },
+  { value: 'other', label: 'Other' }
+];
 
 export default function TowersFlatsScreen() {
   const router = useRouter();
@@ -33,13 +47,49 @@ export default function TowersFlatsScreen() {
   const createTowerMutation = useCreateTower();
   const createFlatMutation = useCreateFlat();
 
+  const updateFlatMutation = useUpdateFlat();
+
   const [newTowerName, setNewTowerName] = useState('');
   const [selectedTowerId, setSelectedTowerId] = useState<string | null>(null);
   const [newFlatNumber, setNewFlatNumber] = useState('');
+  const [newFlatType, setNewFlatType] = useState<FlatType>('1bhk');
+  const [newFlatAmount, setNewFlatAmount] = useState('');
 
   const [showAddTower, setShowAddTower] = useState(false);
   const [showAddFlat, setShowAddFlat] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [editingFlat, setEditingFlat] = useState<Flat | null>(null);
+  const [editFlatType, setEditFlatType] = useState<FlatType>('1bhk');
+  const [editFlatAmount, setEditFlatAmount] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const openEditFlat = (flat: Flat) => {
+    setEditingFlat(flat);
+    setEditFlatType(flat.flatType);
+    setEditFlatAmount(flat.monthlyAmount);
+    setEditError(null);
+  };
+
+  const handleUpdateFlat = async () => {
+    if (!editingFlat) return;
+    const parsedAmount = Number(editFlatAmount.trim());
+    if (!editFlatAmount.trim() || isNaN(parsedAmount) || parsedAmount < 0) {
+      setEditError('Enter a valid monthly amount');
+      return;
+    }
+    try {
+      setEditError(null);
+      await updateFlatMutation.mutateAsync({
+        id: editingFlat.id,
+        flatType: editFlatType,
+        monthlyAmount: parsedAmount
+      });
+      setEditingFlat(null);
+    } catch (err: any) {
+      setEditError(err.message ?? 'Failed to update flat');
+    }
+  };
 
   const handleCreateTower = async () => {
     if (!newTowerName.trim()) return;
@@ -55,13 +105,22 @@ export default function TowersFlatsScreen() {
 
   const handleCreateFlat = async () => {
     if (!newFlatNumber.trim() || !selectedTowerId) return;
+    const parsedAmount = newFlatAmount.trim() ? Number(newFlatAmount.trim()) : 0;
+    if (newFlatAmount.trim() && (isNaN(parsedAmount) || parsedAmount < 0)) {
+      setError('Enter a valid monthly amount');
+      return;
+    }
     try {
       setError(null);
       await createFlatMutation.mutateAsync({
         towerId: selectedTowerId,
-        flatNumber: newFlatNumber.trim()
+        flatNumber: newFlatNumber.trim(),
+        flatType: newFlatType,
+        monthlyAmount: parsedAmount
       });
       setNewFlatNumber('');
+      setNewFlatType('1bhk');
+      setNewFlatAmount('');
       setShowAddFlat(false);
     } catch (err: any) {
       setError(err.message ?? 'Failed to create flat');
@@ -231,23 +290,12 @@ export default function TowersFlatsScreen() {
                   className="flex-row gap-2"
                 >
                   {towers?.map((t) => (
-                    <Pressable
+                    <FilterPill
                       key={t.id}
+                      label={t.name}
+                      active={selectedTowerId === t.id}
                       onPress={() => setSelectedTowerId(t.id)}
-                      className={`px-3 py-2 rounded-xl border ${
-                        selectedTowerId === t.id
-                          ? 'bg-primary border-primary'
-                          : 'bg-surface border-border'
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-sans-bold ${
-                          selectedTowerId === t.id ? 'text-primary-foreground' : 'text-foreground'
-                        }`}
-                      >
-                        {t.name}
-                      </Text>
-                    </Pressable>
+                    />
                   ))}
                 </ScrollView>
 
@@ -257,6 +305,31 @@ export default function TowersFlatsScreen() {
                   onChangeText={setNewFlatNumber}
                   placeholder="e.g. 101, 402, B-305"
                   placeholderTextColor={theme.muted}
+                  className="p-3 bg-surface border border-border rounded-xl font-sans text-foreground text-sm"
+                />
+
+                <Text className="text-xs font-sans-semibold text-foreground mt-2">Flat Type</Text>
+                <View className="flex-row flex-wrap">
+                  {FLAT_TYPES.map((t) => (
+                    <FilterPill
+                      key={t.value}
+                      label={t.label}
+                      active={newFlatType === t.value}
+                      onPress={() => setNewFlatType(t.value)}
+                      className="mb-2"
+                    />
+                  ))}
+                </View>
+
+                <Text className="text-xs font-sans-semibold text-foreground mt-2">
+                  Monthly Amount (₹)
+                </Text>
+                <TextInput
+                  value={newFlatAmount}
+                  onChangeText={setNewFlatAmount}
+                  placeholder="e.g. 2500"
+                  placeholderTextColor={theme.muted}
+                  keyboardType="numeric"
                   className="p-3 bg-surface border border-border rounded-xl font-sans text-foreground text-sm"
                 />
 
@@ -289,21 +362,97 @@ export default function TowersFlatsScreen() {
             ) : (
               <View className="flex-row flex-wrap gap-2">
                 {flats.map((flat) => (
-                  <View
+                  <Pressable
                     key={flat.id}
-                    className="px-3.5 py-2.5 bg-card border border-border rounded-xl flex-row items-center gap-2"
+                    onPress={() => openEditFlat(flat)}
+                    className="px-3.5 py-2.5 bg-card border border-border rounded-xl flex-row items-center gap-2 active:bg-surface"
                   >
                     <Ionicons name="home-outline" size={14} color={theme.primary} />
                     <Text className="text-xs font-mono-bold text-foreground">
                       {flat.flatNumber}
                     </Text>
-                  </View>
+                    <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                      <Text className="text-[9px] font-sans-bold text-primary uppercase">
+                        {FLAT_TYPES.find((t) => t.value === flat.flatType)?.label ?? flat.flatType}
+                      </Text>
+                    </View>
+                    <Text className="text-[10px] font-sans-bold text-muted">
+                      ₹{flat.monthlyAmount}
+                    </Text>
+                  </Pressable>
                 ))}
               </View>
             )}
           </View>
         </ScrollView>
       </View>
+
+      <Modal
+        visible={!!editingFlat}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingFlat(null)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-3xl px-6 pt-5 pb-8">
+            <View className="items-center mb-4">
+              <View className="w-10 h-1 rounded-full bg-border" />
+            </View>
+
+            <View className="flex-row items-center justify-between mb-5">
+              <Text className="text-lg font-serif-semibold text-foreground">
+                Edit flat {editingFlat?.flatNumber}
+              </Text>
+              <Pressable onPress={() => setEditingFlat(null)} hitSlop={12}>
+                <Ionicons name="close" size={22} color={theme.foreground} />
+              </Pressable>
+            </View>
+
+            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
+              Flat Type
+            </Text>
+            <View className="flex-row flex-wrap mb-4">
+              {FLAT_TYPES.map((t) => (
+                <FilterPill
+                  key={t.value}
+                  label={t.label}
+                  active={editFlatType === t.value}
+                  onPress={() => setEditFlatType(t.value)}
+                  className="mb-2"
+                />
+              ))}
+            </View>
+
+            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
+              Monthly Amount (₹)
+            </Text>
+            <TextInput
+              value={editFlatAmount}
+              onChangeText={setEditFlatAmount}
+              placeholder="e.g. 2500"
+              placeholderTextColor={theme.muted}
+              keyboardType="numeric"
+              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-4"
+            />
+
+            {editError ? (
+              <Text className="text-sm font-sans text-danger mb-4">{editError}</Text>
+            ) : null}
+
+            <Pressable
+              onPress={handleUpdateFlat}
+              disabled={updateFlatMutation.isPending}
+              className="rounded-xl bg-primary px-4 py-4 items-center"
+            >
+              {updateFlatMutation.isPending ? (
+                <ActivityIndicator size="small" color={theme.primaryForeground} />
+              ) : (
+                <Text className="text-sm font-sans-bold text-primary-foreground">Save changes</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }

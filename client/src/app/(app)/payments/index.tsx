@@ -21,19 +21,14 @@ import { useSocietyDetails } from '@/features/society/services/use-society';
 import { useConfirmPayment, useDues } from '@/features/payments/hooks/use-payments';
 import type { DueStatus, MaintenanceDue } from '@/features/payments/services/payments';
 
-
 const STATUS_META: Record<
   DueStatus,
   { label: string; icon: string; token: 'danger' | 'warning' | 'success' | 'muted' }
 > = {
   pending: { label: 'Unpaid', icon: 'time-outline', token: 'warning' },
-  overdue: { label: 'Overdue', icon: 'alert-circle-outline', token: 'danger' },
+  review: { label: 'Under review', icon: 'hourglass-outline', token: 'muted' },
   paid: { label: 'Paid', icon: 'checkmark-circle-outline', token: 'success' }
 };
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 export default function PaymentsScreen() {
   const router = useRouter();
@@ -79,8 +74,8 @@ export default function PaymentsScreen() {
             </Text>
           </View>
           <Text className="text-sm font-sans text-foreground-secondary leading-5">
-            Pay any due amount to the society&apos;s UPI ID below using any UPI app, then upload your
-            payment proof against the bill so it can be verified.
+            Pay your due amount to the society&apos;s UPI ID below using any UPI app, then upload
+            your payment proof against the bill so it can be verified.
           </Text>
           <View className="bg-surface border border-border rounded-xl px-3 py-2.5 mt-3">
             <Text className="text-sm font-sans-bold text-foreground">
@@ -102,7 +97,7 @@ export default function PaymentsScreen() {
               No dues yet
             </Text>
             <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-              Your society admin hasn&apos;t generated any maintenance bills for your flat yet.
+              Your society hasn&apos;t assigned a maintenance amount to your flat yet.
             </Text>
           </View>
         ) : (
@@ -119,6 +114,16 @@ export default function PaymentsScreen() {
   );
 }
 
+function formatPeriod(period: string) {
+  // period is "YYYY-MM"
+  const [year, month] = period.split('-').map(Number);
+  if (!year || !month) return period;
+  return new Date(year, month - 1, 1).toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
 function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -126,46 +131,51 @@ function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
   const badgeColor = theme[meta.token];
 
   const latestConfirmation = due.paymentConfirmations?.[0];
-  const verificationPending = due.status !== 'paid' && latestConfirmation?.status === 'pending';
-  const wasRejected = due.status !== 'paid' && latestConfirmation?.status === 'rejected';
+  const wasRejected = due.status === 'pending' && latestConfirmation?.status === 'rejected';
 
   return (
     <View className="bg-card border border-border rounded-2xl p-4 mb-3">
       <View className="flex-row items-center justify-between mb-2">
         <View
-          className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
+          className="flex-row items-center gap-1.5 rounded-lg px-2.5 py-1"
           style={{ backgroundColor: `${badgeColor}1a` }}
         >
           <Ionicons name={meta.icon as never} size={12} color={badgeColor} />
-          <Text className="text-[10px] font-sans-bold uppercase tracking-wider" style={{ color: badgeColor }}>
+          <Text
+            className="text-[10px] font-sans-bold uppercase tracking-wider"
+            style={{ color: badgeColor }}
+          >
             {meta.label}
           </Text>
         </View>
-        <Text className="text-[11px] font-sans text-muted uppercase tracking-wider">
-          Due {formatDate(due.dueDate)}
-        </Text>
       </View>
 
       <View className="flex-row items-end justify-between">
         <View>
-          <Text className="text-base font-serif-semibold text-foreground">{due.period}</Text>
+          <Text className="text-base font-serif-semibold text-foreground">
+            {formatPeriod(due.period)}
+          </Text>
           <Text className="text-2xl font-serif-bold text-foreground mt-1">₹{due.amount}</Text>
         </View>
 
         {due.status !== 'paid' ? (
           <Pressable
             onPress={onPay}
-            disabled={verificationPending}
+            disabled={due.status === 'review'}
             className={`rounded-xl px-4 py-2.5 items-center ${
-              verificationPending ? 'bg-surface border border-border' : 'bg-primary'
+              due.status === 'review' ? 'bg-surface border border-border' : 'bg-primary'
             }`}
           >
             <Text
               className={`text-xs font-sans-bold ${
-                verificationPending ? 'text-foreground-secondary' : 'text-primary-foreground'
+                due.status === 'review' ? 'text-foreground-secondary' : 'text-primary-foreground'
               }`}
             >
-              {verificationPending ? 'Pending review' : wasRejected ? 'Resubmit proof' : 'Pay & submit proof'}
+              {due.status === 'review'
+                ? 'Pending review'
+                : wasRejected
+                  ? 'Resubmit proof'
+                  : 'Pay & submit proof'}
             </Text>
           </Pressable>
         ) : null}
@@ -173,7 +183,12 @@ function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
 
       {wasRejected && latestConfirmation?.rejectionReason ? (
         <View className="flex-row items-start gap-2 mt-3 pt-3 border-t border-border/60">
-          <Ionicons name="alert-circle-outline" size={14} color={theme.danger} style={{ marginTop: 1 }} />
+          <Ionicons
+            name="alert-circle-outline"
+            size={14}
+            color={theme.danger}
+            style={{ marginTop: 1 }}
+          />
           <Text className="text-xs font-sans text-danger flex-1 leading-5">
             Rejected: {latestConfirmation.rejectionReason}
           </Text>
@@ -183,7 +198,13 @@ function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
   );
 }
 
-function ConfirmPaymentModal({ due, onClose }: { due: MaintenanceDue | null; onClose: () => void }) {
+function ConfirmPaymentModal({
+  due,
+  onClose
+}: {
+  due: MaintenanceDue | null;
+  onClose: () => void;
+}) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -259,7 +280,9 @@ function ConfirmPaymentModal({ due, onClose }: { due: MaintenanceDue | null; onC
           </View>
 
           <View className="flex-row items-center justify-between mb-5">
-            <Text className="text-lg font-serif-semibold text-foreground">Submit payment proof</Text>
+            <Text className="text-lg font-serif-semibold text-foreground">
+              Submit payment proof
+            </Text>
             <Pressable onPress={handleClose} hitSlop={12}>
               <Ionicons name="close" size={22} color={theme.foreground} />
             </Pressable>
@@ -268,8 +291,12 @@ function ConfirmPaymentModal({ due, onClose }: { due: MaintenanceDue | null; onC
           <ScrollView showsVerticalScrollIndicator={false}>
             {due ? (
               <View className="bg-card border border-border rounded-xl px-4 py-3 mb-5">
-                <Text className="text-sm font-sans text-foreground-secondary">{due.period}</Text>
-                <Text className="text-xl font-serif-bold text-foreground mt-0.5">₹{due.amount}</Text>
+                <Text className="text-sm font-sans text-foreground-secondary">
+                  {formatPeriod(due.period)}
+                </Text>
+                <Text className="text-xl font-serif-bold text-foreground mt-0.5">
+                  ₹{due.amount}
+                </Text>
               </View>
             ) : null}
 
@@ -317,7 +344,9 @@ function ConfirmPaymentModal({ due, onClose }: { due: MaintenanceDue | null; onC
               {confirmPayment.isPending ? (
                 <ActivityIndicator size="small" color={theme.primaryForeground} />
               ) : (
-                <Text className="text-sm font-sans-bold text-primary-foreground">Submit for review</Text>
+                <Text className="text-sm font-sans-bold text-primary-foreground">
+                  Submit for review
+                </Text>
               )}
             </Pressable>
           </ScrollView>

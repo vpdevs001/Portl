@@ -165,7 +165,7 @@ function FilterChip({
   return (
     <Pressable
       onPress={onPress}
-      className={`px-3 py-1.5 rounded-full border ${active ? 'bg-primary/10 border-primary/30' : 'bg-card border-border'}`}
+      className={`px-3 py-1.5 rounded-lg border ${active ? 'bg-primary/10 border-primary/30' : 'bg-card border-border'}`}
     >
       <Text className={`text-xs font-sans-semibold ${active ? 'text-primary' : 'text-muted'}`}>
         {label}

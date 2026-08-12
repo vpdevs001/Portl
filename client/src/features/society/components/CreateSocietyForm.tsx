@@ -1,18 +1,12 @@
 import { useCreateSociety } from '@/features/society/services/use-society';
 import { authClient } from '@/lib/auth-client';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Input';
+import { OnboardingHeader } from '@/components/OnboardingHeader';
+import { getErrorMessage } from '@/lib/errors';
 
 export function CreateSocietyForm() {
   const router = useRouter();
@@ -44,12 +38,10 @@ export function CreateSocietyForm() {
       // being correct.
       await session.refetch();
       router.push('/(onboarding)/setup-towers');
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to register society');
+    } catch (e) {
+      setError(getErrorMessage(e));
     }
   };
-
-  const isPending = createSocietyMutation.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -57,113 +49,72 @@ export function CreateSocietyForm() {
       className="flex-1"
     >
       <ScrollView className="flex-1 bg-background px-6 py-12">
-        {/* Back Button */}
-        <View className="mb-6">
-          <Pressable onPress={() => router.back()} className="flex-row items-center gap-1 py-1">
-            <Ionicons name="chevron-back" size={18} color="#a9832e" />
-            <Text className="text-primary font-sans-medium text-sm">Back</Text>
-          </Pressable>
-        </View>
-
-        {/* Hero */}
-        <View className="mb-8">
-          <Text className="text-3xl font-serif-bold text-foreground mb-3">Register Estate</Text>
-          <Text className="text-sm font-sans text-foreground-secondary leading-5">
-            Establish the identity of your residential estate or commercial building to manage
-            towers, flats, and members.
-          </Text>
-        </View>
+        <OnboardingHeader
+          title="Register Estate"
+          subtitle="Establish the identity of your residential estate or commercial building to manage towers, flats, and members."
+          step={1}
+          totalSteps={4}
+          showBack
+        />
 
         {/* Form Fields */}
-        <View className="gap-5 mb-8">
+        <View className="mb-8">
           {error ? (
-            <View className="p-3 bg-danger/10 border border-danger/20 rounded-xl">
+            <View className="p-3 bg-danger/10 border border-danger/20 rounded-xl mb-4">
               <Text className="text-danger font-sans text-sm">{error}</Text>
             </View>
           ) : null}
 
-          <View className="gap-2">
-            <Text className="text-xs font-sans-semibold text-foreground-secondary uppercase tracking-wider">
-              Estate Name
-            </Text>
-            <TextInput
+          <Field label="Estate Name">
+            <Input
               value={form.name}
               onChangeText={(text) => setForm({ ...form, name: text })}
               placeholder="e.g. Portl Heights"
-              placeholderTextColor="#93a08d"
-              className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
             />
-          </View>
+          </Field>
 
-          <View className="gap-2">
-            <Text className="text-xs font-sans-semibold text-foreground-secondary uppercase tracking-wider">
-              Street Address
-            </Text>
-            <TextInput
+          <Field label="Street Address">
+            <Input
               value={form.address}
               onChangeText={(text) => setForm({ ...form, address: text })}
               placeholder="e.g. 123 Luxury Road, Sector 5"
-              placeholderTextColor="#93a08d"
-              className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
             />
-          </View>
+          </Field>
 
           <View className="flex-row gap-4">
-            <View className="flex-1 gap-2">
-              <Text className="text-xs font-sans-semibold text-foreground-secondary uppercase tracking-wider">
-                City
-              </Text>
-              <TextInput
+            <Field label="City" className="flex-1">
+              <Input
                 value={form.city}
                 onChangeText={(text) => setForm({ ...form, city: text })}
                 placeholder="Mumbai"
-                placeholderTextColor="#93a08d"
-                className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
               />
-            </View>
-            <View className="flex-1 gap-2">
-              <Text className="text-xs font-sans-semibold text-foreground-secondary uppercase tracking-wider">
-                State
-              </Text>
-              <TextInput
+            </Field>
+            <Field label="State" className="flex-1">
+              <Input
                 value={form.state}
                 onChangeText={(text) => setForm({ ...form, state: text })}
                 placeholder="Maharashtra"
-                placeholderTextColor="#93a08d"
-                className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
               />
-            </View>
+            </Field>
           </View>
 
-          <View className="gap-2">
-            <Text className="text-xs font-sans-semibold text-foreground-secondary uppercase tracking-wider">
-              Pincode / Postal Code
-            </Text>
-            <TextInput
+          <Field label="Pincode / Postal Code">
+            <Input
               value={form.pincode}
               onChangeText={(text) => setForm({ ...form, pincode: text })}
               placeholder="400001"
-              placeholderTextColor="#93a08d"
               keyboardType="numeric"
-              className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
             />
-          </View>
+          </Field>
         </View>
 
-        {/* Submit */}
-        <Pressable
+        <Button
+          label="Create & Continue"
+          size="lg"
+          loading={createSocietyMutation.isPending}
           onPress={handleSubmit}
-          disabled={isPending}
-          className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
-        >
-          {isPending ? (
-            <ActivityIndicator size="small" color="#1a1409" />
-          ) : (
-            <Text className="text-primary-foreground font-sans-bold text-base">
-              Create & Continue
-            </Text>
-          )}
-        </Pressable>
+          className="mb-16"
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

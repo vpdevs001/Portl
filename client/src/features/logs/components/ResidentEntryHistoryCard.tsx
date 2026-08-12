@@ -1,7 +1,10 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useMyEntryLogs } from '@/features/logs/hooks/use-logs';
 
 function formatTime(iso: string | null) {
@@ -16,19 +19,16 @@ function formatTime(iso: string | null) {
 }
 
 export function ResidentEntryHistoryCard() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const { data, isLoading } = useMyEntryLogs();
 
   const recent = (data ?? []).slice(0, 5);
 
   return (
-    <View className="bg-card border border-border rounded-2xl p-6 mb-5 gap-3">
+    <Card className="p-5 mb-4 gap-3">
       <View className="flex-row items-center gap-2 mb-1">
         <Ionicons name="journal-outline" size={14} color={theme.primary} />
-        <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-          Gate Entry History
-        </Text>
+        <SectionLabel>Gate Entry History</SectionLabel>
       </View>
 
       <Text className="text-xs font-sans text-muted leading-5">
@@ -36,8 +36,9 @@ export function ResidentEntryHistoryCard() {
       </Text>
 
       {isLoading ? (
-        <View className="py-4 items-center">
-          <ActivityIndicator size="small" color={theme.primary} />
+        <View className="gap-2 pt-1">
+          <Skeleton className="h-11" />
+          <Skeleton className="h-11" />
         </View>
       ) : recent.length === 0 ? (
         <View className="py-6 items-center">
@@ -59,19 +60,14 @@ export function ResidentEntryHistoryCard() {
                   {log.exitTime ? `Exit ${formatTime(log.exitTime)}` : 'Still inside'}
                 </Text>
               </View>
-              <View
-                className={`px-2 py-1 rounded-full ${log.isInside ? 'bg-success/10' : 'bg-muted/10'}`}
-              >
-                <Text
-                  className={`text-[10px] font-sans-bold uppercase ${log.isInside ? 'text-success' : 'text-muted'}`}
-                >
-                  {log.isInside ? 'Inside' : 'Completed'}
-                </Text>
-              </View>
+              <Badge
+                label={log.isInside ? 'Inside' : 'Completed'}
+                tone={log.isInside ? 'success' : 'muted'}
+              />
             </View>
           ))}
         </View>
       )}
-    </View>
+    </Card>
   );
 }

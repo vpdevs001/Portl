@@ -1,12 +1,14 @@
 import { Modal, View, Text, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeInRight, SlideInLeft } from 'react-native-reanimated';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
+import * as Haptics from 'expo-haptics';
 import { authClient, useAppSession } from '@/lib/auth-client';
 import { useSocietyDetails } from '@/features/society/services/use-society';
-import { Colors } from '@/constants/colors';
-import { useColorScheme, useThemePreference } from '@/hooks/useColorScheme';
+import { useColorScheme, useTheme, useThemePreference } from '@/hooks/useColorScheme';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
 import * as WebBrowser from 'expo-web-browser';
 import { getDrawerItemsForRole, ROLE_LABELS } from '@/constants/navigation';
 
@@ -17,11 +19,11 @@ interface RoleDrawerProps {
 
 export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
   const { width: windowWidth } = useWindowDimensions();
-  const drawerWidth = windowWidth * 0.85;
+  const drawerWidth = Math.min(windowWidth * 0.85, 360);
 
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const { setPreference } = useThemePreference();
   const { data: session } = useAppSession();
   const { data: society } = useSocietyDetails();
@@ -30,10 +32,11 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
   const role = user?.role ?? 'resident';
 
   const handleNavigate = (route: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     onClose();
     setTimeout(() => {
-      router.push(route as any);
-    }, 150);
+      router.push(route as never);
+    }, 200);
   };
 
   const handleSignOut = async () => {
@@ -60,15 +63,25 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
     itemsByCategory.get(category)!.push(item);
   }
 
+  let itemIndex = 0;
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 flex-row bg-black/50">
-        {/* Drawer Panel — 75% Screen Width */}
-        <View
-          className="h-full bg-background border-r border-border shadow-2xl"
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <View className="flex-1 flex-row">
+        {/* Animated backdrop */}
+        <Animated.View
+          entering={FadeIn.duration(220)}
+          className="absolute inset-0 bg-black/50"
+          pointerEvents="none"
+        />
+
+        {/* Drawer panel — slides in from the left */}
+        <Animated.View
+          entering={SlideInLeft.duration(280).springify().damping(24).stiffness(220)}
+          className="h-full bg-background border-r border-border"
           style={{ width: drawerWidth }}
         >
-          <SafeAreaView className="flex-1" style={{ flex: 1 }}>
+          <SafeAreaView style={{ flex: 1 }}>
             {/* Header */}
             <View className="px-5 pt-4 pb-5 border-b border-border/80 bg-card">
               <View className="flex-row items-center justify-between mb-4">
@@ -88,19 +101,7 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
 
               {/* User Profile Card */}
               <View className="flex-row items-center gap-3">
-                <View className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 border border-primary/20 items-center justify-center">
-                  {user?.image ? (
-                    <Image
-                      source={{ uri: user.image }}
-                      style={{ width: 48, height: 48 }}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <Text className="text-primary font-serif-bold text-lg">
-                      {(user?.name ?? 'U').charAt(0).toUpperCase()}
-                    </Text>
-                  )}
-                </View>
+                <Avatar name={user?.name} image={user?.image} size={48} />
                 <View className="flex-1">
                   <Text className="text-base font-serif-semibold text-foreground" numberOfLines={1}>
                     {user?.name ?? 'User'}
@@ -108,23 +109,19 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
                   <Text className="text-xs font-sans text-muted" numberOfLines={1}>
                     {user?.email ?? ''}
                   </Text>
-                  <View className="flex-row items-center gap-2 mt-1">
-                    <View className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/25">
-                      <Text className="text-[10px] font-sans-bold text-primary capitalize">
-                        {roleTitle}
+                  <View className="flex-row items-center gap-2 mt-1.5">
+                    <Badge label={roleTitle} tone="primary" />
+                    {society?.name ? (
+                      <Text className="text-[11px] font-sans text-muted flex-1" numberOfLines={1}>
+                        {society.name}
                       </Text>
-                    </View>
-                    {society?.name && (
-                      <Text className="text-[11px] font-sans text-muted" numberOfLines={1}>
-                        • {society.name}
-                      </Text>
-                    )}
+                    ) : null}
                   </View>
                 </View>
               </View>
             </View>
 
-            {/* Menu Items List */}
+            {/* Menu Items List — staggered entrance */}
             <ScrollView
               className="px-4 pt-4"
               style={{ flex: 1 }}
@@ -139,28 +136,38 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
                     </Text>
                   </View>
 
-                  {itemsByCategory.get(category)!.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => handleNavigate(item.route)}
-                      className="flex-row items-center gap-3 p-3 mb-1.5 rounded-xl bg-card border border-border/60 active:bg-surface"
-                    >
-                      <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
-                        <Ionicons name={item.icon as never} size={18} color={theme.primary} />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-sm font-sans-semibold text-foreground">
-                          {item.label}
-                        </Text>
-                        {item.subtitle && (
-                          <Text className="text-[11px] font-sans text-muted" numberOfLines={1}>
-                            {item.subtitle}
-                          </Text>
-                        )}
-                      </View>
-                      <Ionicons name="chevron-forward" size={14} color={theme.muted} />
-                    </Pressable>
-                  ))}
+                  {itemsByCategory.get(category)!.map((item) => {
+                    const index = itemIndex++;
+                    return (
+                      <Animated.View
+                        key={item.id}
+                        entering={FadeInRight.delay(80 + Math.min(index, 10) * 35)
+                          .duration(300)
+                          .springify()
+                          .damping(20)}
+                      >
+                        <Pressable
+                          onPress={() => handleNavigate(item.route)}
+                          className="flex-row items-center gap-3 p-3 mb-1.5 rounded-xl bg-card border border-border/60 active:bg-surface"
+                        >
+                          <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
+                            <Ionicons name={item.icon as never} size={18} color={theme.primary} />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-sm font-sans-semibold text-foreground">
+                              {item.label}
+                            </Text>
+                            {item.subtitle && (
+                              <Text className="text-[11px] font-sans text-muted" numberOfLines={1}>
+                                {item.subtitle}
+                              </Text>
+                            )}
+                          </View>
+                          <Ionicons name="chevron-forward" size={14} color={theme.muted} />
+                        </Pressable>
+                      </Animated.View>
+                    );
+                  })}
                 </View>
               ))}
             </ScrollView>
@@ -168,20 +175,29 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
             {/* Footer Actions */}
             <View className="p-4 border-t border-border/80 bg-card gap-2">
               {/* Appearance mode toggle */}
-              <View className="flex-row items-center justify-between p-2 rounded-xl bg-surface border border-border/50">
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => undefined);
+                  setPreference(colorScheme === 'dark' ? 'light' : 'dark');
+                }}
+                className="flex-row items-center justify-between p-2.5 rounded-xl bg-surface border border-border/50 active:bg-border/30"
+              >
                 <View className="flex-row items-center gap-2">
-                  <Ionicons name="moon-outline" size={16} color={theme.foregroundSecondary} />
-                  <Text className="text-xs font-sans-medium text-foreground">Theme</Text>
-                </View>
-                <Pressable
-                  onPress={() => setPreference(colorScheme === 'dark' ? 'light' : 'dark')}
-                  className="px-3 py-1 rounded-lg bg-primary/10 border border-primary/20"
-                >
-                  <Text className="text-[11px] font-sans-bold text-primary capitalize">
-                    {colorScheme}
+                  <Ionicons
+                    name={colorScheme === 'dark' ? 'moon' : 'sunny'}
+                    size={16}
+                    color={theme.foregroundSecondary}
+                  />
+                  <Text className="text-xs font-sans-medium text-foreground">
+                    {colorScheme === 'dark' ? 'Dark mode' : 'Light mode'}
                   </Text>
-                </Pressable>
-              </View>
+                </View>
+                <View className="px-3 py-1 rounded-lg bg-primary/10 border border-primary/20">
+                  <Text className="text-[11px] font-sans-bold text-primary">
+                    Switch to {colorScheme === 'dark' ? 'light' : 'dark'}
+                  </Text>
+                </View>
+              </Pressable>
 
               {/* Sign Out Button */}
               <Pressable
@@ -193,7 +209,7 @@ export function RoleDrawer({ visible, onClose }: RoleDrawerProps) {
               </Pressable>
             </View>
           </SafeAreaView>
-        </View>
+        </Animated.View>
 
         {/* Touch Outside to Close */}
         <Pressable className="flex-1 h-full" onPress={onClose} />

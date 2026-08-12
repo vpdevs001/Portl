@@ -1,28 +1,28 @@
 import { Screen } from '@/components/Screen';
-import { Colors } from '@/constants/colors';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
 import {
   usePendingVisitors,
   useRespondToVisitorRequest
 } from '@/features/visitors/hooks/use-visitors';
 import { VisitorResidentCard } from './VisitorResidentCard';
 import { SocietyMembersSection } from './SocietyMembersSection';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HOME_CONSTANTS } from '../constants/home.constants';
 import { DrawerButton } from '@/components/DrawerButton';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 
 /**
  * AdminHome — the society_admin Home tab content.
  *
- * Displays pending admin-routed visitor requests and includes the global
- * drawer button in the header.
+ * Displays pending admin-routed visitor requests and the society member
+ * roster, with the global drawer button in the header.
  */
 export function AdminHome() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { data, isLoading } = usePendingVisitors();
   const respond = useRespondToVisitorRequest();
 
@@ -30,7 +30,7 @@ export function AdminHome() {
     <Screen>
       <View className="flex-1 px-6 pt-4">
         {/* Header Bar with Drawer Toggle */}
-        <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/50">
+        <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-border/50">
           <View className="flex-row items-center gap-3">
             <DrawerButton />
             <View>
@@ -43,55 +43,45 @@ export function AdminHome() {
             </View>
           </View>
 
-          <Pressable
-            onPress={() => router.push('/(app)/add-resident' as any)}
-            className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-primary active:opacity-90"
-          >
-            <Ionicons name="person-add" size={14} color={theme.primaryForeground} />
-            <Text className="text-xs font-sans-bold text-primary-foreground">
-              {HOME_CONSTANTS.ADMIN.ACTION_TEXT}
-            </Text>
-          </Pressable>
+          <Button
+            label={HOME_CONSTANTS.ADMIN.ACTION_TEXT}
+            icon="person-add"
+            size="sm"
+            onPress={() => router.push('/(app)/add-resident')}
+          />
         </View>
 
-        {/* Dashboard Banner */}
-        <View className="mb-6">
+        <FadeIn className="mb-5">
           <Text className="text-2xl font-serif-bold text-foreground">
             {HOME_CONSTANTS.ADMIN.TITLE}
           </Text>
           <Text className="text-xs font-sans text-muted mt-1">
             {HOME_CONSTANTS.ADMIN.DESCRIPTION}
           </Text>
-        </View>
+        </FadeIn>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
           <SocietyMembersSection />
 
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-            Pending Approvals
-          </Text>
+          <SectionLabel className="mb-3">Pending Approvals</SectionLabel>
 
           {isLoading ? (
-            <View className="items-center justify-center py-10">
-              <ActivityIndicator size="large" color={theme.primary} />
-            </View>
+            <ListSkeleton rows={2} />
           ) : !data || data.length === 0 ? (
-            <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[200px]">
-              <Ionicons name="shield-checkmark-outline" size={28} color={theme.primary} />
-              <Text className="text-base font-serif-semibold text-foreground mt-3">
-                {HOME_CONSTANTS.ADMIN.EMPTY_TITLE}
-              </Text>
-              <Text className="text-sm font-sans text-foreground-secondary text-center mt-2 px-4">
-                {HOME_CONSTANTS.ADMIN.EMPTY_SUBTITLE}
-              </Text>
-            </View>
+            <EmptyState
+              variant="boxed"
+              icon="shield-checkmark-outline"
+              title={HOME_CONSTANTS.ADMIN.EMPTY_TITLE}
+              subtitle={HOME_CONSTANTS.ADMIN.EMPTY_SUBTITLE}
+            />
           ) : (
-            data.map((request) => (
-              <VisitorResidentCard
-                key={request.id}
-                request={request}
-                onRespond={(id, status) => respond.mutate({ id, status })}
-              />
+            data.map((request, index) => (
+              <FadeIn key={request.id} index={index}>
+                <VisitorResidentCard
+                  request={request}
+                  onRespond={(id, status) => respond.mutate({ id, status })}
+                />
+              </FadeIn>
             ))
           )}
         </ScrollView>

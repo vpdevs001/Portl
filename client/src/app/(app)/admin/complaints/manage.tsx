@@ -1,33 +1,29 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import {
   useComplaints,
   useUpdateComplaintStatus
 } from '@/features/complaints/hooks/use-complaints';
 import type { Complaint, ComplaintStatus } from '@/features/complaints/services/complaints';
 
-const STATUS_META: Record<
-  ComplaintStatus,
-  { label: string; icon: string; token: 'danger' | 'warning' | 'success' | 'muted' }
-> = {
-  open: { label: 'Open', icon: 'alert-circle-outline', token: 'danger' },
-  in_progress: { label: 'In progress', icon: 'time-outline', token: 'warning' },
-  resolved: { label: 'Resolved', icon: 'checkmark-circle-outline', token: 'success' },
-  closed: { label: 'Closed', icon: 'lock-closed-outline', token: 'muted' }
+const STATUS_META: Record<ComplaintStatus, { label: string; icon: string; tone: BadgeTone }> = {
+  open: { label: 'Open', icon: 'alert-circle-outline', tone: 'danger' },
+  in_progress: { label: 'In progress', icon: 'time-outline', tone: 'warning' },
+  resolved: { label: 'Resolved', icon: 'checkmark-circle-outline', tone: 'success' },
+  closed: { label: 'Closed', icon: 'lock-closed-outline', tone: 'muted' }
 };
 
 const STATUS_ORDER: ComplaintStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
@@ -58,9 +54,6 @@ function formatDate(value: string) {
 }
 
 export default function ManageComplaintsScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const [filter, setFilter] = useState<ComplaintStatus | 'all'>('all');
 
   const { data, isLoading, refetch, isRefetching } = useComplaints();
@@ -69,27 +62,13 @@ export default function ManageComplaintsScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Manage complaints</Text>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => refetch()}
-              hitSlop={12}
-              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-            >
-              <Ionicons
-                name="refresh"
-                size={18}
-                color={theme.foreground}
-                style={isRefetching ? { opacity: 0.4 } : undefined}
-              />
-            </Pressable>
-            <DrawerButton />
-          </View>
-        </View>
+        <ScreenHeader
+          title="Manage complaints"
+          showBack
+          drawer
+          onRefresh={refetch}
+          isRefetching={isRefetching}
+        />
 
         <ScrollView
           horizontal
@@ -98,41 +77,28 @@ export default function ManageComplaintsScreen() {
           contentContainerClassName="gap-2"
         >
           {FILTERS.map((f) => (
-            <Pressable
+            <Chip
               key={f.value}
+              label={f.label}
+              selected={filter === f.value}
               onPress={() => setFilter(f.value)}
-              className={`self-start p-2 rounded-md border mr-2 ${
-                filter === f.value ? 'bg-primary border-primary' : 'bg-card border-border'
-              }`}
-            >
-              <Text
-                className={`text-xs font-sans-bold ${
-                  filter === f.value ? 'text-primary-foreground' : 'text-foreground-secondary'
-                }`}
-              >
-                {f.label}
-              </Text>
-            </Pressable>
+            />
           ))}
         </ScrollView>
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={4} />
         ) : complaints.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-3 pb-20">
-            <View className="w-14 h-14 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
-              <Ionicons name="checkmark-done-outline" size={24} color={theme.primary} />
-            </View>
-            <Text className="text-base font-serif-semibold text-foreground text-center">
-              Nothing here
-            </Text>
-            <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-              {filter === 'all'
-                ? 'No complaints have been raised yet.'
-                : `No ${STATUS_META[filter as ComplaintStatus]?.label.toLowerCase()} tickets.`}
-            </Text>
+          <View className="flex-1 justify-center pb-20">
+            <EmptyState
+              icon="checkmark-done-outline"
+              title="Nothing here"
+              subtitle={
+                filter === 'all'
+                  ? 'No complaints have been raised yet.'
+                  : `No ${STATUS_META[filter as ComplaintStatus]?.label.toLowerCase()} tickets.`
+              }
+            />
           </View>
         ) : (
           <ScrollView
@@ -140,8 +106,10 @@ export default function ManageComplaintsScreen() {
             contentContainerClassName="pb-20"
             className="mt-1"
           >
-            {complaints.map((complaint) => (
-              <ComplaintTicket key={complaint.id} complaint={complaint} />
+            {complaints.map((complaint, index) => (
+              <FadeIn key={complaint.id} index={index}>
+                <ComplaintTicket complaint={complaint} />
+              </FadeIn>
             ))}
           </ScrollView>
         )}
@@ -151,10 +119,8 @@ export default function ManageComplaintsScreen() {
 }
 
 function ComplaintTicket({ complaint }: { complaint: Complaint }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const meta = STATUS_META[complaint.status];
-  const badgeColor = theme[meta.token];
 
   const [expanded, setExpanded] = useState(false);
   const [nextStatus, setNextStatus] = useState<ComplaintStatus>(complaint.status);
@@ -176,21 +142,10 @@ function ComplaintTicket({ complaint }: { complaint: Complaint }) {
   }
 
   return (
-    <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+    <Card className="p-4 mb-3">
       <Pressable onPress={() => setExpanded((prev) => !prev)}>
         <View className="flex-row items-center justify-between mb-2">
-          <View
-            className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
-            style={{ backgroundColor: `${badgeColor}1a` }}
-          >
-            <Ionicons name={meta.icon as never} size={12} color={badgeColor} />
-            <Text
-              className="text-[10px] font-sans-bold uppercase tracking-wider"
-              style={{ color: badgeColor }}
-            >
-              {meta.label}
-            </Text>
-          </View>
+          <Badge label={meta.label} icon={meta.icon} tone={meta.tone} />
           <Text className="text-[11px] font-sans text-muted uppercase tracking-wider">
             {CATEGORY_LABELS[complaint.category] ?? complaint.category}
           </Text>
@@ -221,13 +176,11 @@ function ComplaintTicket({ complaint }: { complaint: Complaint }) {
 
       {expanded ? (
         <View className="mt-4 pt-4 border-t border-border/60">
-          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-            Update status
-          </Text>
+          <SectionLabel className="mb-2">Update status</SectionLabel>
           <View className="flex-row flex-wrap gap-2 mb-3">
             {STATUS_ORDER.map((status) => {
               const active = nextStatus === status;
-              const color = theme[STATUS_META[status].token];
+              const color = theme[STATUS_META[status].tone];
               return (
                 <Pressable
                   key={status}
@@ -247,33 +200,25 @@ function ComplaintTicket({ complaint }: { complaint: Complaint }) {
             })}
           </View>
 
-          <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-            Resolution note
-          </Text>
-          <TextInput
+          <SectionLabel className="mb-2">Resolution note</SectionLabel>
+          <Input
             value={comment}
             onChangeText={setComment}
             placeholder="What was done, or what's next"
-            placeholderTextColor={theme.muted}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
-            className="bg-surface border border-border rounded-xl px-3 py-2.5 text-foreground font-sans text-sm min-h-[80px]"
+            className="bg-surface min-h-[80px]"
           />
 
-          <Pressable
+          <Button
+            label="Update ticket"
+            loading={updateStatus.isPending}
             onPress={handleUpdate}
-            disabled={updateStatus.isPending}
-            className="rounded-xl bg-primary px-4 py-3 items-center mt-3"
-          >
-            {updateStatus.isPending ? (
-              <ActivityIndicator size="small" color={theme.primaryForeground} />
-            ) : (
-              <Text className="text-sm font-sans-bold text-primary-foreground">Update ticket</Text>
-            )}
-          </Pressable>
+            className="mt-3"
+          />
         </View>
       ) : null}
-    </View>
+    </Card>
   );
 }

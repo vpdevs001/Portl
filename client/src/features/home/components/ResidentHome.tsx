@@ -1,29 +1,39 @@
 import { Screen } from '@/components/Screen';
-import { Colors } from '@/constants/colors';
 import {
   usePendingVisitors,
   useRespondToVisitorRequest
 } from '@/features/visitors/hooks/use-visitors';
 import { VisitorResidentCard } from './VisitorResidentCard';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HOME_CONSTANTS } from '../constants/home.constants';
 import { DrawerButton } from '@/components/DrawerButton';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { ListSkeleton } from '@/components/ui/Skeleton';
+import { useAppSession } from '@/lib/auth-client';
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export function ResidentHome() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { data: session } = useAppSession();
   const { data, isLoading } = usePendingVisitors();
   const respond = useRespondToVisitorRequest();
+
+  const firstName = session?.user?.name?.split(' ')[0];
 
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
         {/* Header Bar with Drawer Toggle */}
-        <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/50">
+        <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-border/50">
           <View className="flex-row items-center gap-3">
             <DrawerButton />
             <View>
@@ -36,49 +46,42 @@ export function ResidentHome() {
             </View>
           </View>
 
-          <Pressable
+          <Button
+            label={HOME_CONSTANTS.RESIDENT.ACTION_TEXT}
+            icon="key"
+            size="sm"
             onPress={() => router.push('/(app)/pre-approvals')}
-            className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-primary active:opacity-90"
-          >
-            <Ionicons name="key" size={14} color={theme.primaryForeground} />
-            <Text className="text-xs font-sans-bold text-primary-foreground">
-              {HOME_CONSTANTS.RESIDENT.ACTION_TEXT}
-            </Text>
-          </Pressable>
+          />
         </View>
 
-        <View className="mb-6">
+        <FadeIn className="mb-5">
           <Text className="text-2xl font-serif-bold text-foreground">
-            {HOME_CONSTANTS.RESIDENT.TITLE}
+            {firstName ? `${greeting()}, ${firstName}` : HOME_CONSTANTS.RESIDENT.TITLE}
           </Text>
           <Text className="text-xs font-sans text-muted mt-1">
             {HOME_CONSTANTS.RESIDENT.DESCRIPTION}
           </Text>
-        </View>
+        </FadeIn>
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={3} />
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
             {!data || data.length === 0 ? (
-              <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[200px]">
-                <Ionicons name="notifications-off-outline" size={28} color={theme.muted} />
-                <Text className="text-base font-serif-semibold text-foreground mt-3">
-                  {HOME_CONSTANTS.RESIDENT.EMPTY_TITLE}
-                </Text>
-                <Text className="text-sm font-sans text-foreground-secondary text-center mt-2">
-                  {HOME_CONSTANTS.RESIDENT.EMPTY_SUBTITLE}
-                </Text>
-              </View>
+              <EmptyState
+                variant="boxed"
+                icon="notifications-off-outline"
+                title={HOME_CONSTANTS.RESIDENT.EMPTY_TITLE}
+                subtitle={HOME_CONSTANTS.RESIDENT.EMPTY_SUBTITLE}
+              />
             ) : (
-              data.map((request) => (
-                <VisitorResidentCard
-                  key={request.id}
-                  request={request}
-                  onRespond={(id, status) => respond.mutate({ id, status })}
-                />
+              data.map((request, index) => (
+                <FadeIn key={request.id} index={index}>
+                  <VisitorResidentCard
+                    request={request}
+                    onRespond={(id, status) => respond.mutate({ id, status })}
+                  />
+                </FadeIn>
               ))
             )}
           </ScrollView>

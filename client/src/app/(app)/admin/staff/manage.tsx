@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
 import { useCreateStaff, useUpdateStaff } from '@/features/staff/hooks/use-staff';
 
 const COMMON_ROLES = [
@@ -27,9 +27,6 @@ export default function AdminManageStaffScreen() {
     phone?: string;
   }>();
   const isEditing = Boolean(params.id);
-
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [name, setName] = useState(params.name ?? '');
   const [roleTitle, setRoleTitle] = useState(params.roleTitle ?? '');
@@ -83,97 +80,55 @@ export default function AdminManageStaffScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-24">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">
-            {isEditing ? 'Edit Staff Member' : 'Add Staff Member'}
-          </Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader
+          title={isEditing ? 'Edit Staff Member' : 'Add Staff Member'}
+          showBack
+          drawer
+        />
 
-        {/* Input Form */}
-        <View className="gap-5">
-          <View>
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Full Name
-            </Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g. Ramesh Kumar"
-              placeholderTextColor={theme.muted}
-              className="bg-card border border-border rounded-xl px-4 py-3 text-sm font-sans text-foreground"
-            />
-          </View>
+        <View className="gap-1">
+          <Field label="Full Name">
+            <Input value={name} onChangeText={setName} placeholder="e.g. Ramesh Kumar" />
+          </Field>
 
-          <View>
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Role / Designation
-            </Text>
-            <TextInput
+          <Field label="Role / Designation">
+            <Input
               value={roleTitle}
               onChangeText={setRoleTitle}
               placeholder="e.g. Electrician, Cook"
-              placeholderTextColor={theme.muted}
-              className="bg-card border border-border rounded-xl px-4 py-3 text-sm font-sans text-foreground mb-3"
+              className="mb-3"
             />
             {/* Common role chips */}
             <View className="flex-row flex-wrap gap-2">
-              {COMMON_ROLES.map((role) => {
-                const isSelected = roleTitle.trim().toLowerCase() === role.toLowerCase();
-                return (
-                  <Pressable
-                    key={role}
-                    onPress={() => setRoleTitle(role)}
-                    className={`rounded-lg border px-2.5 py-1.5 ${
-                      isSelected ? 'bg-primary border-primary' : 'bg-card border-border'
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-sans-bold ${
-                        isSelected ? 'text-primary-foreground' : 'text-foreground-secondary'
-                      }`}
-                    >
-                      {role}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              {COMMON_ROLES.map((role) => (
+                <Chip
+                  key={role}
+                  label={role}
+                  selected={roleTitle.trim().toLowerCase() === role.toLowerCase()}
+                  onPress={() => setRoleTitle(role)}
+                />
+              ))}
             </View>
-          </View>
+          </Field>
 
-          <View>
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Phone Number
-            </Text>
-            <TextInput
+          <Field label="Phone Number">
+            <Input
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
               placeholder="e.g. +91 98765 43210"
-              placeholderTextColor={theme.muted}
-              className="bg-card border border-border rounded-xl px-4 py-3 text-sm font-sans text-foreground"
             />
-          </View>
+          </Field>
 
-          {error ? <Text className="text-sm font-sans text-danger">{error}</Text> : null}
+          {error ? <Text className="text-sm font-sans text-danger mb-2">{error}</Text> : null}
 
-          <Pressable
+          <Button
+            label={isEditing ? 'Update Staff Member' : 'Save Staff Member'}
+            size="lg"
+            loading={isPending}
             onPress={handleSubmit}
-            disabled={isPending}
-            className="rounded-xl bg-primary px-4 py-4 items-center mt-4"
-          >
-            {isPending ? (
-              <ActivityIndicator size="small" color={theme.primaryForeground} />
-            ) : (
-              <Text className="text-sm font-sans-bold text-primary-foreground">
-                {isEditing ? 'Update Staff Member' : 'Save Staff Member'}
-              </Text>
-            )}
-          </Pressable>
+            className="mt-4"
+          />
         </View>
       </ScrollView>
     </Screen>

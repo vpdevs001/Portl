@@ -1,20 +1,25 @@
-import { Pressable } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
+import * as Haptics from 'expo-haptics';
 import { useDrawer } from '@/context/DrawerContext';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
+import { PressableScale } from '@/components/ui/PressableScale';
 
 export function DrawerButton() {
   const { openDrawer } = useDrawer();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   return (
-    <Pressable
-      onPress={openDrawer}
-      className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center active:bg-surface"
+    <PressableScale
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+        openDrawer();
+      }}
+      scaleTo={0.92}
+      accessibilityRole="button"
+      accessibilityLabel="Open navigation menu"
+      className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
     >
       <Ionicons name="menu" size={22} color={theme.foreground} />
-    </Pressable>
+    </PressableScale>
   );
 }

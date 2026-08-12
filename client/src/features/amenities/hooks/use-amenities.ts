@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import {
   bookAmenity,
+  cancelBooking,
   createAmenity,
   fetchAmenities,
   fetchBookings,
@@ -50,5 +51,17 @@ export function useBookAmenity() {
     },
     // amenities/book.tsx renders its own inline error banner for this action.
     meta: { suppressErrorToast: true }
+  });
+}
+
+export function useCancelBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (bookingId: string) => cancelBooking(bookingId),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: BOOKINGS_KEY });
+    }
   });
 }

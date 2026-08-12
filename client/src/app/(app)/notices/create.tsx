@@ -1,22 +1,17 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { getErrorMessage } from '@/lib/errors';
-import { useCreateNotice } from '@/features/notices/hooks/use-notices';
+import { useCreateNotice, useUpdateNotice } from '@/features/notices/hooks/use-notices';
 import type { NoticeCategory } from '@/features/notices/services/notices';
 
 const CATEGORIES: { value: NoticeCategory; label: string; icon: string }[] = [
@@ -45,18 +40,31 @@ function endOfDay(date: Date) {
 
 export default function CreateNoticeScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<NoticeCategory>('general');
-  const [hasExpiry, setHasExpiry] = useState(false);
-  const [expiresAt, setExpiresAt] = useState(() => new Date(Date.now() + 24 * 60 * 60 * 1000));
+  // Edit mode — the notices board passes the whole notice as params.
+  const params = useLocalSearchParams<{
+    id?: string;
+    title?: string;
+    description?: string;
+    category?: NoticeCategory;
+    expiresAt?: string;
+  }>();
+  const isEditing = Boolean(params.id);
+
+  const [title, setTitle] = useState(params.title ?? '');
+  const [description, setDescription] = useState(params.description ?? '');
+  const [category, setCategory] = useState<NoticeCategory>(params.category ?? 'general');
+  const [hasExpiry, setHasExpiry] = useState(Boolean(params.expiresAt));
+  const [expiresAt, setExpiresAt] = useState(() =>
+    params.expiresAt ? new Date(params.expiresAt) : new Date(Date.now() + 24 * 60 * 60 * 1000)
+  );
   const [showPicker, setShowPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createNotice = useCreateNotice();
+  const updateNotice = useUpdateNotice();
+  const isPending = createNotice.isPending || updateNotice.isPending;
 
   function handleDateValueChange(_event: unknown, selected: Date) {
     if (Platform.OS === 'android') {
@@ -96,12 +104,25 @@ export default function CreateNoticeScreen() {
     }
 
     try {
-      await createNotice.mutateAsync({
-        title: title.trim(),
-        description: description.trim(),
-        category,
-        expiresAt: hasExpiry ? endOfDay(expiresAt).toISOString() : undefined
-      });
+      if (isEditing && params.id) {
+        await updateNotice.mutateAsync({
+          id: params.id,
+          payload: {
+            title: title.trim(),
+            description: description.trim(),
+            category,
+            // null clears the expiry — that's how an expiring notice becomes permanent.
+            expiresAt: hasExpiry ? endOfDay(expiresAt).toISOString() : null
+          }
+        });
+      } else {
+        await createNotice.mutateAsync({
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          expiresAt: hasExpiry ? endOfDay(expiresAt).toISOString() : undefined
+        });
+      }
 
       router.replace('/(app)/notices');
     } catch (e) {
@@ -112,76 +133,42 @@ export default function CreateNoticeScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Create notice</Text>
-          <DrawerButton />
+        <ScreenHeader title={isEditing ? 'Edit notice' : 'Create notice'} showBack drawer />
+
+        <SectionLabel className="mb-3">Category</SectionLabel>
+        <View className="flex-row flex-wrap gap-2 mb-6">
+          {CATEGORIES.map((c) => (
+            <Chip
+              key={c.value}
+              label={c.label}
+              icon={c.icon}
+              selected={category === c.value}
+              onPress={() => setCategory(c.value)}
+            />
+          ))}
         </View>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Category
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-6"
-          contentContainerClassName="gap-2"
-        >
-          {CATEGORIES.map((c) => {
-            const active = category === c.value;
-            return (
-              <Pressable
-                key={c.value}
-                onPress={() => setCategory(c.value)}
-                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border mr-2 ${
-                  active ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Ionicons
-                  name={c.icon as never}
-                  size={16}
-                  color={active ? theme.primaryForeground : theme.foregroundSecondary}
-                />
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {c.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
         <Field label="Title">
-          <TextInput
+          <Input
             value={title}
             onChangeText={setTitle}
             placeholder="e.g. Water supply maintenance"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
         <Field label="Description">
-          <TextInput
+          <Input
             value={description}
             onChangeText={setDescription}
             placeholder="Details residents and guards need to know"
-            placeholderTextColor={theme.muted}
             multiline
             numberOfLines={5}
             textAlignVertical="top"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans min-h-[120px]"
+            className="min-h-[120px]"
           />
         </Field>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Expiry
-        </Text>
+        <SectionLabel className="mb-3">Expiry</SectionLabel>
 
         <Pressable
           onPress={toggleExpiry}
@@ -234,29 +221,14 @@ export default function CreateNoticeScreen() {
 
         {error ? <Text className="text-sm font-sans text-danger mb-4 mt-2">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label={isEditing ? 'Save changes' : 'Publish notice'}
+          size="lg"
+          loading={isPending}
           onPress={handleSubmit}
-          disabled={createNotice.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-4"
-        >
-          {createNotice.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Publish notice</Text>
-          )}
-        </Pressable>
+          className="mt-4"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

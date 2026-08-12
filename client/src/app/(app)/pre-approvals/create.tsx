@@ -1,20 +1,15 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { getErrorMessage } from '@/lib/errors';
 import { useCreatePreApproval } from '@/features/visitors/hooks/use-visitors';
 
@@ -41,8 +36,7 @@ function formatDateTime(date: Date) {
 
 export default function CreatePreApprovalScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [visitorType, setVisitorType] = useState<VisitorType>('guest');
   const [name, setName] = useState('');
@@ -110,84 +104,43 @@ export default function CreatePreApprovalScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Pre-approve visitor</Text>
-          <DrawerButton />
+        <ScreenHeader title="Pre-approve visitor" showBack drawer />
+
+        <SectionLabel className="mb-3">Visitor type</SectionLabel>
+        <View className="flex-row flex-wrap gap-2 mb-6">
+          {VISITOR_TYPES.map((t) => (
+            <Chip
+              key={t.value}
+              label={t.label}
+              icon={t.icon}
+              selected={visitorType === t.value}
+              onPress={() => setVisitorType(t.value)}
+            />
+          ))}
         </View>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Visitor type
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-6"
-          contentContainerClassName="gap-2"
-        >
-          {VISITOR_TYPES.map((t) => {
-            const active = visitorType === t.value;
-            return (
-              <Pressable
-                key={t.value}
-                onPress={() => setVisitorType(t.value)}
-                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border mr-2 ${
-                  active ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Ionicons
-                  name={t.icon as never}
-                  size={16}
-                  color={active ? theme.primaryForeground : theme.foregroundSecondary}
-                />
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
         <Field label="Guest name">
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Who's coming?"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-          />
+          <Input value={name} onChangeText={setName} placeholder="Who's coming?" />
         </Field>
 
         <Field label="Phone (optional)">
-          <TextInput
+          <Input
             value={phone}
             onChangeText={setPhone}
             placeholder="10-digit mobile number"
-            placeholderTextColor={theme.muted}
             keyboardType="phone-pad"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
         <Field label="Purpose (optional)">
-          <TextInput
+          <Input
             value={purpose}
             onChangeText={setPurpose}
             placeholder="e.g. Housewarming, weekend visit"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Validity window
-        </Text>
+        <SectionLabel className="mb-3">Validity window</SectionLabel>
 
         <Pressable
           onPress={() => setActivePicker(activePicker === 'from' ? null : 'from')}
@@ -237,29 +190,14 @@ export default function CreatePreApprovalScreen() {
 
         {error ? <Text className="text-sm font-sans text-danger mb-4">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label="Generate pass"
+          size="lg"
+          loading={createPreApproval.isPending}
           onPress={handleSubmit}
-          disabled={createPreApproval.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-2"
-        >
-          {createPreApproval.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Generate pass</Text>
-          )}
-        </Pressable>
+          className="mt-2"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

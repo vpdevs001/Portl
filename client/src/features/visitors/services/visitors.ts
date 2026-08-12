@@ -23,7 +23,26 @@ export async function fetchPendingVisitors() {
   return apiRequest<VisitorRequest[]>('/api/visitors/pending');
 }
 
-export async function createVisitorRequest(payload: Record<string, unknown>) {
+// Mirrors the Zod schema in server/src/modules/visitors/visitors.schema.ts —
+// no shared types package between server/client (standing project decision),
+// so keep the two manually in sync.
+export type CreateVisitorRequestInput = {
+  visitorType: VisitorRequest['visitorType'];
+  name: string;
+  phone?: string;
+  purpose?: string;
+  vehicleNumber?: string;
+  flatId?: string;
+  approverType: 'resident' | 'admin';
+  source: 'guard_request' | 'pre_approval';
+  photo?: string;
+  details?:
+    | { companyName: string; orderId?: string }
+    | { providerName: string; vehicleNumber?: string; driverName?: string }
+    | { serviceType: string; companyName?: string };
+};
+
+export async function createVisitorRequest(payload: CreateVisitorRequestInput) {
   return apiRequest<VisitorRequest>('/api/visitors/request', {
     method: 'POST',
     body: JSON.stringify(payload)

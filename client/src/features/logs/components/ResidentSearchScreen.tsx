@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Image } from 'expo-image';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Input } from '@/components/ui/Input';
+import { ListSkeleton } from '@/components/ui/Skeleton';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { useTheme } from '@/hooks/useColorScheme';
 import { useTowers } from '@/features/society/services/use-society';
 import {
   useGateResidents,
@@ -18,10 +23,13 @@ import type { GateResident, GateStaff } from '@/features/logs/services/logs';
 
 type Tab = 'residents' | 'staff';
 
+const TAB_OPTIONS: { value: Tab; label: string }[] = [
+  { value: 'residents', label: 'Residents' },
+  { value: 'staff', label: 'Staff' }
+];
+
 export function ResidentSearchScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [tab, setTab] = useState<Tab>('residents');
   const [search, setSearch] = useState('');
@@ -42,103 +50,64 @@ export function ResidentSearchScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-4">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Gate check-in</Text>
-          <DrawerButton />
-        </View>
-
-        <Text className="text-xs font-sans text-muted mb-4">
-          Search residents or staff and log entry or exit with one tap.
-        </Text>
-
-        <View className="flex-row bg-surface rounded-xl p-1 mb-4">
-          {(['residents', 'staff'] as Tab[]).map((value) => (
-            <Pressable
-              key={value}
-              onPress={() => setTab(value)}
-              className={`flex-1 items-center py-2.5 rounded-lg ${tab === value ? 'bg-card' : ''}`}
-            >
-              <Text
-                className={`text-xs font-sans-bold capitalize ${tab === value ? 'text-primary' : 'text-muted'}`}
-              >
-                {value}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder={
-            tab === 'residents' ? 'Search by name or flat…' : 'Search staff by name or role…'
-          }
-          placeholderTextColor={theme.muted}
-          className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans text-sm mb-3"
+        <ScreenHeader
+          title="Gate check-in"
+          subtitle="Search residents or staff and log entry or exit with one tap."
+          showBack
+          drawer
         />
+
+        <SegmentedControl options={TAB_OPTIONS} value={tab} onChange={setTab} className="mb-4" />
+
+        <View className="flex-row items-center bg-card border border-border rounded-xl px-3 mb-3">
+          <Ionicons name="search-outline" size={18} color={theme.muted} />
+          <Input
+            value={search}
+            onChangeText={setSearch}
+            placeholder={
+              tab === 'residents' ? 'Search by name or flat…' : 'Search staff by name or role…'
+            }
+            className="flex-1 ml-2 border-0 bg-transparent px-0"
+          />
+        </View>
 
         {tab === 'residents' && towers && towers.length > 0 ? (
           <View className="flex-row flex-wrap gap-2 mb-4">
-            <Pressable
-              onPress={() => setTowerId(undefined)}
-              className={`self-start p-2 rounded-md border mr-2 ${
-                !towerId ? 'bg-primary border-primary' : 'bg-card border-border'
-              }`}
-            >
-              <Text
-                className={`text-xs font-sans-bold ${
-                  !towerId ? 'text-primary-foreground' : 'text-foreground-secondary'
-                }`}
-              >
-                All towers
-              </Text>
-            </Pressable>
+            <Chip label="All towers" selected={!towerId} onPress={() => setTowerId(undefined)} />
             {towers.map((tower) => (
-              <Pressable
+              <Chip
                 key={tower.id}
+                label={tower.name}
+                selected={towerId === tower.id}
                 onPress={() => setTowerId(tower.id)}
-                className={`self-start p-2 rounded-md border mr-2 ${
-                  towerId === tower.id ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    towerId === tower.id ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {tower.name}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
         ) : null}
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={5} />
         ) : tab === 'residents' ? (
           <FlatList
             data={residents ?? []}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingBottom: 32, gap: 10 }}
             ListEmptyComponent={
-              <EmptyState message="No residents match your search." icon="people-outline" />
+              <EmptyState icon="people-outline" title="No residents match your search." />
             }
-            renderItem={({ item }) => (
-              <ResidentRow
-                resident={item}
-                isPending={logResident.isPending}
-                onToggle={() =>
-                  logResident.mutate({
-                    userId: item.id,
-                    action: item.isInside ? 'exit' : 'entry'
-                  })
-                }
-              />
+            renderItem={({ item, index }) => (
+              <FadeIn index={index}>
+                <ResidentRow
+                  resident={item}
+                  isPending={logResident.isPending}
+                  onToggle={() =>
+                    logResident.mutate({
+                      userId: item.id,
+                      action: item.isInside ? 'exit' : 'entry'
+                    })
+                  }
+                />
+              </FadeIn>
             )}
           />
         ) : (
@@ -148,21 +117,24 @@ export function ResidentSearchScreen() {
             contentContainerStyle={{ paddingBottom: 32, gap: 10 }}
             ListEmptyComponent={
               <EmptyState
-                message="No staff found. Admins can add staff in the directory (Chapter 14)."
-                icon="badge-outline"
+                icon="id-card-outline"
+                title="No staff found"
+                subtitle="Admins can add staff in the directory."
               />
             }
-            renderItem={({ item }) => (
-              <StaffRow
-                staff={item}
-                isPending={logStaff.isPending}
-                onToggle={() =>
-                  logStaff.mutate({
-                    staffId: item.id,
-                    action: item.isInside ? 'exit' : 'entry'
-                  })
-                }
-              />
+            renderItem={({ item, index }) => (
+              <FadeIn index={index}>
+                <StaffRow
+                  staff={item}
+                  isPending={logStaff.isPending}
+                  onToggle={() =>
+                    logStaff.mutate({
+                      staffId: item.id,
+                      action: item.isInside ? 'exit' : 'entry'
+                    })
+                  }
+                />
+              </FadeIn>
             )}
           />
         )}
@@ -184,23 +156,13 @@ function ResidentRow({
 
   return (
     <View className="bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
-      <Avatar name={resident.name} image={resident.image} />
+      <Avatar name={resident.name} image={resident.image} size={44} />
       <View className="flex-1">
         <Text className="text-sm font-sans-semibold text-foreground">{resident.name}</Text>
         {subtitle ? <Text className="text-xs font-sans text-muted mt-0.5">{subtitle}</Text> : null}
         <StatusBadge isInside={resident.isInside} />
       </View>
-      <Pressable
-        onPress={onToggle}
-        disabled={isPending}
-        className={`px-4 py-2.5 rounded-xl ${resident.isInside ? 'bg-danger/10 border border-danger/20' : 'bg-success/10 border border-success/20'} active:opacity-80`}
-      >
-        <Text
-          className={`text-xs font-sans-bold ${resident.isInside ? 'text-danger' : 'text-success'}`}
-        >
-          {resident.isInside ? 'Log exit' : 'Log entry'}
-        </Text>
-      </Pressable>
+      <LogButton isInside={resident.isInside} isPending={isPending} onPress={onToggle} />
     </View>
   );
 }
@@ -216,65 +178,45 @@ function StaffRow({
 }) {
   return (
     <View className="bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
-      <Avatar name={staff.name} image={staff.photo} />
+      <Avatar name={staff.name} image={staff.photo} size={44} />
       <View className="flex-1">
         <Text className="text-sm font-sans-semibold text-foreground">{staff.name}</Text>
         <Text className="text-xs font-sans text-muted mt-0.5">{staff.roleTitle}</Text>
         <StatusBadge isInside={staff.isInside} />
       </View>
-      <Pressable
-        onPress={onToggle}
-        disabled={isPending}
-        className={`px-4 py-2.5 rounded-xl ${staff.isInside ? 'bg-danger/10 border border-danger/20' : 'bg-success/10 border border-success/20'} active:opacity-80`}
-      >
-        <Text
-          className={`text-xs font-sans-bold ${staff.isInside ? 'text-danger' : 'text-success'}`}
-        >
-          {staff.isInside ? 'Log exit' : 'Log entry'}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function Avatar({ name, image }: { name: string; image: string | null }) {
-  return (
-    <View className="w-11 h-11 rounded-full overflow-hidden bg-surface border border-border/60">
-      {image ? (
-        <Image source={{ uri: image }} style={{ width: 44, height: 44 }} contentFit="cover" />
-      ) : (
-        <View className="w-11 h-11 items-center justify-center bg-primary/10">
-          <Text className="text-primary font-serif-bold text-base">
-            {name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      )}
+      <LogButton isInside={staff.isInside} isPending={isPending} onPress={onToggle} />
     </View>
   );
 }
 
 function StatusBadge({ isInside }: { isInside: boolean }) {
   return (
-    <View
-      className={`self-start mt-2 px-2 py-0.5 rounded-full ${isInside ? 'bg-success/10' : 'bg-muted/10'}`}
-    >
-      <Text
-        className={`text-[10px] font-sans-bold uppercase ${isInside ? 'text-success' : 'text-muted'}`}
-      >
-        {isInside ? 'Inside' : 'Outside'}
-      </Text>
-    </View>
+    <Badge
+      label={isInside ? 'Inside' : 'Outside'}
+      tone={isInside ? 'success' : 'muted'}
+      className="self-start mt-2"
+    />
   );
 }
 
-function EmptyState({ message, icon }: { message: string; icon: string }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-
+function LogButton({
+  isInside,
+  isPending,
+  onPress
+}: {
+  isInside: boolean;
+  isPending: boolean;
+  onPress: () => void;
+}) {
   return (
-    <View className="items-center justify-center py-16 px-6">
-      <Ionicons name={icon as never} size={36} color={theme.muted} />
-      <Text className="text-sm font-sans text-muted text-center mt-4 leading-5">{message}</Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      disabled={isPending}
+      className={`px-4 py-2.5 rounded-xl ${isInside ? 'bg-danger/10 border border-danger/20' : 'bg-success/10 border border-success/20'} active:opacity-80`}
+    >
+      <Text className={`text-xs font-sans-bold ${isInside ? 'text-danger' : 'text-success'}`}>
+        {isInside ? 'Log exit' : 'Log entry'}
+      </Text>
+    </Pressable>
   );
 }

@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-  useColorScheme
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Screen } from '@/components/Screen';
+import { RoleGate } from '@/components/RoleGate';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
 import {
   useTowers,
   useFlats,
@@ -22,8 +20,8 @@ import {
   type Flat,
   type FlatType
 } from '@/features/society/services/use-society';
-import { Colors } from '@/constants/colors';
-import { DrawerButton } from '@/components/DrawerButton';
+import { useTheme } from '@/hooks/useColorScheme';
+import { getErrorMessage } from '@/lib/errors';
 
 const FLAT_TYPES: { value: FlatType; label: string }[] = [
   { value: '1bhk', label: '1BHK' },
@@ -34,10 +32,16 @@ const FLAT_TYPES: { value: FlatType; label: string }[] = [
   { value: 'other', label: 'Other' }
 ];
 
-export default function TowersFlatsScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+export default function TowersFlatsRoute() {
+  return (
+    <RoleGate roles={['society_admin']}>
+      <TowersFlatsScreen />
+    </RoleGate>
+  );
+}
+
+function TowersFlatsScreen() {
+  const theme = useTheme();
 
   const { data: society } = useSocietyDetails();
   const { data: towers, isLoading: isLoadingTowers } = useTowers();
@@ -45,7 +49,6 @@ export default function TowersFlatsScreen() {
 
   const createTowerMutation = useCreateTower();
   const createFlatMutation = useCreateFlat();
-
   const updateFlatMutation = useUpdateFlat();
 
   const [newTowerName, setNewTowerName] = useState('');
@@ -85,8 +88,8 @@ export default function TowersFlatsScreen() {
         monthlyAmount: parsedAmount
       });
       setEditingFlat(null);
-    } catch (err: any) {
-      setEditError(err.message ?? 'Failed to update flat');
+    } catch (err) {
+      setEditError(getErrorMessage(err));
     }
   };
 
@@ -97,8 +100,8 @@ export default function TowersFlatsScreen() {
       await createTowerMutation.mutateAsync({ name: newTowerName.trim() });
       setNewTowerName('');
       setShowAddTower(false);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to create tower');
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
@@ -121,26 +124,15 @@ export default function TowersFlatsScreen() {
       setNewFlatType('1bhk');
       setNewFlatAmount('');
       setShowAddFlat(false);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to create flat');
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        {/* Header Bar */}
-        <View className="flex-row items-center justify-between py-4 border-b border-border/60 mb-4">
-          <Pressable
-            onPress={() => router.back()}
-            className="flex-row items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border active:bg-surface"
-          >
-            <Ionicons name="arrow-back" size={18} color={theme.foreground} />
-            <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
-          </Pressable>
-          <Text className="text-base font-serif-bold text-foreground">Estate Structure</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Estate Structure" showBack drawer />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -148,7 +140,7 @@ export default function TowersFlatsScreen() {
         >
           {/* Subheader */}
           <View className="mb-6">
-            <Text className="text-2xl font-serif-bold text-foreground">Towers &amp; Flats</Text>
+            <Text className="text-2xl font-serif-bold text-foreground">Towers & Flats</Text>
             <Text className="text-xs font-sans text-muted mt-1">
               {society?.name ?? 'Estate Directory'} • Structure overview
             </Text>
@@ -162,69 +154,64 @@ export default function TowersFlatsScreen() {
 
           {/* Quick Stats */}
           <View className="flex-row gap-3 mb-6">
-            <View className="flex-1 bg-card border border-border/80 p-4 rounded-2xl">
+            <Card className="flex-1 p-4">
               <Text className="text-xs font-sans-medium text-muted uppercase">Towers</Text>
-              <Text className="text-2xl font-mono-bold text-primary mt-1">
+              <Text className="text-2xl font-mono-semibold text-primary mt-1">
                 {towers?.length ?? 0}
               </Text>
-            </View>
-            <View className="flex-1 bg-card border border-border/80 p-4 rounded-2xl">
+            </Card>
+            <Card className="flex-1 p-4">
               <Text className="text-xs font-sans-medium text-muted uppercase">
                 Flats Registered
               </Text>
-              <Text className="text-2xl font-mono-bold text-primary mt-1">
+              <Text className="text-2xl font-mono-semibold text-primary mt-1">
                 {flats?.length ?? 0}
               </Text>
-            </View>
+            </Card>
           </View>
 
           {/* Towers List Section */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider">
-                Towers List
-              </Text>
-              <Pressable
+              <SectionLabel>Towers List</SectionLabel>
+              <Button
+                label="Add Tower"
+                icon="add-circle-outline"
+                variant="outline"
+                size="sm"
                 onPress={() => setShowAddTower(!showAddTower)}
-                className="flex-row items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 active:bg-primary/20"
-              >
-                <Ionicons name="add-circle-outline" size={14} color={theme.primary} />
-                <Text className="text-xs font-sans-bold text-primary">Add Tower</Text>
-              </Pressable>
+              />
             </View>
 
             {showAddTower && (
-              <View className="p-4 mb-4 bg-card border border-border rounded-xl gap-3">
+              <Card className="p-4 mb-4 gap-3">
                 <Text className="text-xs font-sans-semibold text-foreground">New Tower Name</Text>
-                <TextInput
+                <Input
                   value={newTowerName}
                   onChangeText={setNewTowerName}
                   placeholder="e.g. Tower A, Block B, West Wing"
-                  placeholderTextColor={theme.muted}
-                  className="p-3 bg-surface border border-border rounded-xl font-sans text-foreground text-sm"
+                  className="bg-surface"
                 />
                 <View className="flex-row justify-end gap-2 mt-1">
-                  <Pressable
+                  <Button
+                    label="Cancel"
+                    variant="secondary"
+                    size="sm"
+                    haptic={false}
                     onPress={() => setShowAddTower(false)}
-                    className="px-4 py-2 rounded-xl bg-surface border border-border"
-                  >
-                    <Text className="text-xs font-sans text-foreground">Cancel</Text>
-                  </Pressable>
-                  <Pressable
+                  />
+                  <Button
+                    label="Save Tower"
+                    size="sm"
+                    loading={createTowerMutation.isPending}
                     onPress={handleCreateTower}
-                    disabled={createTowerMutation.isPending}
-                    className="px-4 py-2 rounded-xl bg-primary active:opacity-90"
-                  >
-                    <Text className="text-xs font-sans-bold text-primary-foreground">
-                      {createTowerMutation.isPending ? 'Saving...' : 'Save Tower'}
-                    </Text>
-                  </Pressable>
+                  />
                 </View>
-              </View>
+              </Card>
             )}
 
             {isLoadingTowers ? (
-              <ActivityIndicator color={theme.primary} className="my-4" />
+              <Spinner className="my-4" />
             ) : !towers || towers.length === 0 ? (
               <View className="p-6 rounded-2xl border border-dashed border-border items-center">
                 <Text className="text-sm font-sans text-muted">No towers created yet</Text>
@@ -234,10 +221,7 @@ export default function TowersFlatsScreen() {
                 {towers.map((tower) => {
                   const towerFlats = flats?.filter((f) => f.towerId === tower.id) ?? [];
                   return (
-                    <View
-                      key={tower.id}
-                      className="p-4 bg-card border border-border rounded-2xl gap-2"
-                    >
+                    <Card key={tower.id} className="p-4 gap-2">
                       <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center gap-2">
                           <Ionicons name="business" size={18} color={theme.primary} />
@@ -251,7 +235,7 @@ export default function TowersFlatsScreen() {
                           </Text>
                         </View>
                       </View>
-                    </View>
+                    </Card>
                   );
                 })}
               </View>
@@ -261,124 +245,92 @@ export default function TowersFlatsScreen() {
           {/* Add Flat Section */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider">
-                Flats Register
-              </Text>
+              <SectionLabel>Flats Register</SectionLabel>
               {towers && towers.length > 0 && (
-                <Pressable
+                <Button
+                  label="Add Flat"
+                  icon="key-outline"
+                  variant="outline"
+                  size="sm"
                   onPress={() => {
                     if (!selectedTowerId && towers.length > 0) {
                       setSelectedTowerId(towers[0].id);
                     }
                     setShowAddFlat(!showAddFlat);
                   }}
-                  className="flex-row items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 active:bg-primary/20"
-                >
-                  <Ionicons name="key-outline" size={14} color={theme.primary} />
-                  <Text className="text-xs font-sans-bold text-primary">Add Flat</Text>
-                </Pressable>
+                />
               )}
             </View>
 
             {showAddFlat && (
-              <View className="p-4 mb-4 bg-card border border-border rounded-xl gap-3">
+              <Card className="p-4 mb-4 gap-3">
                 <Text className="text-xs font-sans-semibold text-foreground">Select Tower</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  className="flex-row gap-2"
+                  contentContainerClassName="gap-2"
                 >
                   {towers?.map((t) => (
-                    <Pressable
+                    <Chip
                       key={t.id}
+                      label={t.name}
+                      selected={selectedTowerId === t.id}
                       onPress={() => setSelectedTowerId(t.id)}
-                      className={`self-start p-2 rounded-md border mr-2 ${
-                        selectedTowerId === t.id
-                          ? 'bg-primary border-primary'
-                          : 'bg-card border-border'
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-sans-bold ${
-                          selectedTowerId === t.id
-                            ? 'text-primary-foreground'
-                            : 'text-foreground-secondary'
-                        }`}
-                      >
-                        {t.name}
-                      </Text>
-                    </Pressable>
+                    />
                   ))}
                 </ScrollView>
 
                 <Text className="text-xs font-sans-semibold text-foreground mt-2">Flat Number</Text>
-                <TextInput
+                <Input
                   value={newFlatNumber}
                   onChangeText={setNewFlatNumber}
                   placeholder="e.g. 101, 402, B-305"
-                  placeholderTextColor={theme.muted}
-                  className="p-3 bg-surface border border-border rounded-xl font-sans text-foreground text-sm"
+                  className="bg-surface"
                 />
 
                 <Text className="text-xs font-sans-semibold text-foreground mt-2">Flat Type</Text>
-                <View className="flex-row flex-wrap">
+                <View className="flex-row flex-wrap gap-2">
                   {FLAT_TYPES.map((t) => (
-                    <Pressable
+                    <Chip
                       key={t.value}
+                      label={t.label}
+                      selected={newFlatType === t.value}
                       onPress={() => setNewFlatType(t.value)}
-                      className={`self-start p-2 rounded-md border mr-2 mb-2 ${
-                        newFlatType === t.value
-                          ? 'bg-primary border-primary'
-                          : 'bg-card border-border'
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-sans-bold ${
-                          newFlatType === t.value
-                            ? 'text-primary-foreground'
-                            : 'text-foreground-secondary'
-                        }`}
-                      >
-                        {t.label}
-                      </Text>
-                    </Pressable>
+                    />
                   ))}
                 </View>
 
                 <Text className="text-xs font-sans-semibold text-foreground mt-2">
                   Monthly Amount (₹)
                 </Text>
-                <TextInput
+                <Input
                   value={newFlatAmount}
                   onChangeText={setNewFlatAmount}
                   placeholder="e.g. 2500"
-                  placeholderTextColor={theme.muted}
                   keyboardType="numeric"
-                  className="p-3 bg-surface border border-border rounded-xl font-sans text-foreground text-sm"
+                  className="bg-surface"
                 />
 
                 <View className="flex-row justify-end gap-2 mt-1">
-                  <Pressable
+                  <Button
+                    label="Cancel"
+                    variant="secondary"
+                    size="sm"
+                    haptic={false}
                     onPress={() => setShowAddFlat(false)}
-                    className="px-4 py-2 rounded-xl bg-surface border border-border"
-                  >
-                    <Text className="text-xs font-sans text-foreground">Cancel</Text>
-                  </Pressable>
-                  <Pressable
+                  />
+                  <Button
+                    label="Save Flat"
+                    size="sm"
+                    loading={createFlatMutation.isPending}
                     onPress={handleCreateFlat}
-                    disabled={createFlatMutation.isPending}
-                    className="px-4 py-2 rounded-xl bg-primary active:opacity-90"
-                  >
-                    <Text className="text-xs font-sans-bold text-primary-foreground">
-                      {createFlatMutation.isPending ? 'Saving...' : 'Save Flat'}
-                    </Text>
-                  </Pressable>
+                  />
                 </View>
-              </View>
+              </Card>
             )}
 
             {isLoadingFlats ? (
-              <ActivityIndicator color={theme.primary} className="my-4" />
+              <Spinner className="my-4" />
             ) : !flats || flats.length === 0 ? (
               <View className="p-6 rounded-2xl border border-dashed border-border items-center">
                 <Text className="text-sm font-sans text-muted">No flats created yet</Text>
@@ -392,7 +344,7 @@ export default function TowersFlatsScreen() {
                     className="px-3.5 py-2.5 bg-card border border-border rounded-xl flex-row items-center gap-2 active:bg-surface"
                   >
                     <Ionicons name="home-outline" size={14} color={theme.primary} />
-                    <Text className="text-xs font-mono-bold text-foreground">
+                    <Text className="text-xs font-mono-semibold text-foreground">
                       {flat.flatNumber}
                     </Text>
                     <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
@@ -411,6 +363,7 @@ export default function TowersFlatsScreen() {
         </ScrollView>
       </View>
 
+      {/* Edit flat bottom sheet */}
       <Modal
         visible={!!editingFlat}
         transparent
@@ -432,58 +385,38 @@ export default function TowersFlatsScreen() {
               </Pressable>
             </View>
 
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Flat Type
-            </Text>
-            <View className="flex-row flex-wrap mb-4">
+            <SectionLabel className="mb-2">Flat Type</SectionLabel>
+            <View className="flex-row flex-wrap gap-2 mb-4">
               {FLAT_TYPES.map((t) => (
-                <Pressable
+                <Chip
                   key={t.value}
+                  label={t.label}
+                  selected={editFlatType === t.value}
                   onPress={() => setEditFlatType(t.value)}
-                  className={`self-start p-2 rounded-md border mr-2 mb-2 ${
-                    editFlatType === t.value ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      editFlatType === t.value
-                        ? 'text-primary-foreground'
-                        : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
+                />
               ))}
             </View>
 
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Monthly Amount (₹)
-            </Text>
-            <TextInput
-              value={editFlatAmount}
-              onChangeText={setEditFlatAmount}
-              placeholder="e.g. 2500"
-              placeholderTextColor={theme.muted}
-              keyboardType="numeric"
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-4"
-            />
+            <Field label="Monthly Amount (₹)">
+              <Input
+                value={editFlatAmount}
+                onChangeText={setEditFlatAmount}
+                placeholder="e.g. 2500"
+                keyboardType="numeric"
+                className="mb-4"
+              />
+            </Field>
 
             {editError ? (
               <Text className="text-sm font-sans text-danger mb-4">{editError}</Text>
             ) : null}
 
-            <Pressable
+            <Button
+              label="Save changes"
+              size="lg"
+              loading={updateFlatMutation.isPending}
               onPress={handleUpdateFlat}
-              disabled={updateFlatMutation.isPending}
-              className="rounded-xl bg-primary px-4 py-4 items-center"
-            >
-              {updateFlatMutation.isPending ? (
-                <ActivityIndicator size="small" color={theme.primaryForeground} />
-              ) : (
-                <Text className="text-sm font-sans-bold text-primary-foreground">Save changes</Text>
-              )}
-            </Pressable>
+            />
           </View>
         </View>
       </Modal>

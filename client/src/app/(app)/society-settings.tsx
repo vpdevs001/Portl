@@ -1,29 +1,32 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { RoleGate } from '@/components/RoleGate';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Field, Input } from '@/components/ui/Input';
+import { Spinner } from '@/components/ui/Spinner';
+import { getErrorMessage } from '@/lib/errors';
 import {
   useSocietyDetails,
   useUpdateSocietyDetails
 } from '@/features/society/services/use-society';
 
-export default function SocietySettingsScreen() {
+export default function SocietySettingsRoute() {
+  return (
+    <RoleGate roles={['society_admin']}>
+      <SocietySettingsScreen />
+    </RoleGate>
+  );
+}
+
+function SocietySettingsScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const { data: society, isLoading } = useSocietyDetails();
   const updateSociety = useUpdateSocietyDetails();
@@ -69,151 +72,85 @@ export default function SocietySettingsScreen() {
       });
       setSuccess(true);
       setTimeout(() => router.back(), 700);
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to update society details');
+    } catch (e) {
+      setError(getErrorMessage(e));
     }
   };
 
   return (
     <Screen>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 48 }}>
-          {/* Header Bar */}
-          <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/60">
-            <Pressable
-              onPress={() => router.back()}
-              className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border active:bg-surface"
-            >
-              <Ionicons name="arrow-back" size={16} color={theme.foreground} />
-              <Text className="text-xs font-sans-semibold text-foreground">Back</Text>
-            </Pressable>
-            <Text className="text-base font-serif-bold text-foreground">Society Settings</Text>
-            <DrawerButton />
+      <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 48 }}>
+        <ScreenHeader title="Society Settings" showBack drawer />
+
+        {/* Hero */}
+        <View className="mb-6 mt-2">
+          <Text className="text-2xl font-serif-bold text-foreground mb-2">Society Details</Text>
+          <Text className="text-sm font-sans text-foreground-secondary leading-5">
+            Update your society’s name and registered address. These details appear across notices,
+            receipts, and member-facing screens.
+          </Text>
+        </View>
+
+        {isLoading ? (
+          <View className="py-16 items-center">
+            <Spinner />
           </View>
+        ) : (
+          <View className="mb-8">
+            {error ? (
+              <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg mb-4">
+                <Text className="text-danger font-sans text-xs">{error}</Text>
+              </View>
+            ) : null}
 
-          {/* Hero */}
-          <View className="mb-8 mt-2">
-            <Text className="text-3xl font-serif-bold text-foreground mb-3">Society Details</Text>
-            <Text className="text-sm font-sans text-foreground-secondary leading-5">
-              Update your society&apos;s name and registered address. These details appear across
-              notices, receipts, and member-facing screens.
-            </Text>
+            <Field label="Society Name">
+              <Input value={name} onChangeText={setName} placeholder="e.g. Green Meadows Society" />
+            </Field>
+
+            <Field label="Address">
+              <Input value={address} onChangeText={setAddress} placeholder="Street / locality" />
+            </Field>
+
+            <View className="flex-row gap-3">
+              <Field label="City" className="flex-1">
+                <Input value={city} onChangeText={setCity} placeholder="City" />
+              </Field>
+              <Field label="State" className="flex-1">
+                <Input value={state} onChangeText={setState} placeholder="State" />
+              </Field>
+            </View>
+
+            <Field label="Pincode">
+              <Input
+                value={pincode}
+                onChangeText={setPincode}
+                placeholder="e.g. 226001"
+                keyboardType="number-pad"
+              />
+            </Field>
+
+            {success ? (
+              <View className="p-3.5 bg-success/15 border border-success/30 rounded-xl mb-4">
+                <Text className="text-success font-sans-semibold text-center text-xs">
+                  Society details updated!
+                </Text>
+              </View>
+            ) : null}
+
+            <Button
+              label="Save Changes"
+              icon="checkmark-done"
+              size="lg"
+              loading={updateSociety.isPending}
+              onPress={handleSave}
+              className="mt-2"
+            />
           </View>
+        )}
 
-          {isLoading ? (
-            <View className="py-16 items-center">
-              <ActivityIndicator size="small" color={theme.primary} />
-            </View>
-          ) : (
-            <View className="gap-5 mb-8">
-              {error ? (
-                <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg">
-                  <Text className="text-danger font-sans text-xs">{error}</Text>
-                </View>
-              ) : null}
-
-              <View className="gap-2">
-                <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-                  Society Name
-                </Text>
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="e.g. Green Meadows Society"
-                  placeholderTextColor="#93a08d"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
-                />
-              </View>
-
-              <View className="gap-2">
-                <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-                  Address
-                </Text>
-                <TextInput
-                  value={address}
-                  onChangeText={setAddress}
-                  placeholder="Street / locality"
-                  placeholderTextColor="#93a08d"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
-                />
-              </View>
-
-              <View className="flex-row gap-3">
-                <View className="flex-1 gap-2">
-                  <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-                    City
-                  </Text>
-                  <TextInput
-                    value={city}
-                    onChangeText={setCity}
-                    placeholder="City"
-                    placeholderTextColor="#93a08d"
-                    className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
-                  />
-                </View>
-                <View className="flex-1 gap-2">
-                  <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-                    State
-                  </Text>
-                  <TextInput
-                    value={state}
-                    onChangeText={setState}
-                    placeholder="State"
-                    placeholderTextColor="#93a08d"
-                    className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
-                  />
-                </View>
-              </View>
-
-              <View className="gap-2">
-                <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase">
-                  Pincode
-                </Text>
-                <TextInput
-                  value={pincode}
-                  onChangeText={setPincode}
-                  placeholder="e.g. 226001"
-                  placeholderTextColor="#93a08d"
-                  keyboardType="number-pad"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3.5 text-foreground font-sans text-sm"
-                />
-              </View>
-
-              {success ? (
-                <View className="p-3.5 bg-success/15 border border-success/30 rounded-xl">
-                  <Text className="text-success font-sans-semibold text-center text-xs">
-                    Society details updated!
-                  </Text>
-                </View>
-              ) : null}
-
-              <Pressable
-                onPress={handleSave}
-                disabled={updateSociety.isPending}
-                className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mt-2"
-              >
-                {updateSociety.isPending ? (
-                  <ActivityIndicator size="small" color={theme.primaryForeground} />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-done" size={18} color={theme.primaryForeground} />
-                    <Text className="text-primary-foreground font-sans-bold text-base">
-                      Save Changes
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            </View>
-          )}
-
-          {/* Pointer to Maintenance & Dues for UPI ID, so it isn't duplicated here */}
-          <Pressable
-            onPress={() => router.push('/(app)/admin/payments/review' as any)}
-            className="p-4 bg-card border border-border rounded-xl flex-row items-center gap-3"
-          >
+        {/* Pointer to Maintenance & Dues for UPI ID, so it isn't duplicated here */}
+        <Pressable onPress={() => router.push('/(app)/admin/payments/review')}>
+          <Card className="p-4 flex-row items-center gap-3">
             <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
               <Ionicons name="card-outline" size={18} color={theme.primary} />
             </View>
@@ -222,13 +159,13 @@ export default function SocietySettingsScreen() {
                 Looking for the UPI ID?
               </Text>
               <Text className="text-[11px] font-sans text-muted" numberOfLines={2}>
-                That&apos;s managed from Maintenance &amp; Dues, not here.
+                That’s managed from Maintenance & Dues, not here.
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={14} color={theme.muted} />
-          </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </Card>
+        </Pressable>
+      </ScrollView>
     </Screen>
   );
 }

@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Spinner } from '@/components/ui/Spinner';
 import {
   useLogVisitorEntry,
   useLogVisitorExit,
@@ -15,13 +21,16 @@ import {
 import type { PreApproval } from '@/features/visitors/services/visitors';
 import { getErrorMessage } from '@/lib/errors';
 
-export default function VerifyPassScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+type Mode = 'scan' | 'manual';
 
+const MODE_OPTIONS: { value: Mode; label: string; icon: string }[] = [
+  { value: 'scan', label: 'Scan QR', icon: 'qr-code-outline' },
+  { value: 'manual', label: 'Enter code', icon: 'keypad-outline' }
+];
+
+export default function VerifyPassScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [mode, setMode] = useState<'scan' | 'manual'>('scan');
+  const [mode, setMode] = useState<Mode>('scan');
   const [manualCode, setManualCode] = useState('');
   const [scanLocked, setScanLocked] = useState(false);
   const [result, setResult] = useState<PreApproval | null>(null);
@@ -62,13 +71,7 @@ export default function VerifyPassScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-4">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Verify pass</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Verify pass" showBack drawer />
 
         {result ? (
           <ResultCard
@@ -89,28 +92,12 @@ export default function VerifyPassScreen() {
           />
         ) : (
           <>
-            <View className="flex-row bg-surface rounded-xl p-1 mb-4">
-              <Pressable
-                onPress={() => setMode('scan')}
-                className={`flex-1 items-center py-2.5 rounded-lg ${mode === 'scan' ? 'bg-card' : ''}`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${mode === 'scan' ? 'text-primary' : 'text-muted'}`}
-                >
-                  Scan QR
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setMode('manual')}
-                className={`flex-1 items-center py-2.5 rounded-lg ${mode === 'manual' ? 'bg-card' : ''}`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${mode === 'manual' ? 'text-primary' : 'text-muted'}`}
-                >
-                  Enter code
-                </Text>
-              </Pressable>
-            </View>
+            <SegmentedControl
+              options={MODE_OPTIONS}
+              value={mode}
+              onChange={setMode}
+              className="mb-4"
+            />
 
             {mode === 'scan' ? (
               <ScanPanel
@@ -122,29 +109,23 @@ export default function VerifyPassScreen() {
               />
             ) : (
               <View className="items-center pt-8">
-                <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3 self-start">
-                  6-character pass code
-                </Text>
-                <TextInput
+                <SectionLabel className="mb-3 self-start">6-character pass code</SectionLabel>
+                <Input
                   value={manualCode}
                   onChangeText={(t) => setManualCode(t.toUpperCase())}
                   autoCapitalize="characters"
                   maxLength={6}
                   placeholder="ABC123"
-                  placeholderTextColor={theme.muted}
-                  className="w-full bg-card border border-border rounded-xl px-4 py-4 text-foreground font-sans-bold text-2xl text-center tracking-[8px] mb-4"
+                  className="w-full py-4 font-sans-bold text-2xl text-center tracking-[8px] mb-4"
                 />
-                <Pressable
+                <Button
+                  label="Verify"
+                  size="lg"
+                  loading={verifyPass.isPending}
+                  disabled={manualCode.trim().length !== 6}
                   onPress={handleManualSubmit}
-                  disabled={manualCode.trim().length !== 6 || verifyPass.isPending}
-                  className="w-full rounded-xl bg-primary px-4 py-4 items-center"
-                >
-                  {verifyPass.isPending ? (
-                    <ActivityIndicator size="small" color={theme.primaryForeground} />
-                  ) : (
-                    <Text className="text-sm font-sans-bold text-primary-foreground">Verify</Text>
-                  )}
-                </Pressable>
+                  className="w-full"
+                />
               </View>
             )}
 
@@ -178,13 +159,12 @@ function ScanPanel({
   onScanned: (data: string) => void;
   isVerifying: boolean;
 }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   if (!permission) {
     return (
       <View className="items-center justify-center py-16">
-        <ActivityIndicator size="small" color={theme.primary} />
+        <Spinner />
       </View>
     );
   }
@@ -197,11 +177,9 @@ function ScanPanel({
           Camera access needed
         </Text>
         <Text className="text-sm font-sans text-foreground-secondary text-center mt-2 mb-4">
-          Portl needs the camera to scan a resident&apos;s QR pass.
+          Portl needs the camera to scan a resident’s QR pass.
         </Text>
-        <Pressable onPress={requestPermission} className="rounded-xl bg-primary px-4 py-3">
-          <Text className="text-xs font-sans-bold text-primary-foreground">Grant access</Text>
-        </Pressable>
+        <Button label="Grant access" size="sm" onPress={requestPermission} />
       </View>
     );
   }
@@ -214,9 +192,13 @@ function ScanPanel({
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={scanLocked ? undefined : (event) => onScanned(event.data)}
       />
+      {/* Viewfinder frame */}
+      <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
+        <View className="w-48 h-48 rounded-2xl border-2 border-white/70" />
+      </View>
       {isVerifying ? (
         <View className="absolute inset-0 bg-black/40 items-center justify-center">
-          <ActivityIndicator size="large" color="#fff" />
+          <Spinner size="large" color="#fff" />
         </View>
       ) : null}
     </View>
@@ -238,19 +220,20 @@ function ResultCard({
   isLoggingExit: boolean;
   onScanAnother: () => void;
 }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const isInside = Boolean(result.isInside);
   const isLogging = isLoggingEntry || isLoggingExit;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <View className="rounded-2xl bg-success/10 border border-success/30 p-4 mb-4 items-center">
-        <Ionicons name="checkmark-circle" size={32} color={theme.success} />
-        <Text className="text-base font-serif-semibold text-foreground mt-2">Pass verified</Text>
-      </View>
+      <Animated.View entering={ZoomIn.duration(350).springify().damping(16)}>
+        <View className="rounded-2xl bg-success/10 border border-success/30 p-4 mb-4 items-center">
+          <Ionicons name="checkmark-circle" size={32} color={theme.success} />
+          <Text className="text-base font-serif-semibold text-foreground mt-2">Pass verified</Text>
+        </View>
+      </Animated.View>
 
-      <View className="bg-card border border-border rounded-2xl p-4 mb-4">
+      <Card className="p-4 mb-4">
         <Text className="text-lg font-serif-semibold text-foreground">{result.name}</Text>
         <Text className="text-sm font-sans text-foreground-secondary mt-1 capitalize">
           {result.visitorType?.replace('_', ' ')}
@@ -262,55 +245,31 @@ function ResultCard({
           <Text className="text-sm font-sans text-foreground-secondary mt-1">{result.purpose}</Text>
         ) : null}
         <Text className="text-sm font-sans text-foreground-secondary mt-2">
-          Flat {result.flat?.flatNumber ?? result.flat?.number ?? result.flat?.name ?? '—'}
+          Flat {result.flat?.flatNumber ?? '—'}
         </Text>
         {result.validUntil ? (
           <Text className="text-xs font-sans text-muted mt-2">
             Valid until {new Date(result.validUntil).toLocaleString()}
           </Text>
         ) : null}
-      </View>
+      </Card>
 
-      <View
-        className={`rounded-xl px-3 py-2 mb-3 self-start ${
-          isInside ? 'bg-success/10' : 'bg-muted/10'
-        }`}
-      >
-        <Text
-          className={`text-[10px] font-sans-bold uppercase ${
-            isInside ? 'text-success' : 'text-muted'
-          }`}
-        >
-          {isInside ? 'Currently inside' : 'Currently outside'}
-        </Text>
-      </View>
+      <Badge
+        label={isInside ? 'Currently inside' : 'Currently outside'}
+        tone={isInside ? 'success' : 'muted'}
+        className="mb-3"
+      />
 
-      <Pressable
+      <Button
+        label={isInside ? 'Log exit' : 'Log entry'}
+        variant={isInside ? 'dangerSoft' : 'primary'}
+        size="lg"
+        loading={isLogging}
         onPress={isInside ? onLogExit : onLogEntry}
-        disabled={isLogging}
-        className={`rounded-xl px-4 py-4 items-center mb-3 ${
-          isInside ? 'bg-danger/10 border border-danger/20' : 'bg-primary'
-        }`}
-      >
-        {isLogging ? (
-          <ActivityIndicator
-            size="small"
-            color={isInside ? theme.danger : theme.primaryForeground}
-          />
-        ) : (
-          <Text
-            className={`text-sm font-sans-bold ${
-              isInside ? 'text-danger' : 'text-primary-foreground'
-            }`}
-          >
-            {isInside ? 'Log exit' : 'Log entry'}
-          </Text>
-        )}
-      </Pressable>
+        className="mb-3"
+      />
 
-      <Pressable onPress={onScanAnother} className="items-center py-3">
-        <Text className="text-xs font-sans-bold text-primary">Verify another pass</Text>
-      </Pressable>
+      <Button label="Verify another pass" variant="ghost" size="sm" onPress={onScanAnother} />
     </ScrollView>
   );
 }

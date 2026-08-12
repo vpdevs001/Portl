@@ -1,25 +1,25 @@
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { usePendingVisitors } from '@/features/visitors/hooks/use-visitors';
 import { VisitorGuardQueue } from './VisitorGuardQueue';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/useColorScheme';
 import { HOME_CONSTANTS } from '../constants/home.constants';
 import { DrawerButton } from '@/components/DrawerButton';
+import { Button } from '@/components/ui/Button';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { PressableScale } from '@/components/ui/PressableScale';
 
 export function GuardHome() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { data, isLoading } = usePendingVisitors();
 
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
         {/* Header Bar with Drawer Toggle */}
-        <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/50">
+        <View className="flex-row items-center justify-between pb-4 mb-4 border-b border-border/50">
           <View className="flex-row items-center gap-3">
             <DrawerButton />
             <View>
@@ -32,25 +32,22 @@ export function GuardHome() {
             </View>
           </View>
 
-          <Pressable
-            onPress={() => router.push('/(app)/guard/register-visitor' as any)}
-            className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-primary active:opacity-90"
-          >
-            <Ionicons name="person-add" size={14} color={theme.primaryForeground} />
-            <Text className="text-xs font-sans-bold text-primary-foreground">
-              {HOME_CONSTANTS.GUARD.ACTION_TEXT}
-            </Text>
-          </Pressable>
+          <Button
+            label={HOME_CONSTANTS.GUARD.ACTION_TEXT}
+            icon="person-add"
+            size="sm"
+            onPress={() => router.push('/(app)/guard/register-visitor')}
+          />
         </View>
 
-        <View className="mb-6">
+        <FadeIn className="mb-5">
           <Text className="text-2xl font-serif-bold text-foreground">
             {HOME_CONSTANTS.GUARD.TITLE}
           </Text>
           <Text className="text-xs font-sans text-muted mt-1">
             {HOME_CONSTANTS.GUARD.DESCRIPTION}
           </Text>
-        </View>
+        </FadeIn>
 
         <VisitorGuardQueue
           requests={data ?? []}
@@ -58,18 +55,24 @@ export function GuardHome() {
           onOpenRegister={() => router.push('/(app)/guard/register-visitor')}
         />
 
-        <View className="flex-row gap-3 mt-6">
+        <FadeIn index={2} className="flex-row gap-3 mt-4">
           <QuickAction
             label="Check-in"
             icon="people-outline"
-            onPress={() => router.push('/(app)/guard/resident-search' as any)}
+            onPress={() => router.push('/(app)/guard/resident-search')}
           />
           <QuickAction
             label="Gate logs"
             icon="journal-outline"
-            onPress={() => router.push('/(app)/guard/gate-logs' as any)}
+            onPress={() => router.push('/(app)/guard/gate-logs')}
           />
-        </View>
+          <QuickAction
+            label="SOS"
+            icon="alert-circle-outline"
+            danger
+            onPress={() => router.push('/(app)/guard/emergency-alert')}
+          />
+        </FadeIn>
       </View>
     </Screen>
   );
@@ -78,22 +81,27 @@ export function GuardHome() {
 function QuickAction({
   label,
   icon,
+  danger = false,
   onPress
 }: {
   label: string;
   icon: string;
+  danger?: boolean;
   onPress: () => void;
 }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
-      className="flex-1 bg-card border border-border rounded-2xl p-4 items-center gap-2 active:opacity-90"
+      className={`flex-1 rounded-2xl p-4 items-center gap-2 border ${
+        danger ? 'bg-danger/10 border-danger/20' : 'bg-card border-border'
+      }`}
     >
-      <Ionicons name={icon as never} size={20} color={theme.primary} />
-      <Text className="text-xs font-sans-bold text-foreground">{label}</Text>
-    </Pressable>
+      <Ionicons name={icon as never} size={20} color={danger ? theme.danger : theme.primary} />
+      <Text className={`text-xs font-sans-bold ${danger ? 'text-danger' : 'text-foreground'}`}>
+        {label}
+      </Text>
+    </PressableScale>
   );
 }

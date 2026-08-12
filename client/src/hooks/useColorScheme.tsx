@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScopedTheme } from 'uniwind';
+import { Colors } from '@/constants/colors';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type ResolvedScheme = 'light' | 'dark';
@@ -90,4 +91,15 @@ export function useColorScheme(): ResolvedScheme {
   }
 
   return ctx.resolvedScheme;
+}
+
+/**
+ * Returns the resolved theme's raw color tokens (for icon colors, native
+ * props like ActivityIndicator/placeholderTextColor, and inline styles).
+ * Replaces the repeated `Colors[useColorScheme() === 'dark' ? 'dark' : 'light']`
+ * incantation spread across screens.
+ */
+export function useTheme() {
+  const scheme = useColorScheme();
+  return Colors[scheme];
 }

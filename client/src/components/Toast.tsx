@@ -6,11 +6,11 @@ import {
   useState,
   type PropsWithChildren
 } from 'react';
-import { Animated, Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { registerToastListener, type ToastVariant } from '@/lib/toast-bridge';
 
 type ToastItem = {
@@ -91,7 +91,8 @@ function ToastHost({
         left: 0,
         right: 0,
         paddingHorizontal: 16,
-        gap: 8
+        gap: 8,
+        zIndex: 100
       }}
     >
       {toasts.map((toast) => (
@@ -102,73 +103,39 @@ function ToastHost({
 }
 
 function ToastBanner({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  // Animated.Value needs a stable identity across renders, but it's read
-  // during render below (opacity/transform), which the refs lint rule
-  // flags if it's held in a ref. A lazily-initialized state value gives
-  // the same "create once" behavior and is safe to read during render.
-  const [progress] = useState(() => new Animated.Value(0));
+  const theme = useTheme();
   const isError = toast.variant === 'error';
   const accent = isError ? theme.danger : theme.success;
 
   useEffect(() => {
-    Animated.spring(progress, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 16,
-      bounciness: 6
-    }).start();
-
-    const timer = setTimeout(() => {
-      Animated.timing(progress, { toValue: 0, duration: 180, useNativeDriver: true }).start(
-        onDismiss
-      );
-    }, AUTO_DISMISS_MS);
-
+    const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handlePress() {
-    Animated.timing(progress, { toValue: 0, duration: 150, useNativeDriver: true }).start(
-      onDismiss
-    );
-  }
-
   return (
     <Animated.View
-      style={{
-        opacity: progress,
-        transform: [
-          {
-            translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] })
-          }
-        ],
-        // Shadow so the banner reads as elevated above screen content on both platforms.
-        ...(Platform.OS === 'ios'
+      entering={FadeInDown.duration(350).springify().damping(18).stiffness(200)}
+      exiting={FadeOutUp.duration(200)}
+      style={
+        Platform.OS === 'ios'
           ? {
               shadowColor: '#000',
               shadowOpacity: 0.15,
               shadowRadius: 8,
               shadowOffset: { width: 0, height: 3 }
             }
-          : { elevation: 6 })
-      }}
+          : { elevation: 6 }
+      }
     >
       <Pressable
-        onPress={handlePress}
-        className="flex-row items-start gap-2.5 rounded-xl border p-3 bg-card"
-        style={{ borderColor: accent }}
+        onPress={onDismiss}
+        className="flex-row items-center gap-2.5 rounded-xl border p-3 bg-card"
+        style={{ borderColor: `${accent}55` }}
       >
-        <Ionicons
-          name={isError ? 'alert-circle' : 'checkmark-circle'}
-          size={18}
-          color={accent}
-          style={{ marginTop: 1 }}
-        />
-        <Text className="flex-1 text-sm font-sans text-foreground">{toast.message}</Text>
-        <Ionicons name="close" size={16} color={theme.muted} style={{ marginTop: 2 }} />
+        <Ionicons name={isError ? 'alert-circle' : 'checkmark-circle'} size={18} color={accent} />
+        <Text className="flex-1 text-sm font-sans-medium text-foreground">{toast.message}</Text>
+        <Ionicons name="close" size={16} color={theme.muted} />
       </Pressable>
     </Animated.View>
   );

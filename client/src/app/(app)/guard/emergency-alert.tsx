@@ -1,26 +1,28 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useCreateEmergencyAlert } from '@/features/notices/hooks/use-notices';
 
 const QUICK_REASONS = ['Fire', 'Medical', 'Security breach', 'Water leak', 'Power outage'];
 
 /**
- * Chapter 17 — reuses the notices/emergency-alert pipeline (Chapter 10's
- * feed, now with a guard-facing entry point): posting here creates a
+ * Reuses the notices/emergency-alert pipeline: posting here creates a
  * category='emergency' notice and immediately pushes every society member,
  * with the alert framed as urgent (see notices.service.ts on the server).
  */
 export default function EmergencyAlertScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -48,22 +50,23 @@ export default function EmergencyAlertScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center px-8">
-          <View className="w-16 h-16 rounded-full bg-emerald-500/10 items-center justify-center mb-4">
-            <Ionicons name="checkmark-circle" size={32} color="#2f7a4f" />
-          </View>
-          <Text className="text-lg font-serif-semibold text-foreground text-center mb-1.5">
-            Alert sent to the whole society
-          </Text>
-          <Text className="text-sm font-sans text-muted text-center mb-8">
-            Every resident and admin has been pushed a notification and it&apos;s live on the
-            Notices feed.
-          </Text>
-          <Pressable
-            onPress={() => router.back()}
-            className="px-6 py-3.5 rounded-xl bg-primary active:bg-primary/90"
-          >
-            <Text className="text-primary-foreground font-sans-semibold text-sm">Done</Text>
-          </Pressable>
+          <Animated.View entering={ZoomIn.duration(450).springify().damping(14)}>
+            <View className="w-16 h-16 rounded-full bg-success/15 items-center justify-center mb-4">
+              <Ionicons name="checkmark-circle" size={32} color={theme.success} />
+            </View>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(150).duration(400)} className="items-center">
+            <Text className="text-lg font-serif-semibold text-foreground text-center mb-1.5">
+              Alert sent to the whole society
+            </Text>
+            <Text className="text-sm font-sans text-muted text-center mb-8 leading-5">
+              Every resident and admin has been pushed a notification and it’s live on the Notices
+              feed.
+            </Text>
+          </Animated.View>
+          <Animated.View entering={FadeInDown.delay(280).duration(400)}>
+            <Button label="Done" onPress={() => router.back()} className="px-8" />
+          </Animated.View>
         </View>
       </Screen>
     );
@@ -72,13 +75,7 @@ export default function EmergencyAlertScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-4">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Emergency Alert</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Emergency Alert" showBack drawer />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -92,82 +89,48 @@ export default function EmergencyAlertScreen() {
             </Text>
           </View>
 
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-2">
-            Quick reason
-          </Text>
+          <SectionLabel className="mb-2">Quick reason</SectionLabel>
           <View className="flex-row flex-wrap gap-2 mb-5">
             {QUICK_REASONS.map((reason) => (
-              <Pressable
+              <Chip
                 key={reason}
+                label={reason}
+                selected={title === reason}
                 onPress={() => setTitle(reason)}
-                className={`px-3 py-2 rounded-xl border ${
-                  title === reason
-                    ? 'bg-danger border-danger'
-                    : 'bg-card border-border active:bg-surface'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-sans-semibold ${
-                    title === reason ? 'text-white' : 'text-foreground'
-                  }`}
-                >
-                  {reason}
-                </Text>
-              </Pressable>
+              />
             ))}
           </View>
 
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-2">
-            Alert title
-          </Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="e.g. Fire near Tower B"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3.5 text-sm font-sans text-foreground mb-5"
-          />
+          <Field label="Alert title">
+            <Input value={title} onChangeText={setTitle} placeholder="e.g. Fire near Tower B" />
+          </Field>
 
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-2">
-            Details
-          </Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="What's happening, and what should residents do?"
-            placeholderTextColor={theme.muted}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            className="bg-card border border-border rounded-xl px-4 py-3.5 text-sm font-sans text-foreground mb-6 min-h-[110px]"
-          />
+          <Field label="Details">
+            <Input
+              value={description}
+              onChangeText={setDescription}
+              placeholder="What's happening, and what should residents do?"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              className="min-h-[110px]"
+            />
+          </Field>
 
-          <Pressable
+          <Button
+            label="Broadcast Emergency Alert"
+            icon="megaphone-outline"
+            variant="danger"
+            size="lg"
+            loading={createAlert.isPending}
+            disabled={!canSend}
             onPress={() => setConfirming(true)}
-            disabled={!canSend || createAlert.isPending}
-            className={`flex-row items-center justify-center gap-2 py-4 rounded-xl ${
-              canSend ? 'bg-danger active:bg-danger/90' : 'bg-surface border border-border'
-            }`}
-          >
-            {createAlert.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Ionicons
-                  name="megaphone-outline"
-                  size={18}
-                  color={canSend ? '#fff' : theme.muted}
-                />
-                <Text className={`font-sans-bold text-sm ${canSend ? 'text-white' : 'text-muted'}`}>
-                  Broadcast Emergency Alert
-                </Text>
-              </>
-            )}
-          </Pressable>
+            className="mt-2"
+          />
 
           {createAlert.isError && (
             <Text className="text-xs font-sans text-danger text-center mt-3">
-              Couldn&apos;t send the alert. Please try again.
+              Couldn’t send the alert. Please try again.
             </Text>
           )}
         </ScrollView>

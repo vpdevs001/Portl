@@ -20,7 +20,12 @@ export type CreateNoticeInput = {
   expiresAt?: string;
 };
 
-export type UpdateNoticeInput = Partial<CreateNoticeInput> & { expiresAt?: string | null };
+// Omit-then-extend: a plain `Partial & { expiresAt?: string | null }`
+// intersection would narrow expiresAt back to `string | undefined` — the
+// null matters, it's how an edit clears an existing expiry.
+export type UpdateNoticeInput = Omit<Partial<CreateNoticeInput>, 'expiresAt'> & {
+  expiresAt?: string | null;
+};
 
 export async function fetchNotices(includeExpired = false) {
   const query = includeExpired ? '?includeExpired=true' : '';

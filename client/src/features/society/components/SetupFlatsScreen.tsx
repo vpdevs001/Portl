@@ -4,21 +4,18 @@ import {
   useTowers,
   type FlatType
 } from '@/features/society/services/use-society';
-import { Colors } from '@/constants/colors';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
+import { OnboardingHeader } from '@/components/OnboardingHeader';
+import { getErrorMessage } from '@/lib/errors';
 
 const FLAT_TYPES: { value: FlatType; label: string }[] = [
   { value: '1bhk', label: '1BHK' },
@@ -47,8 +44,6 @@ export function SetupFlatsScreen() {
   const [flatType, setFlatType] = useState<FlatType>('1bhk');
   const [monthlyAmount, setMonthlyAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const handleAddFlat = async () => {
     if (!effectiveTowerId) {
@@ -85,8 +80,8 @@ export function SetupFlatsScreen() {
       setFloor('');
       setFlatType('1bhk');
       setMonthlyAmount('');
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to add flat');
+    } catch (e) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -100,48 +95,32 @@ export function SetupFlatsScreen() {
       className="flex-1"
     >
       <ScrollView className="flex-1 bg-background px-6 py-12">
-        {/* Hero */}
-        <View className="mb-8 mt-4">
-          <Text className="text-3xl font-serif-bold text-foreground mb-3">Setup Flats</Text>
-          <Text className="text-sm font-sans text-foreground-secondary leading-5">
-            Map out the apartments or office units in each tower. You can switch towers to view and
-            configure their respective units.
-          </Text>
-        </View>
+        <OnboardingHeader
+          title="Setup Flats"
+          subtitle="Map out the apartments or office units in each tower. You can switch towers to view and configure their respective units."
+          step={3}
+          totalSteps={4}
+          showBack
+        />
 
         {/* Tower Selector */}
         <View className="mb-6">
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-            Select Tower
-          </Text>
+          <SectionLabel className="mb-3">Select Tower</SectionLabel>
           {isLoadingTowers ? (
-            <ActivityIndicator size="small" color="#a9832e" />
+            <Spinner />
           ) : towers && towers.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="flex-row gap-2"
+              contentContainerClassName="gap-2"
             >
               {towers.map((t) => (
-                <Pressable
+                <Chip
                   key={t.id}
+                  label={t.name}
+                  selected={effectiveTowerId === t.id}
                   onPress={() => setSelectedTowerId(t.id)}
-                  className={`self-start p-2 rounded-md border mr-2 ${
-                    effectiveTowerId === t.id
-                      ? 'bg-primary border-primary'
-                      : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      effectiveTowerId === t.id
-                        ? 'text-primary-foreground'
-                        : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {t.name}
-                  </Text>
-                </Pressable>
+                />
               ))}
             </ScrollView>
           ) : (
@@ -152,7 +131,7 @@ export function SetupFlatsScreen() {
         </View>
 
         {/* Add Flat Form */}
-        <View className="p-5 bg-card border border-border rounded-xl gap-4 mb-8">
+        <Card className="p-5 gap-4 mb-8">
           <Text className="text-sm font-sans-bold text-foreground">Add New Flat</Text>
           {error ? (
             <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg">
@@ -160,15 +139,14 @@ export function SetupFlatsScreen() {
             </View>
           ) : null}
 
-          <View className="flex-row gap-3">
+          <View className="flex-row gap-3 items-end">
             <View className="flex-[2] gap-1">
               <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat No.</Text>
-              <TextInput
+              <Input
                 value={flatNumber}
                 onChangeText={setFlatNumber}
                 placeholder="e.g. 101"
-                placeholderTextColor="#93a08d"
-                className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+                className="bg-surface"
               />
             </View>
 
@@ -176,50 +154,26 @@ export function SetupFlatsScreen() {
               <Text className="text-[10px] font-sans-semibold text-muted uppercase">
                 Floor (Opt)
               </Text>
-              <TextInput
+              <Input
                 value={floor}
                 onChangeText={setFloor}
                 placeholder="e.g. 1"
-                placeholderTextColor="#93a08d"
                 keyboardType="numeric"
-                className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+                className="bg-surface"
               />
-            </View>
-
-            <View className="justify-end">
-              <Pressable
-                onPress={handleAddFlat}
-                disabled={createFlatMutation.isPending}
-                className="px-4 py-2 bg-primary rounded-lg items-center justify-center h-10"
-              >
-                {createFlatMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#1a1409" />
-                ) : (
-                  <Ionicons name="add" size={18} color={theme.primaryForeground} />
-                )}
-              </Pressable>
             </View>
           </View>
 
           <View className="gap-1">
             <Text className="text-[10px] font-sans-semibold text-muted uppercase">Flat Type</Text>
-            <View className="flex-row flex-wrap">
+            <View className="flex-row flex-wrap gap-2">
               {FLAT_TYPES.map((t) => (
-                <Pressable
+                <Chip
                   key={t.value}
+                  label={t.label}
+                  selected={flatType === t.value}
                   onPress={() => setFlatType(t.value)}
-                  className={`self-start p-2 rounded-md border mr-2 mb-2 ${
-                    flatType === t.value ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      flatType === t.value ? 'text-primary-foreground' : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
+                />
               ))}
             </View>
           </View>
@@ -228,48 +182,55 @@ export function SetupFlatsScreen() {
             <Text className="text-[10px] font-sans-semibold text-muted uppercase">
               Monthly Amount (₹)
             </Text>
-            <TextInput
+            <Input
               value={monthlyAmount}
               onChangeText={setMonthlyAmount}
               placeholder="e.g. 2500"
-              placeholderTextColor="#93a08d"
               keyboardType="numeric"
-              className="bg-surface border border-border rounded-lg px-3.5 py-2 text-foreground font-sans text-xs"
+              className="bg-surface"
             />
           </View>
-        </View>
+
+          <Button
+            label="Add Flat"
+            icon="add"
+            size="sm"
+            loading={createFlatMutation.isPending}
+            onPress={handleAddFlat}
+            className="self-end"
+          />
+        </Card>
 
         {/* Flats List */}
         <View className="mb-10">
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-            Units registered in {towers?.find((t) => t.id === effectiveTowerId)?.name ?? 'Tower'} (
+          <SectionLabel className="mb-3">
+            Units in {towers?.find((t) => t.id === effectiveTowerId)?.name ?? 'Tower'} (
             {flats?.length ?? 0})
-          </Text>
+          </SectionLabel>
 
           {isLoadingFlats ? (
-            <ActivityIndicator size="small" color="#a9832e" />
+            <Spinner />
           ) : flats && flats.length > 0 ? (
             <View className="flex-row flex-wrap gap-2">
-              {flats.map((flat) => (
-                <View
-                  key={flat.id}
-                  className="px-3.5 py-2 bg-card border border-border rounded-lg flex-row items-center gap-1.5"
-                >
-                  <Text className="text-xs font-sans-medium text-foreground">
-                    {flat.flatNumber}
-                  </Text>
-                  <Text className="text-[10px] font-sans text-muted">
-                    (Fl: {flat.floor ?? 'G'})
-                  </Text>
-                  <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
-                    <Text className="text-[9px] font-sans-bold text-primary uppercase">
-                      {FLAT_TYPES.find((t) => t.value === flat.flatType)?.label ?? flat.flatType}
+              {flats.map((flat, index) => (
+                <FadeIn key={flat.id} index={index}>
+                  <View className="px-3.5 py-2 bg-card border border-border rounded-lg flex-row items-center gap-1.5">
+                    <Text className="text-xs font-sans-medium text-foreground">
+                      {flat.flatNumber}
+                    </Text>
+                    <Text className="text-[10px] font-sans text-muted">
+                      (Fl: {flat.floor ?? 'G'})
+                    </Text>
+                    <View className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+                      <Text className="text-[9px] font-sans-bold text-primary uppercase">
+                        {FLAT_TYPES.find((t) => t.value === flat.flatType)?.label ?? flat.flatType}
+                      </Text>
+                    </View>
+                    <Text className="text-[10px] font-sans-bold text-muted">
+                      ₹{flat.monthlyAmount}
                     </Text>
                   </View>
-                  <Text className="text-[10px] font-sans-bold text-muted">
-                    ₹{flat.monthlyAmount}
-                  </Text>
-                </View>
+                </FadeIn>
               ))}
             </View>
           ) : (
@@ -281,16 +242,13 @@ export function SetupFlatsScreen() {
           )}
         </View>
 
-        {/* Next Step */}
-        <Pressable
+        <Button
+          label="Next: Invite Members"
+          icon="arrow-forward"
+          size="lg"
           onPress={handleNext}
-          className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
-        >
-          <Text className="text-primary-foreground font-sans-bold text-base">
-            Next: Invite Members
-          </Text>
-          <Ionicons name="arrow-forward" size={18} color={theme.primaryForeground} />
-        </Pressable>
+          className="mb-16"
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

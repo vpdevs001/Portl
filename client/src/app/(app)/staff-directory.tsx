@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Linking,
-  Pressable,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { FlatList, Linking, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Input } from '@/components/ui/Input';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useStaff, useRemoveStaff } from '@/features/staff/hooks/use-staff';
 import { useAppSession } from '@/lib/auth-client';
@@ -32,8 +30,7 @@ const ROLE_FILTERS = [
 
 export default function StaffDirectoryScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const { data: session } = useAppSession();
   const isAdmin = session?.user?.role === 'society_admin';
 
@@ -52,10 +49,6 @@ export default function StaffDirectoryScreen() {
     Linking.openURL(`tel:${phone}`);
   }
 
-  function handleRemove(id: string) {
-    setPendingDeleteId(id);
-  }
-
   function confirmRemove() {
     if (pendingDeleteId) {
       removeStaffMutation.mutate(pendingDeleteId);
@@ -66,40 +59,29 @@ export default function StaffDirectoryScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Staff Directory</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Staff Directory" showBack drawer />
 
         {/* Admin Action Button */}
         {isAdmin && (
-          <Pressable
+          <Button
+            label="Add New Staff Member"
+            icon="person-add-outline"
             onPress={() => router.push('/(app)/admin/staff/manage')}
-            className="flex-row items-center justify-center bg-primary rounded-xl py-3.5 px-4 mb-5"
-          >
-            <Ionicons name="person-add-outline" size={18} color={theme.primaryForeground} />
-            <Text className="text-sm font-sans-bold text-primary-foreground ml-2">
-              Add New Staff Member
-            </Text>
-          </Pressable>
+            className="mb-5"
+          />
         )}
 
         {/* Search input */}
-        <View className="flex-row items-center bg-card border border-border rounded-xl px-3 py-2.5 mb-4">
+        <View className="flex-row items-center bg-card border border-border rounded-xl px-3 mb-4">
           <Ionicons name="search-outline" size={18} color={theme.muted} />
-          <TextInput
+          <Input
             value={search}
             onChangeText={setSearch}
             placeholder="Search staff by name, role or phone..."
-            placeholderTextColor={theme.muted}
-            className="flex-1 ml-2 text-sm font-sans text-foreground"
+            className="flex-1 ml-2 border-0 bg-transparent px-0"
           />
           {search ? (
-            <Pressable onPress={() => setSearch('')}>
+            <Pressable onPress={() => setSearch('')} hitSlop={10}>
               <Ionicons name="close-circle" size={18} color={theme.muted} />
             </Pressable>
           ) : null}
@@ -114,35 +96,25 @@ export default function StaffDirectoryScreen() {
             keyExtractor={(item) => item}
             contentContainerClassName="gap-2"
             renderItem={({ item }) => (
-              <Pressable
+              <Chip
+                label={item}
+                selected={selectedRole === item}
                 onPress={() => setSelectedRole(item)}
-                className={`self-start p-2 rounded-md border ${
-                  selectedRole === item ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    selectedRole === item ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {item}
-                </Text>
-              </Pressable>
+              />
             )}
           />
         </View>
 
         {/* Staff List */}
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={5} />
         ) : !staffList || staffList.length === 0 ? (
-          <View className="flex-1 items-center justify-center p-6">
-            <Ionicons name="people-outline" size={48} color={theme.muted} />
-            <Text className="text-sm font-sans text-muted mt-3 text-center">
-              No staff members found matching your search.
-            </Text>
+          <View className="flex-1 justify-center pb-20">
+            <EmptyState
+              icon="people-outline"
+              title="No staff found"
+              subtitle="No staff members match your search."
+            />
           </View>
         ) : (
           <FlatList
@@ -150,59 +122,62 @@ export default function StaffDirectoryScreen() {
             keyExtractor={(item) => item.id}
             contentContainerClassName="pb-24 gap-3"
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }: { item: StaffMember }) => (
-              <View className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between">
-                <View className="flex-row items-center flex-1 mr-3">
-                  <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center mr-3">
-                    <Ionicons name="person-outline" size={24} color={theme.primary} />
+            renderItem={({ item, index }: { item: StaffMember; index: number }) => (
+              <FadeIn index={index}>
+                <View className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1 mr-3">
+                    <Avatar name={item.name} image={item.photo} size={48} className="mr-3" />
+                    <View className="flex-1">
+                      <Text
+                        className="text-sm font-serif-semibold text-foreground"
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      <Text className="text-xs font-sans-bold text-primary mt-0.5">
+                        {item.roleTitle}
+                      </Text>
+                      <Text className="text-xs font-sans text-muted mt-0.5">{item.phone}</Text>
+                    </View>
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-serif-semibold text-foreground" numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text className="text-xs font-sans-bold text-primary mt-0.5">
-                      {item.roleTitle}
-                    </Text>
-                    <Text className="text-xs font-sans text-muted mt-0.5">{item.phone}</Text>
-                  </View>
-                </View>
 
-                <View className="flex-row items-center gap-2">
-                  <Pressable
-                    onPress={() => handleCall(item.phone)}
-                    className="w-10 h-10 rounded-full bg-primary/15 items-center justify-center"
-                  >
-                    <Ionicons name="call-outline" size={20} color={theme.primary} />
-                  </Pressable>
-                  {isAdmin && (
-                    <>
-                      <Pressable
-                        onPress={() =>
-                          router.push({
-                            pathname: '/(app)/admin/staff/manage',
-                            params: {
-                              id: item.id,
-                              name: item.name,
-                              roleTitle: item.roleTitle,
-                              phone: item.phone
-                            }
-                          })
-                        }
-                        className="w-10 h-10 rounded-full bg-primary/15 items-center justify-center"
-                      >
-                        <Ionicons name="create-outline" size={18} color={theme.primary} />
-                      </Pressable>
-                      <Pressable
-                        onPress={() => handleRemove(item.id)}
-                        disabled={removeStaffMutation.isPending}
-                        className="w-10 h-10 rounded-full bg-danger/15 items-center justify-center"
-                      >
-                        <Ionicons name="trash-outline" size={18} color={theme.danger} />
-                      </Pressable>
-                    </>
-                  )}
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      onPress={() => handleCall(item.phone)}
+                      className="w-10 h-10 rounded-full bg-primary/15 items-center justify-center active:opacity-70"
+                    >
+                      <Ionicons name="call-outline" size={20} color={theme.primary} />
+                    </Pressable>
+                    {isAdmin && (
+                      <>
+                        <Pressable
+                          onPress={() =>
+                            router.push({
+                              pathname: '/(app)/admin/staff/manage',
+                              params: {
+                                id: item.id,
+                                name: item.name,
+                                roleTitle: item.roleTitle,
+                                phone: item.phone
+                              }
+                            })
+                          }
+                          className="w-10 h-10 rounded-full bg-primary/15 items-center justify-center active:opacity-70"
+                        >
+                          <Ionicons name="create-outline" size={18} color={theme.primary} />
+                        </Pressable>
+                        <Pressable
+                          onPress={() => setPendingDeleteId(item.id)}
+                          disabled={removeStaffMutation.isPending}
+                          className="w-10 h-10 rounded-full bg-danger/15 items-center justify-center active:opacity-70"
+                        >
+                          <Ionicons name="trash-outline" size={18} color={theme.danger} />
+                        </Pressable>
+                      </>
+                    )}
+                  </View>
                 </View>
-              </View>
+              </FadeIn>
             )}
           />
         )}

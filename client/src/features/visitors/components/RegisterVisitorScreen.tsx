@@ -1,26 +1,21 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Alert, Image, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
 import { useFlats } from '@/features/society/services/use-society';
 import {
   useCreateVisitorRequest,
   useUploadVisitorPhoto
 } from '@/features/visitors/hooks/use-visitors';
-import { DrawerButton } from '@/components/DrawerButton';
 import { getErrorMessage } from '@/lib/errors';
 
 type VisitorType = 'guest' | 'delivery' | 'cab' | 'service_staff' | 'admin_visitor';
@@ -35,8 +30,7 @@ const VISITOR_TYPES: { value: VisitorType; label: string; icon: string }[] = [
 
 export function RegisterVisitorScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [visitorType, setVisitorType] = useState<VisitorType>('guest');
   const [name, setName] = useState('');
@@ -170,55 +164,24 @@ export function RegisterVisitorScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Register visitor</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Register visitor" showBack drawer />
 
         {/* Visitor type */}
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Visitor type
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-6"
-          contentContainerClassName="gap-2"
-        >
-          {VISITOR_TYPES.map((t) => {
-            const active = visitorType === t.value;
-            return (
-              <Pressable
-                key={t.value}
-                onPress={() => setVisitorType(t.value)}
-                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-lg border mr-2 ${
-                  active ? 'bg-primary border-primary' : 'bg-card border-border'
-                }`}
-              >
-                <Ionicons
-                  name={t.icon as never}
-                  size={16}
-                  color={active ? theme.primaryForeground : theme.foregroundSecondary}
-                />
-                <Text
-                  className={`text-xs font-sans-bold ${
-                    active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                  }`}
-                >
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <SectionLabel className="mb-3">Visitor type</SectionLabel>
+        <View className="flex-row flex-wrap gap-2 mb-6">
+          {VISITOR_TYPES.map((t) => (
+            <Chip
+              key={t.value}
+              label={t.label}
+              icon={t.icon}
+              selected={visitorType === t.value}
+              onPress={() => setVisitorType(t.value)}
+            />
+          ))}
+        </View>
 
         {/* Photo capture */}
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Photo
-        </Text>
+        <SectionLabel className="mb-3">Photo</SectionLabel>
         <View className="flex-row items-center gap-3 mb-6">
           {photoUri ? (
             <Image source={{ uri: photoUri }} className="w-16 h-16 rounded-xl" />
@@ -227,62 +190,46 @@ export function RegisterVisitorScreen() {
               <Ionicons name="camera-outline" size={22} color={theme.muted} />
             </View>
           )}
-          <Pressable
+          <Button
+            label="Take photo"
+            variant="secondary"
+            size="sm"
             onPress={() => handlePickPhoto('camera')}
-            className="rounded-xl border border-border px-3 py-2.5"
-          >
-            <Text className="text-xs font-sans-bold text-foreground">Take photo</Text>
-          </Pressable>
-          <Pressable
+          />
+          <Button
+            label="Choose"
+            variant="secondary"
+            size="sm"
             onPress={() => handlePickPhoto('library')}
-            className="rounded-xl border border-border px-3 py-2.5"
-          >
-            <Text className="text-xs font-sans-bold text-foreground">Choose photo</Text>
-          </Pressable>
-          {uploadPhoto.isPending ? <ActivityIndicator size="small" color={theme.primary} /> : null}
+          />
+          {uploadPhoto.isPending ? <Spinner /> : null}
         </View>
 
         {/* Core details */}
         <Field label="Name">
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Visitor's full name"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-          />
+          <Input value={name} onChangeText={setName} placeholder="Visitor's full name" />
         </Field>
 
         <Field label="Phone (optional)">
-          <TextInput
+          <Input
             value={phone}
             onChangeText={setPhone}
             placeholder="10-digit mobile number"
-            placeholderTextColor={theme.muted}
             keyboardType="phone-pad"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
         <Field label="Purpose (optional)">
-          <TextInput
-            value={purpose}
-            onChangeText={setPurpose}
-            placeholder="e.g. Meeting, drop-off"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-          />
+          <Input value={purpose} onChangeText={setPurpose} placeholder="e.g. Meeting, drop-off" />
         </Field>
 
         {visitorType !== 'cab' ? (
           <Field label="Vehicle number (optional)">
-            <TextInput
+            <Input
               value={vehicleNumber}
               onChangeText={setVehicleNumber}
               placeholder="e.g. bike/scooter plate"
-              placeholderTextColor={theme.muted}
               autoCapitalize="characters"
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
             />
           </Field>
         ) : null}
@@ -291,21 +238,14 @@ export function RegisterVisitorScreen() {
         {visitorType === 'delivery' ? (
           <>
             <Field label="Company">
-              <TextInput
+              <Input
                 value={companyName}
                 onChangeText={setCompanyName}
                 placeholder="Amazon, Swiggy, Zomato…"
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
               />
             </Field>
             <Field label="Order ID (optional)">
-              <TextInput
-                value={orderId}
-                onChangeText={setOrderId}
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-              />
+              <Input value={orderId} onChangeText={setOrderId} />
             </Field>
           </>
         ) : null}
@@ -313,30 +253,17 @@ export function RegisterVisitorScreen() {
         {visitorType === 'cab' ? (
           <>
             <Field label="Provider">
-              <TextInput
-                value={providerName}
-                onChangeText={setProviderName}
-                placeholder="Uber, Ola…"
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-              />
+              <Input value={providerName} onChangeText={setProviderName} placeholder="Uber, Ola…" />
             </Field>
             <Field label="Cab plate number (optional)">
-              <TextInput
+              <Input
                 value={cabVehicleNumber}
                 onChangeText={setCabVehicleNumber}
                 autoCapitalize="characters"
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
               />
             </Field>
             <Field label="Driver name (optional)">
-              <TextInput
-                value={driverName}
-                onChangeText={setDriverName}
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-              />
+              <Input value={driverName} onChangeText={setDriverName} />
             </Field>
           </>
         ) : null}
@@ -344,21 +271,14 @@ export function RegisterVisitorScreen() {
         {visitorType === 'service_staff' ? (
           <>
             <Field label="Service type">
-              <TextInput
+              <Input
                 value={serviceType}
                 onChangeText={setServiceType}
                 placeholder="Plumber, electrician…"
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
               />
             </Field>
             <Field label="Company (optional)">
-              <TextInput
-                value={companyName}
-                onChangeText={setCompanyName}
-                placeholderTextColor={theme.muted}
-                className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-              />
+              <Input value={companyName} onChangeText={setCompanyName} />
             </Field>
           </>
         ) : null}
@@ -366,18 +286,15 @@ export function RegisterVisitorScreen() {
         {/* Flat picker — not needed for admin-routed visitors */}
         {!isAdminRouted ? (
           <View className="mb-4">
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              Flat
-            </Text>
-            <TextInput
+            <SectionLabel className="mb-2">Flat</SectionLabel>
+            <Input
               value={flatQuery}
               onChangeText={setFlatQuery}
               placeholder="Search flat number"
-              placeholderTextColor={theme.muted}
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-2"
+              className="mb-2"
             />
             {isLoadingFlats ? (
-              <ActivityIndicator size="small" color={theme.primary} />
+              <Spinner />
             ) : (
               <ScrollView
                 horizontal
@@ -385,21 +302,12 @@ export function RegisterVisitorScreen() {
                 contentContainerClassName="gap-2"
               >
                 {filteredFlats.slice(0, 20).map((flat) => (
-                  <Pressable
+                  <Chip
                     key={flat.id}
+                    label={flat.flatNumber}
+                    selected={flatId === flat.id}
                     onPress={() => setFlatId(flat.id)}
-                    className={`self-start p-2 rounded-md border mr-2 ${
-                      flatId === flat.id ? 'bg-primary border-primary' : 'bg-card border-border'
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-sans-bold ${
-                        flatId === flat.id ? 'text-primary-foreground' : 'text-foreground-secondary'
-                      }`}
-                    >
-                      {flat.flatNumber}
-                    </Text>
-                  </Pressable>
+                  />
                 ))}
               </ScrollView>
             )}
@@ -414,31 +322,14 @@ export function RegisterVisitorScreen() {
 
         {error ? <Text className="text-sm font-sans text-danger mb-4">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label="Send for approval"
+          size="lg"
+          loading={createRequest.isPending}
           onPress={handleSubmit}
-          disabled={createRequest.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-2"
-        >
-          {createRequest.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">
-              Send for approval
-            </Text>
-          )}
-        </Pressable>
+          className="mt-2"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

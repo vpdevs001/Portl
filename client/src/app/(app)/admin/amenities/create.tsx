@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Input';
 import { getErrorMessage } from '@/lib/errors';
 import { useCreateAmenity } from '@/features/amenities/hooks/use-amenities';
 
 export default function CreateAmenityScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -51,14 +51,7 @@ export default function CreateAmenityScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Add Amenity</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Add Amenity" showBack drawer />
 
         {/* Info banner */}
         <View className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-6 flex-row items-start gap-3">
@@ -74,68 +67,45 @@ export default function CreateAmenityScreen() {
           </Text>
         </View>
 
-        {/* Name */}
         <Field label="Amenity Name *">
-          <TextInput
+          <Input
             value={name}
             onChangeText={setName}
             placeholder="e.g. Swimming Pool, Clubhouse, Tennis Court"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
-        {/* Description */}
         <Field label="Description (optional)">
-          <TextInput
+          <Input
             value={description}
             onChangeText={setDescription}
             placeholder="Opening hours, usage rules, facilities available…"
-            placeholderTextColor={theme.muted}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans min-h-[100px]"
+            className="min-h-[100px]"
           />
         </Field>
 
-        {/* Capacity */}
         <Field label="Capacity (optional)">
-          <TextInput
+          <Input
             value={capacity}
             onChangeText={setCapacity}
             placeholder="Maximum number of people at one time"
-            placeholderTextColor={theme.muted}
             keyboardType="number-pad"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
           />
         </Field>
 
         {error ? <Text className="text-sm font-sans text-danger mb-4 mt-2">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label="Create Amenity"
+          size="lg"
+          loading={createAmenity.isPending}
           onPress={handleSubmit}
-          disabled={createAmenity.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-4"
-        >
-          {createAmenity.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Create Amenity</Text>
-          )}
-        </Pressable>
+          className="mt-4"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

@@ -1,11 +1,17 @@
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useAppSession } from '@/lib/auth-client';
 import { useCastVote, usePolls } from '@/features/polls/hooks/use-polls';
 import type { Poll } from '@/features/polls/services/polls';
@@ -28,8 +34,6 @@ function formatEndsAt(endsAt: string, closed: boolean) {
 
 export default function PollsScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { data: session } = useAppSession();
   const isAdmin = session?.user?.role === 'society_admin';
 
@@ -50,59 +54,37 @@ export default function PollsScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between pb-4 mb-2 border-b border-border/50">
-          <View className="flex-row items-center gap-3">
-            <DrawerButton />
-            <View>
-              <Text className="text-2xl font-serif-bold text-foreground">Polls</Text>
-              <View className="flex-row items-center gap-1.5 mt-0.5">
-                <View className="w-1.5 h-1.5 rounded-full bg-success" />
-                <Text className="text-xs font-sans text-muted">Live results</Text>
-              </View>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={() => refetch()}
-            hitSlop={12}
-            className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-          >
-            <Ionicons
-              name="refresh"
-              size={18}
-              color={theme.foreground}
-              style={isRefetching ? { opacity: 0.4 } : undefined}
-            />
-          </Pressable>
-        </View>
+        <ScreenHeader
+          size="lg"
+          title="Polls"
+          subtitle="Live results"
+          drawer
+          onRefresh={refetch}
+          isRefetching={isRefetching}
+        />
 
         {isAdmin ? (
-          <Pressable
+          <Button
+            label="Create poll"
+            icon="add"
             onPress={() => router.push('/(app)/polls/create')}
-            className="flex-row items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 my-4"
-          >
-            <Ionicons name="add" size={18} color={theme.primaryForeground} />
-            <Text className="text-sm font-sans-bold text-primary-foreground">Create poll</Text>
-          </Pressable>
+            className="my-4"
+          />
         ) : null}
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={3} />
         ) : polls.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-3 pb-20">
-            <View className="w-14 h-14 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
-              <Ionicons name="checkbox-outline" size={24} color={theme.primary} />
-            </View>
-            <Text className="text-base font-serif-semibold text-foreground text-center">
-              No polls yet
-            </Text>
-            <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-              {isAdmin
-                ? 'Create a poll to gather opinions from residents on society decisions.'
-                : 'Polls created by your admin will appear here for you to vote on.'}
-            </Text>
+          <View className="flex-1 justify-center pb-20">
+            <EmptyState
+              icon="checkbox-outline"
+              title="No polls yet"
+              subtitle={
+                isAdmin
+                  ? 'Create a poll to gather opinions from residents on society decisions.'
+                  : 'Polls created by your admin will appear here for you to vote on.'
+              }
+            />
           </View>
         ) : (
           <ScrollView
@@ -110,8 +92,10 @@ export default function PollsScreen() {
             contentContainerClassName="pb-20"
             className="mt-2"
           >
-            {polls.map((poll) => (
-              <PollCard key={poll.id} poll={poll} />
+            {polls.map((poll, index) => (
+              <FadeIn key={poll.id} index={index}>
+                <PollCard poll={poll} />
+              </FadeIn>
             ))}
           </ScrollView>
         )}
@@ -121,8 +105,7 @@ export default function PollsScreen() {
 }
 
 function PollCard({ poll }: { poll: Poll }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const castVote = useCastVote();
   const closed = isClosed(poll);
   const showResults = poll.hasVoted || closed;
@@ -134,24 +117,13 @@ function PollCard({ poll }: { poll: Poll }) {
   }
 
   return (
-    <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+    <Card className="p-4 mb-3">
       <View className="flex-row items-center justify-between mb-2">
-        <View
-          className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ backgroundColor: closed ? `${theme.muted}1a` : `${theme.success}1a` }}
-        >
-          <Ionicons
-            name={closed ? 'lock-closed-outline' : 'radio-outline'}
-            size={12}
-            color={closed ? theme.muted : theme.success}
-          />
-          <Text
-            className="text-[10px] font-sans-bold uppercase tracking-wider"
-            style={{ color: closed ? theme.muted : theme.success }}
-          >
-            {closed ? 'Closed' : 'Active'}
-          </Text>
-        </View>
+        <Badge
+          label={closed ? 'Closed' : 'Active'}
+          icon={closed ? 'lock-closed-outline' : 'radio-outline'}
+          tone={closed ? 'muted' : 'success'}
+        />
         <Text className="text-[11px] font-sans text-muted">
           {formatEndsAt(poll.endsAt, closed)}
         </Text>
@@ -169,6 +141,9 @@ function PollCard({ poll }: { poll: Poll }) {
               <Pressable
                 key={option.id}
                 onPress={() => setSelectedOptionId(option.id)}
+                accessibilityRole="radio"
+                accessibilityLabel={option.optionText}
+                accessibilityState={{ selected }}
                 className={`flex-row items-center gap-3 rounded-xl border px-3.5 py-3 ${
                   selected ? 'bg-primary/10 border-primary' : 'bg-surface border-border'
                 }`}
@@ -185,25 +160,13 @@ function PollCard({ poll }: { poll: Poll }) {
             );
           })}
 
-          <Pressable
+          <Button
+            label="Cast vote"
+            loading={castVote.isPending}
+            disabled={!selectedOptionId}
             onPress={handleVote}
-            disabled={!selectedOptionId || castVote.isPending}
-            className={`rounded-xl px-4 py-3 items-center mt-1 ${
-              selectedOptionId ? 'bg-primary' : 'bg-muted/30'
-            }`}
-          >
-            {castVote.isPending ? (
-              <ActivityIndicator size="small" color={theme.primaryForeground} />
-            ) : (
-              <Text
-                className={`text-sm font-sans-bold ${
-                  selectedOptionId ? 'text-primary-foreground' : 'text-muted'
-                }`}
-              >
-                Cast vote
-              </Text>
-            )}
-          </Pressable>
+            className="mt-1"
+          />
 
           {castVote.isError ? (
             <Text className="text-xs font-sans text-danger mt-1">
@@ -220,22 +183,19 @@ function PollCard({ poll }: { poll: Poll }) {
         {poll.hasVoted ? (
           <View className="flex-row items-center gap-1">
             <Ionicons name="checkmark-circle" size={12} color={theme.success} />
-            <Text className="text-[11px] font-sans-bold" style={{ color: theme.success }}>
-              You voted
-            </Text>
+            <Text className="text-[11px] font-sans-bold text-success">You voted</Text>
           </View>
         ) : null}
       </View>
-    </View>
+    </Card>
   );
 }
 
 // Bar-chart style results, kept live by the socket subscription in
 // usePolls — vote counts here update in place as anyone in the society
-// votes, with no re-fetch needed.
+// votes, with the bar widths animating to their new share.
 function PollResultsView({ poll }: { poll: Poll }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const maxVotes = Math.max(1, ...poll.options.map((o) => o.voteCount));
 
   return (
@@ -263,12 +223,9 @@ function PollResultsView({ poll }: { poll: Poll }) {
               <Text className="text-xs font-sans-bold text-foreground">{pct}%</Text>
             </View>
             <View className="h-2 rounded-full bg-surface overflow-hidden">
-              <View
-                className="h-2 rounded-full"
-                style={{
-                  width: `${Math.max(barWidthPct, option.voteCount > 0 ? 4 : 0)}%`,
-                  backgroundColor: isMyVote ? theme.primary : theme.muted
-                }}
+              <ResultBar
+                widthPct={Math.max(barWidthPct, option.voteCount > 0 ? 4 : 0)}
+                color={isMyVote ? theme.primary : theme.muted}
               />
             </View>
           </View>
@@ -276,4 +233,20 @@ function PollResultsView({ poll }: { poll: Poll }) {
       })}
     </View>
   );
+}
+
+/** A result bar whose width tweens to the latest vote share. */
+function ResultBar({ widthPct, color }: { widthPct: number; color: string }) {
+  const width = useSharedValue(0);
+
+  useEffect(() => {
+    width.value = withTiming(widthPct, { duration: 450 });
+  }, [widthPct, width]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${width.value}%`,
+    backgroundColor: color
+  }));
+
+  return <Animated.View className="h-2 rounded-full" style={animatedStyle} />;
 }

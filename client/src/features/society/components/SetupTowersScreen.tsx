@@ -1,29 +1,26 @@
 import { useCreateTower, useTowers } from '@/features/society/services/use-society';
-import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { useTheme } from '@/hooks/useColorScheme';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
+import { OnboardingHeader } from '@/components/OnboardingHeader';
+import { getErrorMessage } from '@/lib/errors';
 
 export function SetupTowersScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const { data: towers, isLoading } = useTowers();
   const createTowerMutation = useCreateTower();
 
   const [towerName, setTowerName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const handleAddTower = async () => {
     if (!towerName.trim()) {
@@ -35,8 +32,8 @@ export function SetupTowersScreen() {
     try {
       await createTowerMutation.mutateAsync({ name: towerName.trim() });
       setTowerName('');
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to add tower');
+    } catch (e) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -54,17 +51,16 @@ export function SetupTowersScreen() {
       className="flex-1"
     >
       <ScrollView className="flex-1 bg-background px-6 py-12">
-        {/* Hero */}
-        <View className="mb-8 mt-4">
-          <Text className="text-3xl font-serif-bold text-foreground mb-3">Setup Towers</Text>
-          <Text className="text-sm font-sans text-foreground-secondary leading-5">
-            Add the individual buildings, wings, or blocks that make up your estate. You need at
-            least one tower to assign flats.
-          </Text>
-        </View>
+        <OnboardingHeader
+          title="Setup Towers"
+          subtitle="Add the individual buildings, wings, or blocks that make up your estate. You need at least one tower to assign flats."
+          step={2}
+          totalSteps={4}
+          showBack
+        />
 
         {/* Input Form */}
-        <View className="p-5 bg-card border border-border rounded-xl gap-4 mb-8">
+        <Card className="p-5 gap-4 mb-8">
           <Text className="text-sm font-sans-bold text-foreground">Add New Tower / Wing</Text>
           {error ? (
             <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg">
@@ -72,46 +68,42 @@ export function SetupTowersScreen() {
             </View>
           ) : null}
 
-          <View className="flex-row gap-3">
-            <TextInput
+          <View className="flex-row gap-3 items-center">
+            <Input
               value={towerName}
               onChangeText={setTowerName}
               placeholder="e.g. Tower A or East Wing"
-              placeholderTextColor="#93a08d"
-              className="flex-1 bg-surface border border-border rounded-lg px-3.5 py-2.5 text-foreground font-sans text-sm"
+              className="flex-1 bg-surface"
             />
-            <Pressable
+            <Button
+              label="Add"
+              icon="add"
+              size="sm"
+              loading={createTowerMutation.isPending}
               onPress={handleAddTower}
-              disabled={createTowerMutation.isPending}
-              className="px-4 py-2.5 bg-primary rounded-lg justify-center items-center"
-            >
-              {createTowerMutation.isPending ? (
-                <ActivityIndicator size="small" color="#1a1409" />
-              ) : (
-                <Ionicons name="add" size={20} color={theme.primaryForeground} />
-              )}
-            </Pressable>
+            />
           </View>
-        </View>
+        </Card>
 
         {/* Towers List */}
         <View className="mb-10">
-          <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-            Current Towers ({towers?.length ?? 0})
-          </Text>
+          <SectionLabel className="mb-3">Current Towers ({towers?.length ?? 0})</SectionLabel>
 
           {isLoading ? (
-            <ActivityIndicator size="small" color="#a9832e" />
+            <Spinner />
           ) : towers && towers.length > 0 ? (
             <View className="gap-2">
-              {towers.map((tower) => (
-                <View
-                  key={tower.id}
-                  className="p-4 bg-card border border-border rounded-xl flex-row justify-between items-center"
-                >
-                  <Text className="text-sm font-sans-medium text-foreground">{tower.name}</Text>
-                  <Text className="text-xs font-sans text-muted">ID: {tower.id.slice(0, 8)}</Text>
-                </View>
+              {towers.map((tower, index) => (
+                <FadeIn key={tower.id} index={index}>
+                  <Card className="p-4 flex-row items-center gap-3">
+                    <View className="w-9 h-9 rounded-lg bg-primary/10 items-center justify-center">
+                      <Ionicons name="business-outline" size={16} color={theme.primary} />
+                    </View>
+                    <Text className="text-sm font-sans-semibold text-foreground flex-1">
+                      {tower.name}
+                    </Text>
+                  </Card>
+                </FadeIn>
               ))}
             </View>
           ) : (
@@ -121,16 +113,13 @@ export function SetupTowersScreen() {
           )}
         </View>
 
-        {/* Next Step */}
-        <Pressable
+        <Button
+          label="Next: Setup Flats"
+          icon="arrow-forward"
+          size="lg"
           onPress={handleNext}
-          className="w-full py-4 rounded-xl bg-primary active:opacity-90 items-center justify-center flex-row gap-2 mb-16"
-        >
-          <Text className="text-primary-foreground font-sans-bold text-base">
-            Next: Setup Flats
-          </Text>
-          <Ionicons name="arrow-forward" size={18} color={theme.primaryForeground} />
-        </Pressable>
+          className="mb-16"
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

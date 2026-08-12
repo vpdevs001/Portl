@@ -1,40 +1,31 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { Alert, Image, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useSocietyDetails } from '@/features/society/services/use-society';
 import { useConfirmPayment, useDues } from '@/features/payments/hooks/use-payments';
 import type { DueStatus, MaintenanceDue } from '@/features/payments/services/payments';
 import { getErrorMessage } from '@/lib/errors';
 
-const STATUS_META: Record<
-  DueStatus,
-  { label: string; icon: string; token: 'danger' | 'warning' | 'success' | 'muted' }
-> = {
-  pending: { label: 'Unpaid', icon: 'time-outline', token: 'warning' },
-  review: { label: 'Under review', icon: 'hourglass-outline', token: 'muted' },
-  paid: { label: 'Paid', icon: 'checkmark-circle-outline', token: 'success' }
+const STATUS_META: Record<DueStatus, { label: string; icon: string; tone: BadgeTone }> = {
+  pending: { label: 'Unpaid', icon: 'time-outline', tone: 'warning' },
+  review: { label: 'Under review', icon: 'hourglass-outline', tone: 'muted' },
+  paid: { label: 'Paid', icon: 'checkmark-circle-outline', tone: 'success' }
 };
 
 export default function PaymentsScreen() {
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const { data, isLoading, refetch, isRefetching } = useDues();
   const { data: society } = useSocietyDetails();
@@ -45,61 +36,39 @@ export default function PaymentsScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-4">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Maintenance dues</Text>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => refetch()}
-              hitSlop={12}
-              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-            >
-              <Ionicons
-                name="refresh"
-                size={18}
-                color={theme.foreground}
-                style={isRefetching ? { opacity: 0.4 } : undefined}
-              />
-            </Pressable>
-            <DrawerButton />
-          </View>
-        </View>
+        <ScreenHeader
+          title="Maintenance dues"
+          showBack
+          drawer
+          onRefresh={refetch}
+          isRefetching={isRefetching}
+        />
 
-        <View className="bg-card border border-border rounded-2xl p-4 mb-5">
+        <Card className="p-4 mb-5">
           <View className="flex-row items-center gap-2 mb-2">
             <Ionicons name="qr-code-outline" size={16} color={theme.primary} />
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider">
-              Pay via UPI
-            </Text>
+            <SectionLabel>Pay via UPI</SectionLabel>
           </View>
           <Text className="text-sm font-sans text-foreground-secondary leading-5">
-            Pay your due amount to the society&apos;s UPI ID below using any UPI app, then upload
-            your payment proof against the bill so it can be verified.
+            Pay your due amount to the society’s UPI ID below using any UPI app, then upload your
+            payment proof against the bill so it can be verified.
           </Text>
           <View className="bg-surface border border-border rounded-xl px-3 py-2.5 mt-3">
             <Text className="text-sm font-sans-bold text-foreground">
               {society?.upiId ?? 'Not set up by your admin yet'}
             </Text>
           </View>
-        </View>
+        </Card>
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={3} />
         ) : dues.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-3 pb-20">
-            <View className="w-14 h-14 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
-              <Ionicons name="checkmark-done-outline" size={24} color={theme.primary} />
-            </View>
-            <Text className="text-base font-serif-semibold text-foreground text-center">
-              No dues yet
-            </Text>
-            <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-              Your society hasn&apos;t assigned a maintenance amount to your flat yet.
-            </Text>
+          <View className="flex-1 justify-center pb-20">
+            <EmptyState
+              icon="checkmark-done-outline"
+              title="No dues yet"
+              subtitle="Your society hasn't assigned a maintenance amount to your flat yet."
+            />
           </View>
         ) : (
           <ScrollView
@@ -107,8 +76,10 @@ export default function PaymentsScreen() {
             contentContainerClassName="pb-20"
             className="flex-1"
           >
-            {dues.map((due) => (
-              <DueCard key={due.id} due={due} onPay={() => setActiveDue(due)} />
+            {dues.map((due, index) => (
+              <FadeIn key={due.id} index={index}>
+                <DueCard due={due} onPay={() => setActiveDue(due)} />
+              </FadeIn>
             ))}
           </ScrollView>
         )}
@@ -130,59 +101,40 @@ function formatPeriod(period: string) {
 }
 
 function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const meta = STATUS_META[due.status];
-  const badgeColor = theme[meta.token];
 
   const latestConfirmation = due.paymentConfirmations?.[0];
   const wasRejected = due.status === 'pending' && latestConfirmation?.status === 'rejected';
 
   return (
-    <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+    <Card className="p-4 mb-3">
       <View className="flex-row items-center justify-between mb-2">
-        <View
-          className="flex-row items-center gap-1.5 rounded-lg px-2.5 py-1"
-          style={{ backgroundColor: `${badgeColor}1a` }}
-        >
-          <Ionicons name={meta.icon as never} size={12} color={badgeColor} />
-          <Text
-            className="text-[10px] font-sans-bold uppercase tracking-wider"
-            style={{ color: badgeColor }}
-          >
-            {meta.label}
-          </Text>
-        </View>
+        <Badge label={meta.label} icon={meta.icon} tone={meta.tone} />
       </View>
 
-      <View className="flex-row items-end justify-between">
-        <View>
+      <View className="flex-row items-end justify-between gap-3">
+        <View className="flex-1">
           <Text className="text-base font-serif-semibold text-foreground">
             {formatPeriod(due.period)}
           </Text>
-          <Text className="text-2xl font-serif-bold text-foreground mt-1">₹{due.amount}</Text>
+          <Text className="text-2xl font-mono-semibold text-foreground mt-1">₹{due.amount}</Text>
         </View>
 
         {due.status !== 'paid' ? (
-          <Pressable
-            onPress={onPay}
-            disabled={due.status === 'review'}
-            className={`rounded-xl px-4 py-2.5 items-center ${
-              due.status === 'review' ? 'bg-surface border border-border' : 'bg-primary'
-            }`}
-          >
-            <Text
-              className={`text-xs font-sans-bold ${
-                due.status === 'review' ? 'text-foreground-secondary' : 'text-primary-foreground'
-              }`}
-            >
-              {due.status === 'review'
+          <Button
+            label={
+              due.status === 'review'
                 ? 'Pending review'
                 : wasRejected
                   ? 'Resubmit proof'
-                  : 'Pay & submit proof'}
-            </Text>
-          </Pressable>
+                  : 'Pay & submit proof'
+            }
+            size="sm"
+            variant={due.status === 'review' ? 'secondary' : 'primary'}
+            disabled={due.status === 'review'}
+            onPress={onPay}
+          />
         ) : null}
       </View>
 
@@ -199,7 +151,7 @@ function DueCard({ due, onPay }: { due: MaintenanceDue; onPay: () => void }) {
           </Text>
         </View>
       ) : null}
-    </View>
+    </Card>
   );
 }
 
@@ -210,8 +162,7 @@ function ConfirmPaymentModal({
   due: MaintenanceDue | null;
   onClose: () => void;
 }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
   const [screenshotBase64, setScreenshotBase64] = useState<string | null>(null);
@@ -295,65 +246,54 @@ function ConfirmPaymentModal({
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {due ? (
-              <View className="bg-card border border-border rounded-xl px-4 py-3 mb-5">
+              <Card className="px-4 py-3 mb-5">
                 <Text className="text-sm font-sans text-foreground-secondary">
                   {formatPeriod(due.period)}
                 </Text>
-                <Text className="text-xl font-serif-bold text-foreground mt-0.5">
+                <Text className="text-xl font-mono-semibold text-foreground mt-0.5">
                   ₹{due.amount}
                 </Text>
-              </View>
+              </Card>
             ) : null}
 
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-              Payment screenshot
-            </Text>
+            <SectionLabel className="mb-3">Payment screenshot</SectionLabel>
             <View className="flex-row items-center gap-3 mb-5">
               {screenshotUri ? (
                 <Image source={{ uri: screenshotUri }} className="w-16 h-16 rounded-xl" />
               ) : null}
-              <Pressable
+              <Button
+                label="Take photo"
+                icon="camera-outline"
+                variant="secondary"
+                size="sm"
                 onPress={() => handlePickScreenshot('camera')}
-                className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
-              >
-                <Ionicons name="camera-outline" size={16} color={theme.foreground} />
-                <Text className="text-xs font-sans-bold text-foreground">Take photo</Text>
-              </Pressable>
-              <Pressable
+              />
+              <Button
+                label="Choose"
+                icon="image-outline"
+                variant="secondary"
+                size="sm"
                 onPress={() => handlePickScreenshot('library')}
-                className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
-              >
-                <Ionicons name="image-outline" size={16} color={theme.foreground} />
-                <Text className="text-xs font-sans-bold text-foreground">Choose</Text>
-              </Pressable>
+              />
             </View>
 
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-              UPI transaction ID / UTR (optional)
-            </Text>
-            <TextInput
-              value={upiRef}
-              onChangeText={setUpiRef}
-              placeholder="e.g. 402317659821"
-              placeholderTextColor={theme.muted}
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans mb-5"
-            />
+            <Field label="UPI transaction ID / UTR (optional)">
+              <Input
+                value={upiRef}
+                onChangeText={setUpiRef}
+                placeholder="e.g. 402317659821"
+                className="mb-5"
+              />
+            </Field>
 
             {error ? <Text className="text-sm font-sans text-danger mb-4">{error}</Text> : null}
 
-            <Pressable
+            <Button
+              label="Submit for review"
+              size="lg"
+              loading={confirmPayment.isPending}
               onPress={handleSubmit}
-              disabled={confirmPayment.isPending}
-              className="rounded-xl bg-primary px-4 py-4 items-center"
-            >
-              {confirmPayment.isPending ? (
-                <ActivityIndicator size="small" color={theme.primaryForeground} />
-              ) : (
-                <Text className="text-sm font-sans-bold text-primary-foreground">
-                  Submit for review
-                </Text>
-              )}
-            </Pressable>
+            />
           </ScrollView>
         </View>
       </View>

@@ -1,5 +1,7 @@
-import { Colors } from '@/constants/colors';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Avatar } from '@/components/ui/Avatar';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useDues } from '@/features/payments/hooks/use-payments';
 import {
   useFlats,
@@ -8,10 +10,11 @@ import {
   useTowers
 } from '@/features/society/services/use-society';
 import { useAppSession } from '@/lib/auth-client';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useTheme } from '@/hooks/useColorScheme';
+import { getErrorMessage } from '@/lib/errors';
 
 // Priority when a flat somehow has more than one due row this month:
 // review (a proof is actively awaiting the admin) outranks pending,
@@ -36,8 +39,7 @@ const DUE_DOT_META: Record<keyof typeof DUE_STATUS_RANK, { dotClass: string; lab
  * rejects targetUserId === actorId server-side too).
  */
 export function SocietyMembersSection() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const { data: session } = useAppSession();
 
   const { data: members, isLoading: isLoadingMembers } = useSocietyMembers();
@@ -83,8 +85,8 @@ export function SocietyMembersSection() {
     setRemovingId(id);
     try {
       await removeMemberMutation.mutateAsync(id);
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to remove member');
+    } catch (e) {
+      setError(getErrorMessage(e));
     } finally {
       setRemovingId(null);
     }
@@ -106,9 +108,7 @@ export function SocietyMembersSection() {
         onCancel={() => setPendingRemoval(null)}
       />
 
-      <Text className="text-xs font-sans-bold text-primary tracking-wider uppercase mb-3">
-        Society Members
-      </Text>
+      <SectionLabel className="mb-3">Society Members</SectionLabel>
 
       {error ? (
         <View className="p-2.5 bg-danger/10 border border-danger/20 rounded-lg mb-3">
@@ -117,8 +117,10 @@ export function SocietyMembersSection() {
       ) : null}
 
       {isLoadingMembers ? (
-        <View className="py-6 items-center">
-          <ActivityIndicator size="small" color={theme.primary} />
+        <View className="gap-2.5">
+          <Skeleton className="h-14" />
+          <Skeleton className="h-14" />
+          <Skeleton className="h-14" />
         </View>
       ) : members && members.length > 0 ? (
         <View className="gap-2.5">
@@ -134,12 +136,7 @@ export function SocietyMembersSection() {
                 key={member.id}
                 className="p-3.5 bg-card border border-border rounded-xl flex-row items-center gap-3"
               >
-                {/* Avatar */}
-                <View className="w-9 h-9 rounded-full items-center justify-center bg-primary/10">
-                  <Text className="text-primary font-serif-bold text-sm">
-                    {member.name.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
+                <Avatar name={member.name} size={38} />
 
                 {/* Identity */}
                 <View className="flex-1">

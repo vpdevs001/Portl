@@ -28,41 +28,43 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Colors — faint sage background + antique gold accent, deep forest in   */
-/* dark mode with a lifted champagne gold for contrast. Semantic tokens,  */
-/* adapts automatically via className (no dark: prefix needed). Mirrored  */
-/* as plain hex in src/constants/colors.ts for native props that can't    */
-/* take a className.                                                     */
+/* Colors — "modern heritage": warm linen neutrals + antique brass gold,  */
+/* deep warm charcoal in dark mode with a lifted champagne gold.          */
+/* Semantic tokens adapt automatically via className (no dark: prefix     */
+/* needed). Mirrored as plain hex in src/constants/colors.ts for native   */
+/* props that can't take a className.                                     */
 /* ---------------------------------------------------------------------- */
 @layer theme {
   :root {
     @variant light {
-      --color-background: #f5f7f2;
-      --color-surface: #ecf0e7;
-      --color-card: #fbfcf9;
-      --color-foreground: #14201a;
-      --color-foreground-secondary: #56635a;
-      --color-border: #dde4d6;
-      --color-muted: #93a08d;
-      --color-primary: #a9832e;
-      --color-primary-foreground: #241c0c;
-      --color-success: #2f7a4f;
-      --color-danger: #b23b30;
-      --color-warning: #c97a2b;
+      --color-background: #f4f2ec;
+      --color-surface: #eae7de;
+      --color-card: #fcfbf7;
+      --color-foreground: #1d1a13;
+      --color-foreground-secondary: #5b5546;
+      --color-border: #e1ddcf;
+      --color-muted: #9a917e;
+      --color-primary: #8a6b1d;
+      --color-primary-foreground: #fbf7ea;
+      --color-success: #2e7d4e;
+      --color-danger: #b3402f;
+      --color-warning: #bf7728;
+      --color-info: #3a6ea5;
     }
     @variant dark {
-      --color-background: #0b120e;
-      --color-surface: #101913;
-      --color-card: #141f18;
-      --color-foreground: #edf1ea;
-      --color-foreground-secondary: #9aa79a;
-      --color-border: #23302a;
-      --color-muted: #5e6d64;
-      --color-primary: #d4af63;
-      --color-primary-foreground: #1a1409;
-      --color-success: #4caf75;
-      --color-danger: #e0685c;
-      --color-warning: #e0a354;
+      --color-background: #14120e;
+      --color-surface: #1d1a14;
+      --color-card: #242118;
+      --color-foreground: #f0ede2;
+      --color-foreground-secondary: #a79f8d;
+      --color-border: #383326;
+      --color-muted: #6e6759;
+      --color-primary: #d9b25f;
+      --color-primary-foreground: #241c08;
+      --color-success: #5cb87f;
+      --color-danger: #e0705f;
+      --color-warning: #e0a254;
+      --color-info: #7fa8d0;
     }
   }
 }

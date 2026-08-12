@@ -1,19 +1,23 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useAmenities, useBookings } from '@/features/amenities/hooks/use-amenities';
 import type { AmenityBooking } from '@/features/amenities/services/amenities';
 
-type StatusToken = 'success' | 'muted';
-
-const STATUS_META: Record<'confirmed' | 'cancelled', { label: string; token: StatusToken }> = {
-  confirmed: { label: 'Confirmed', token: 'success' },
-  cancelled: { label: 'Cancelled', token: 'muted' }
+const STATUS_META: Record<'confirmed' | 'cancelled', { label: string; tone: BadgeTone }> = {
+  confirmed: { label: 'Confirmed', tone: 'success' },
+  cancelled: { label: 'Cancelled', tone: 'muted' }
 };
 
 function formatRange(start: string, end: string) {
@@ -31,8 +35,6 @@ function formatRange(start: string, end: string) {
 
 export default function AmenityLogsScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [amenityFilter, setAmenityFilter] = useState<string | null>(null);
 
@@ -49,37 +51,20 @@ export default function AmenityLogsScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-2">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Amenity Bookings</Text>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => refetch()}
-              hitSlop={12}
-              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-            >
-              <Ionicons
-                name="refresh"
-                size={18}
-                color={theme.foreground}
-                style={isRefetching ? { opacity: 0.4 } : undefined}
-              />
-            </Pressable>
-            <DrawerButton />
-          </View>
-        </View>
+        <ScreenHeader
+          title="Amenity Bookings"
+          showBack
+          drawer
+          onRefresh={refetch}
+          isRefetching={isRefetching}
+        />
 
-        {/* Add Amenity action button */}
-        <Pressable
+        <Button
+          label="Add new amenity"
+          icon="add"
           onPress={() => router.push('/(app)/admin/amenities/create')}
-          className="flex-row items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 my-2"
-        >
-          <Ionicons name="add" size={18} color={theme.primaryForeground} />
-          <Text className="text-sm font-sans-bold text-primary-foreground">Add new amenity</Text>
-        </Pressable>
+          className="my-2"
+        />
 
         {/* Amenity filter chips */}
         {amenities && amenities.length > 0 ? (
@@ -89,40 +74,19 @@ export default function AmenityLogsScreen() {
             className="my-4"
             contentContainerClassName="gap-2 pr-2"
           >
-            <Pressable
+            <Chip
+              label="All"
+              selected={amenityFilter === null}
               onPress={() => setAmenityFilter(null)}
-              className={`self-start p-2 rounded-md border mr-2 ${
-                amenityFilter === null ? 'bg-primary border-primary' : 'bg-card border-border'
-              }`}
-            >
-              <Text
-                className={`text-xs font-sans-bold ${
-                  amenityFilter === null ? 'text-primary-foreground' : 'text-foreground-secondary'
-                }`}
-              >
-                All
-              </Text>
-            </Pressable>
-            {amenities.map((a) => {
-              const active = amenityFilter === a.id;
-              return (
-                <Pressable
-                  key={a.id}
-                  onPress={() => setAmenityFilter(active ? null : a.id)}
-                  className={`self-start p-2 rounded-md border mr-2 ${
-                    active ? 'bg-primary border-primary' : 'bg-card border-border'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-sans-bold ${
-                      active ? 'text-primary-foreground' : 'text-foreground-secondary'
-                    }`}
-                  >
-                    {a.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            />
+            {amenities.map((a) => (
+              <Chip
+                key={a.id}
+                label={a.name}
+                selected={amenityFilter === a.id}
+                onPress={() => setAmenityFilter(amenityFilter === a.id ? null : a.id)}
+              />
+            ))}
           </ScrollView>
         ) : (
           <View className="h-4" />
@@ -130,22 +94,18 @@ export default function AmenityLogsScreen() {
 
         {/* Content */}
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={4} />
         ) : filtered.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-3 pb-20">
-            <View className="w-14 h-14 rounded-full border border-primary/30 bg-card items-center justify-center mb-2">
-              <Ionicons name="calendar-outline" size={24} color={theme.primary} />
-            </View>
-            <Text className="text-base font-serif-semibold text-foreground text-center">
-              No bookings yet
-            </Text>
-            <Text className="text-sm font-sans text-foreground-secondary text-center leading-6 px-6">
-              {amenityFilter
-                ? 'No bookings for this amenity.'
-                : 'No bookings have been made yet across the society.'}
-            </Text>
+          <View className="flex-1 justify-center pb-20">
+            <EmptyState
+              icon="calendar-outline"
+              title="No bookings yet"
+              subtitle={
+                amenityFilter
+                  ? 'No bookings for this amenity.'
+                  : 'No bookings have been made yet across the society.'
+              }
+            />
           </View>
         ) : (
           <ScrollView
@@ -153,8 +113,10 @@ export default function AmenityLogsScreen() {
             contentContainerClassName="pb-20"
             className="mt-1"
           >
-            {filtered.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
+            {filtered.map((booking, index) => (
+              <FadeIn key={booking.id} index={index}>
+                <BookingCard booking={booking} />
+              </FadeIn>
             ))}
           </ScrollView>
         )}
@@ -164,13 +126,11 @@ export default function AmenityLogsScreen() {
 }
 
 function BookingCard({ booking }: { booking: AmenityBooking }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const meta = STATUS_META[booking.status];
-  const badgeColor = theme[meta.token];
 
   return (
-    <View className="bg-card border border-border rounded-2xl p-4 mb-3">
+    <Card className="p-4 mb-3">
       {/* Top row: amenity name + status badge */}
       <View className="flex-row items-center justify-between mb-2">
         <Text
@@ -179,18 +139,7 @@ function BookingCard({ booking }: { booking: AmenityBooking }) {
         >
           {booking.amenity?.name ?? 'Amenity'}
         </Text>
-        <View
-          className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ backgroundColor: `${badgeColor}1a` }}
-        >
-          <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: badgeColor }} />
-          <Text
-            className="text-[10px] font-sans-bold uppercase tracking-wider"
-            style={{ color: badgeColor }}
-          >
-            {meta.label}
-          </Text>
-        </View>
+        <Badge label={meta.label} tone={meta.tone} />
       </View>
 
       {/* Date & time range */}
@@ -216,6 +165,6 @@ function BookingCard({ booking }: { booking: AmenityBooking }) {
           </View>
         ) : null}
       </View>
-    </View>
+    </Card>
   );
 }

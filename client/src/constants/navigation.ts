@@ -4,7 +4,6 @@ export type DrawerItem = {
   subtitle?: string;
   icon: string;
   route: string;
-  isLive: boolean;
   category?: string;
 };
 
@@ -30,7 +29,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Issue invite codes for flats & guards',
     icon: 'person-add-outline',
     route: '/(app)/add-resident',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -39,7 +37,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'View estate structure & flat directory',
     icon: 'business-outline',
     route: '/(app)/towers-flats',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -48,7 +45,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Publish & view announcements',
     icon: 'megaphone-outline',
     route: '/(app)/notices',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -57,7 +53,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Create opinion polls for residents',
     icon: 'checkbox-outline',
     route: '/(app)/polls',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -66,7 +61,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Create digital gate pass for guests',
     icon: 'key-outline',
     route: '/(app)/pre-approvals',
-    isLive: true,
     category: 'Passes & Access'
   },
   {
@@ -75,7 +69,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Track dues, payments & confirmations',
     icon: 'card-outline',
     route: '/(app)/admin/payments/review',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -84,7 +77,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Manage clubhouse, pool & hall slots',
     icon: 'water-outline',
     route: '/(app)/admin/amenities/logs',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -93,7 +85,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Manage resident tickets & status',
     icon: 'build-outline',
     route: '/(app)/admin/complaints/manage',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -102,7 +93,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Maids, drivers & maintenance staff',
     icon: 'people-outline',
     route: '/(app)/staff-directory',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -111,7 +101,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Audit visitor & resident check-ins',
     icon: 'journal-outline',
     route: '/(app)/admin/gate-logs',
-    isLive: true,
     category: 'Management'
   },
   {
@@ -120,7 +109,6 @@ export const ADMIN_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Society parameters & configuration',
     icon: 'settings-outline',
     route: '/(app)/society-settings',
-    isLive: true,
     category: 'Management'
   }
 ];
@@ -132,7 +120,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Manage incoming visitor requests',
     icon: 'shield-checkmark-outline',
     route: '/(app)/home',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -141,7 +128,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Log walk-in, cab or delivery entry',
     icon: 'person-add-outline',
     route: '/(app)/guard/register-visitor',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -150,7 +136,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Verify resident invite pass codes',
     icon: 'qr-code-outline',
     route: '/(app)/guard/verify-pass',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -159,7 +144,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Guests currently inside the gate',
     icon: 'log-in-outline',
     route: '/(app)/guard/check-in',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -168,7 +152,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Complete gate check-in history',
     icon: 'journal-outline',
     route: '/(app)/guard/gate-logs',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -177,7 +160,6 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Search and log entry or exit',
     icon: 'people-outline',
     route: '/(app)/guard/resident-search',
-    isLive: true,
     category: 'Gate Operations'
   },
   {
@@ -186,8 +168,23 @@ export const GUARD_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Instant alert to admin & residents',
     icon: 'alert-circle-outline',
     route: '/(app)/guard/emergency-alert',
-    isLive: true,
     category: 'Gate Operations'
+  },
+  {
+    id: 'notices',
+    label: 'Society Notices',
+    subtitle: 'Announcements from admin',
+    icon: 'megaphone-outline',
+    route: '/(app)/notices',
+    category: 'Community'
+  },
+  {
+    id: 'staff',
+    label: 'Staff Directory',
+    subtitle: 'Verified maids, cooks & plumbers',
+    icon: 'people-outline',
+    route: '/(app)/staff-directory',
+    category: 'Community'
   }
 ];
 
@@ -198,7 +195,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Create digital gate pass for guests',
     icon: 'key-outline',
     route: '/(app)/pre-approvals',
-    isLive: true,
     category: 'Passes & Access'
   },
   {
@@ -207,7 +203,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Announcements from admin',
     icon: 'megaphone-outline',
     route: '/(app)/notices',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -216,7 +211,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Vote on society decisions',
     icon: 'checkbox-outline',
     route: '/(app)/polls',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -225,7 +219,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Log of guests who entered your flat',
     icon: 'time-outline',
     route: '/(app)/visitor-history',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -234,7 +227,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'View bills & upload payment receipts',
     icon: 'card-outline',
     route: '/(app)/payments',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -243,7 +235,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Reserve clubhouse, pool & tennis court',
     icon: 'water-outline',
     route: '/(app)/amenities/book',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -252,7 +243,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Report maintenance & plumbing issues',
     icon: 'build-outline',
     route: '/(app)/complaints',
-    isLive: true,
     category: 'Community'
   },
   {
@@ -261,7 +251,6 @@ export const RESIDENT_DRAWER_ITEMS: DrawerItem[] = [
     subtitle: 'Find verified maids, cooks & plumbers',
     icon: 'people-outline',
     route: '/(app)/staff-directory',
-    isLive: true,
     category: 'Community'
   }
 ];

@@ -1,20 +1,14 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { getErrorMessage } from '@/lib/errors';
 import { useCreatePoll } from '@/features/polls/hooks/use-polls';
 
@@ -38,8 +32,7 @@ function endOfDay(date: Date) {
 
 export default function CreatePollScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
@@ -109,39 +102,29 @@ export default function CreatePollScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Create poll</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Create poll" showBack drawer />
 
         <Field label="Question">
-          <TextInput
+          <Input
             value={question}
             onChangeText={setQuestion}
             placeholder="e.g. Should we install EV chargers?"
-            placeholderTextColor={theme.muted}
             multiline
             numberOfLines={2}
             textAlignVertical="top"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans min-h-[60px]"
+            className="min-h-[60px]"
           />
         </Field>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Options
-        </Text>
+        <SectionLabel className="mb-3">Options</SectionLabel>
         <View className="gap-2 mb-2">
           {options.map((option, index) => (
             <View key={index} className="flex-row items-center gap-2">
-              <TextInput
+              <Input
                 value={option}
                 onChangeText={(value) => updateOption(index, value)}
                 placeholder={`Option ${index + 1}`}
-                placeholderTextColor={theme.muted}
-                className="flex-1 bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
+                className="flex-1"
               />
               {options.length > 2 ? (
                 <Pressable
@@ -168,9 +151,7 @@ export default function CreatePollScreen() {
           <View className="mb-6" />
         )}
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Voting window
-        </Text>
+        <SectionLabel className="mb-3">Voting window</SectionLabel>
 
         <Pressable
           onPress={() => setShowPicker(true)}
@@ -198,29 +179,14 @@ export default function CreatePollScreen() {
 
         {error ? <Text className="text-sm font-sans text-danger mb-4 mt-2">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label="Publish poll"
+          size="lg"
+          loading={createPoll.isPending}
           onPress={handleSubmit}
-          disabled={createPoll.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-4"
-        >
-          {createPoll.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Publish poll</Text>
-          )}
-        </Pressable>
+          className="mt-4"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

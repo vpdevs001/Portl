@@ -1,14 +1,17 @@
 import { Stack } from 'expo-router';
+import { RoleGate } from '@/components/RoleGate';
 
 export default function AdminLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="complaints/manage" />
-      <Stack.Screen name="amenities/logs" />
-      <Stack.Screen name="amenities/create" />
-      <Stack.Screen name="staff/manage" />
-      <Stack.Screen name="gate-logs" />
-      <Stack.Screen name="payments/review" />
-    </Stack>
+    <RoleGate roles={['society_admin']}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="complaints/manage" />
+        <Stack.Screen name="amenities/logs" />
+        <Stack.Screen name="amenities/create" />
+        <Stack.Screen name="staff/manage" />
+        <Stack.Screen name="gate-logs" />
+        <Stack.Screen name="payments/review" />
+      </Stack>
+    </RoleGate>
   );
 }

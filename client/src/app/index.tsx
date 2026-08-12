@@ -1,9 +1,5 @@
-import { ActivityIndicator, View } from 'react-native';
+import { LoadingScreen } from '@/components/ui/Spinner';
 
 export default function Index() {
-  return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <ActivityIndicator size="large" color="#a9832e" />
-    </View>
-  );
+  return <LoadingScreen />;
 }

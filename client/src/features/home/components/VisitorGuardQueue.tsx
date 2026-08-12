@@ -1,8 +1,13 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { ListSkeleton } from '@/components/ui/Skeleton';
 import type { VisitorRequest } from '@/features/visitors/services/visitors';
 
 export function VisitorGuardQueue({
@@ -15,71 +20,70 @@ export function VisitorGuardQueue({
   onOpenRegister: () => void;
 }) {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   return (
     <View className="flex-1">
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-lg font-serif-semibold text-foreground">Pending queue</Text>
         <View className="flex-row items-center gap-2">
-          <Pressable
+          <Button
+            label="Verify pass"
+            variant="secondary"
+            size="sm"
             onPress={() => router.push('/(app)/guard/verify-pass')}
-            className="rounded-full bg-card border border-border px-3 py-2"
-          >
-            <Text className="text-xs font-sans-bold text-foreground">Verify pass</Text>
-          </Pressable>
-          <Pressable onPress={onOpenRegister} className="rounded-full bg-primary px-3 py-2">
-            <Text className="text-xs font-sans-bold text-primary-foreground">Register visitor</Text>
-          </Pressable>
+          />
+          <Button label="Register" size="sm" onPress={onOpenRegister} />
         </View>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <ListSkeleton rows={3} />
       ) : requests.length === 0 ? (
-        <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6">
-          <Ionicons name="shield-outline" size={28} color={theme.primary} />
-          <Text className="text-base font-serif-semibold text-foreground mt-3">Queue is clear</Text>
-          <Text className="text-sm font-sans text-foreground-secondary text-center mt-2">
-            New guard requests will appear here instantly.
-          </Text>
-        </View>
+        <EmptyState
+          variant="boxed"
+          icon="shield-outline"
+          title="Queue is clear"
+          subtitle="New guard requests will appear here instantly."
+          className="flex-1"
+        />
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-8">
-          {requests.map((request) => (
-            <View key={request.id} className="bg-card border border-border rounded-2xl p-4 mb-3">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-base font-serif-semibold text-foreground">
-                  {request.name}
-                </Text>
-                <View className="rounded-full bg-primary/10 px-2.5 py-1">
-                  <Text className="text-[10px] font-sans-bold text-primary uppercase tracking-wider">
-                    {request.status}
+          {requests.map((request, index) => (
+            <FadeIn key={request.id} index={index}>
+              <Card className="p-4 mb-3">
+                <View className="flex-row items-center justify-between gap-2">
+                  <Text className="text-base font-serif-semibold text-foreground flex-1">
+                    {request.name}
                   </Text>
+                  <Badge label={request.status} tone="primary" />
                 </View>
-              </View>
-              <Text className="text-sm font-sans text-foreground-secondary mt-1">
-                {request.visitorType.replace('_', ' ')}
-              </Text>
-              {request.purpose ? (
-                <Text className="text-sm font-sans text-foreground-secondary mt-2">
-                  {request.purpose}
+                <Text className="text-sm font-sans text-foreground-secondary mt-1 capitalize">
+                  {request.visitorType.replace('_', ' ')}
                 </Text>
-              ) : null}
-              {request.vehicleNumber ? (
-                <Text className="text-sm font-sans text-foreground-secondary mt-1">
-                  Vehicle: {request.vehicleNumber}
-                </Text>
-              ) : null}
-              <Text className="text-sm font-sans text-foreground-secondary mt-1">
-                {request.approverType === 'admin'
-                  ? 'Routed to admin'
-                  : `Flat ${request.flat?.flatNumber ?? request.flat?.number ?? request.flat?.name ?? '—'}`}
-              </Text>
-            </View>
+                {request.purpose ? (
+                  <Text className="text-sm font-sans text-foreground-secondary mt-1.5 leading-5">
+                    {request.purpose}
+                  </Text>
+                ) : null}
+                <View className="flex-row items-center gap-4 mt-2.5 pt-2.5 border-t border-border/50">
+                  {request.vehicleNumber ? (
+                    <View className="flex-row items-center gap-1">
+                      <Ionicons name="car-outline" size={12} color={theme.muted} />
+                      <Text className="text-xs font-sans text-muted">{request.vehicleNumber}</Text>
+                    </View>
+                  ) : null}
+                  <View className="flex-row items-center gap-1">
+                    <Ionicons name="home-outline" size={12} color={theme.muted} />
+                    <Text className="text-xs font-sans text-muted">
+                      {request.approverType === 'admin'
+                        ? 'Routed to admin'
+                        : `Flat ${request.flat?.flatNumber ?? '—'}`}
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            </FadeIn>
           ))}
         </ScrollView>
       )}

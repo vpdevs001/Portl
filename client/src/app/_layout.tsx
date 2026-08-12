@@ -3,13 +3,13 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as WebBrowser from 'expo-web-browser';
-import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { ToastProvider } from '@/components/Toast';
 import { ThemeProvider } from '@/hooks/useColorScheme';
 import { AppLockProvider, useAppLock } from '@/hooks/useAppLock';
 import { AppLockScreen } from '@/components/AppLockScreen';
+import { LoadingScreen } from '@/components/ui/Spinner';
 import { fontsToLoad } from '@/constants/fonts';
 import { useAppSession } from '@/lib/auth-client';
 
@@ -51,11 +51,7 @@ function RootNavigation() {
   }, [session, isPending, segments, router]);
 
   if (isPending || !appLockReady) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#a9832e" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   // The lock screen sits above the Stack rather than replacing it, so the

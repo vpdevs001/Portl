@@ -1,21 +1,15 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
 import { useUploadVisitorPhoto } from '@/features/visitors/hooks/use-visitors';
 import { useCreateComplaint } from '@/features/complaints/hooks/use-complaints';
 import type { ComplaintCategory } from '@/features/complaints/services/complaints';
@@ -30,8 +24,7 @@ const CATEGORIES: { value: ComplaintCategory; label: string; icon: string }[] = 
 
 export default function CreateComplaintScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [category, setCategory] = useState<ComplaintCategory>('general');
   const [title, setTitle] = useState('');
@@ -113,17 +106,9 @@ export default function CreateComplaintScreen() {
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-16">
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Log a complaint</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Log a complaint" showBack drawer />
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Category
-        </Text>
+        <SectionLabel className="mb-3">Category</SectionLabel>
         <View className="flex-row flex-wrap gap-2 mb-6">
           {CATEGORIES.map((c) => {
             const active = category === c.value;
@@ -153,31 +138,22 @@ export default function CreateComplaintScreen() {
         </View>
 
         <Field label="Title">
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="e.g. Kitchen tap leaking"
-            placeholderTextColor={theme.muted}
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans"
-          />
+          <Input value={title} onChangeText={setTitle} placeholder="e.g. Kitchen tap leaking" />
         </Field>
 
         <Field label="Description">
-          <TextInput
+          <Input
             value={description}
             onChangeText={setDescription}
             placeholder="Describe the issue in detail"
-            placeholderTextColor={theme.muted}
             multiline
             numberOfLines={5}
             textAlignVertical="top"
-            className="bg-card border border-border rounded-xl px-4 py-3 text-foreground font-sans min-h-[120px]"
+            className="min-h-[120px]"
           />
         </Field>
 
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Photo (optional)
-        </Text>
+        <SectionLabel className="mb-3">Photo (optional)</SectionLabel>
         <View className="flex-row items-center gap-3 mb-6">
           {photoUri ? (
             <View className="relative">
@@ -190,48 +166,33 @@ export default function CreateComplaintScreen() {
               </Pressable>
             </View>
           ) : null}
-          <Pressable
+          <Button
+            label="Take photo"
+            icon="camera-outline"
+            variant="secondary"
+            size="sm"
             onPress={() => handlePickPhoto('camera')}
-            className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
-          >
-            <Ionicons name="camera-outline" size={16} color={theme.foreground} />
-            <Text className="text-xs font-sans-bold text-foreground">Take photo</Text>
-          </Pressable>
-          <Pressable
+          />
+          <Button
+            label="Choose"
+            icon="image-outline"
+            variant="secondary"
+            size="sm"
             onPress={() => handlePickPhoto('library')}
-            className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
-          >
-            <Ionicons name="image-outline" size={16} color={theme.foreground} />
-            <Text className="text-xs font-sans-bold text-foreground">Choose photo</Text>
-          </Pressable>
-          {uploadPhoto.isPending ? <ActivityIndicator size="small" color={theme.primary} /> : null}
+          />
+          {uploadPhoto.isPending ? <Spinner /> : null}
         </View>
 
         {error ? <Text className="text-sm font-sans text-danger mb-4 mt-2">{error}</Text> : null}
 
-        <Pressable
+        <Button
+          label="Submit complaint"
+          size="lg"
+          loading={createComplaint.isPending}
           onPress={handleSubmit}
-          disabled={createComplaint.isPending}
-          className="rounded-xl bg-primary px-4 py-4 items-center mt-4"
-        >
-          {createComplaint.isPending ? (
-            <ActivityIndicator size="small" color={theme.primaryForeground} />
-          ) : (
-            <Text className="text-sm font-sans-bold text-primary-foreground">Submit complaint</Text>
-          )}
-        </Pressable>
+          className="mt-2"
+        />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-4">
-      <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-        {label}
-      </Text>
-      {children}
-    </View>
   );
 }

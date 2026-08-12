@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Share, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { FadeIn } from '@/components/ui/FadeIn';
+import { ListSkeleton } from '@/components/ui/Skeleton';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { QrCode } from '@/components/QrCode';
 import { usePreApprovals } from '@/features/visitors/hooks/use-visitors';
 import type { PreApproval } from '@/features/visitors/services/visitors';
@@ -16,8 +23,6 @@ function isExpired(pass: PreApproval) {
 
 export default function PreApprovalsListScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const { data, isLoading, refetch, isRefetching } = usePreApprovals();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -28,80 +33,59 @@ export default function PreApprovalsListScreen() {
   return (
     <Screen>
       <View className="flex-1 px-6 pt-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Pre-approved passes</Text>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => refetch()}
-              hitSlop={12}
-              className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-            >
-              <Ionicons
-                name="refresh"
-                size={18}
-                color={theme.foreground}
-                style={isRefetching ? { opacity: 0.4 } : undefined}
-              />
-            </Pressable>
-            <DrawerButton />
-          </View>
-        </View>
+        <ScreenHeader
+          title="Pre-approved passes"
+          showBack
+          drawer
+          onRefresh={refetch}
+          isRefetching={isRefetching}
+        />
 
-        <Pressable
+        <Button
+          label="New pre-approval"
+          icon="add"
           onPress={() => router.push('/(app)/pre-approvals/create')}
-          className="flex-row items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 my-4"
-        >
-          <Ionicons name="add" size={18} color={theme.primaryForeground} />
-          <Text className="text-sm font-sans-bold text-primary-foreground">New pre-approval</Text>
-        </Pressable>
+          className="my-4"
+        />
 
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ListSkeleton rows={3} />
         ) : passes.length === 0 ? (
-          <View className="flex-1 items-center justify-center rounded-2xl border border-dashed border-border p-6 min-h-[200px]">
-            <Ionicons name="key-outline" size={28} color={theme.muted} />
-            <Text className="text-base font-serif-semibold text-foreground mt-3">
-              No passes yet
-            </Text>
-            <Text className="text-sm font-sans text-foreground-secondary text-center mt-2">
-              Create a digital gate pass so your guest can skip the wait at security.
-            </Text>
-          </View>
+          <EmptyState
+            variant="boxed"
+            icon="key-outline"
+            title="No passes yet"
+            subtitle="Create a digital gate pass so your guest can skip the wait at security."
+            className="mt-6"
+          />
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-20">
             {active.length > 0 ? (
               <>
-                <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-2">
-                  Active
-                </Text>
-                {active.map((pass) => (
-                  <PreApprovalCard
-                    key={pass.id}
-                    pass={pass}
-                    expanded={expandedId === pass.id}
-                    onToggle={() => setExpandedId(expandedId === pass.id ? null : pass.id)}
-                  />
+                <SectionLabel className="mb-2">Active</SectionLabel>
+                {active.map((pass, index) => (
+                  <FadeIn key={pass.id} index={index}>
+                    <PreApprovalCard
+                      pass={pass}
+                      expanded={expandedId === pass.id}
+                      onToggle={() => setExpandedId(expandedId === pass.id ? null : pass.id)}
+                    />
+                  </FadeIn>
                 ))}
               </>
             ) : null}
 
             {inactive.length > 0 ? (
               <>
-                <Text className="text-xs font-sans-bold text-muted uppercase tracking-wider mt-4 mb-2">
-                  Past
-                </Text>
-                {inactive.map((pass) => (
-                  <PreApprovalCard
-                    key={pass.id}
-                    pass={pass}
-                    expanded={expandedId === pass.id}
-                    onToggle={() => setExpandedId(expandedId === pass.id ? null : pass.id)}
-                  />
+                <SectionLabel className="mt-4 mb-2 text-muted">Past</SectionLabel>
+                {inactive.map((pass, index) => (
+                  <FadeIn key={pass.id} index={index}>
+                    <PreApprovalCard
+                      pass={pass}
+                      expanded={expandedId === pass.id}
+                      onToggle={() => setExpandedId(expandedId === pass.id ? null : pass.id)}
+                    />
+                  </FadeIn>
                 ))}
               </>
             ) : null}
@@ -121,27 +105,15 @@ function PreApprovalCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
   const expired = isExpired(pass);
   const isActive = pass.status === 'approved' && !expired;
 
   return (
-    <Pressable
-      onPress={onToggle}
-      className={`bg-card border border-border rounded-2xl p-4 mb-3 ${!isActive ? 'opacity-60' : ''}`}
-    >
-      <View className="flex-row items-center justify-between">
-        <Text className="text-base font-serif-semibold text-foreground">{pass.name}</Text>
-        <View className={`rounded-full px-2.5 py-1 ${isActive ? 'bg-primary/10' : 'bg-surface'}`}>
-          <Text
-            className={`text-[10px] font-sans-bold uppercase tracking-wider ${
-              isActive ? 'text-primary' : 'text-muted'
-            }`}
-          >
-            {expired ? 'Expired' : pass.status}
-          </Text>
-        </View>
+    <Card onPress={onToggle} className={`p-4 mb-3 ${!isActive ? 'opacity-60' : ''}`}>
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="text-base font-serif-semibold text-foreground flex-1">{pass.name}</Text>
+        <Badge label={expired ? 'Expired' : pass.status} tone={isActive ? 'primary' : 'muted'} />
       </View>
 
       <Text className="text-sm font-sans text-foreground-secondary mt-1 capitalize">
@@ -156,18 +128,36 @@ function PreApprovalCard({
       ) : null}
 
       {expanded && pass.passCode ? (
-        <View className="items-center mt-4 pt-4 border-t border-border/60">
-          <QrCode
-            value={pass.passCode}
-            size={160}
-            foreground={theme.foreground}
-            background={theme.card}
-          />
+        <Animated.View
+          entering={FadeInDown.duration(280).springify().damping(20)}
+          className="items-center mt-4 pt-4 border-t border-border/60"
+        >
+          <View className="p-3 bg-white rounded-2xl">
+            <QrCode value={pass.passCode} size={160} foreground="#1d1a13" background="#ffffff" />
+          </View>
           <Text className="text-xs font-sans text-muted mt-3">Or share this code</Text>
-          <Text className="text-2xl font-sans-bold text-primary tracking-[6px] mt-1">
+          <Text className="text-2xl font-mono-semibold text-primary tracking-[6px] mt-1">
             {pass.passCode}
           </Text>
-        </View>
+          <Button
+            label="Share pass"
+            icon="share-social-outline"
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onPress={() => {
+              // Built-in RN share sheet — no native module needed, works
+              // on every platform the app targets.
+              Share.share({
+                message: `Portl gate pass for ${pass.name}: ${pass.passCode}${
+                  pass.validUntil
+                    ? ` (valid until ${new Date(pass.validUntil).toLocaleString()})`
+                    : ''
+                } — show this at the gate.`
+              }).catch(() => undefined);
+            }}
+          />
+        </Animated.View>
       ) : null}
 
       <View className="flex-row items-center justify-center mt-3">
@@ -180,6 +170,6 @@ function PreApprovalCard({
           {expanded ? 'Hide pass' : 'Show pass'}
         </Text>
       </View>
-    </Pressable>
+    </Card>
   );
 }

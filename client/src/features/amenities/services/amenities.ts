@@ -60,3 +60,10 @@ export async function bookAmenity(amenityId: string, payload: BookAmenityInput) 
     body: JSON.stringify(payload)
   });
 }
+
+export async function cancelBooking(bookingId: string) {
+  return apiRequest<AmenityBooking>(`/api/amenities/bookings/${bookingId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+}

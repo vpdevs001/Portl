@@ -1,18 +1,25 @@
 import { useState, useMemo } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/hooks/useColorScheme';
 import { Screen } from '@/components/Screen';
-import { DrawerButton } from '@/components/DrawerButton';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Spinner } from '@/components/ui/Spinner';
 import { getErrorMessage } from '@/lib/errors';
 import {
   useAmenities,
   useBookAmenity,
-  useBookings
+  useBookings,
+  useCancelBooking
 } from '@/features/amenities/hooks/use-amenities';
-import type { Amenity } from '@/features/amenities/services/amenities';
+import type { Amenity, AmenityBooking } from '@/features/amenities/services/amenities';
 
 // Booking grid: 08:00 – 22:00, 1-hour slots
 const SLOT_START_HOUR = 8;
@@ -53,8 +60,7 @@ function buildDateStrip() {
 
 export default function BookAmenityScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = useTheme();
 
   const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
   const [selectedDate, setSelectedDate] = useState(buildDateStrip()[0].iso);
@@ -164,36 +170,36 @@ export default function BookAmenityScreen() {
     }
   }
 
+  function handleSuccessDone() {
+    setShowSuccessModal(false);
+    setStartSlot(null);
+    setEndSlot(null);
+    router.back();
+  }
+
   const canConfirm = selectedAmenity !== null && startSlot !== null && endSlot !== null;
 
   return (
     <Screen>
       <ScrollView className="flex-1 px-6 pt-4" contentContainerClassName="pb-24">
-        {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={24} color={theme.foreground} />
-          </Pressable>
-          <Text className="text-lg font-serif-semibold text-foreground">Book an Amenity</Text>
-          <DrawerButton />
-        </View>
+        <ScreenHeader title="Book an Amenity" showBack drawer />
+
+        <MyBookingsSection />
 
         {/* Amenity picker */}
-        <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-          Select Amenity
-        </Text>
+        <SectionLabel className="mb-3">Select Amenity</SectionLabel>
 
         {amenitiesLoading ? (
           <View className="items-center py-6">
-            <ActivityIndicator size="small" color={theme.primary} />
+            <Spinner />
           </View>
         ) : !amenities || amenities.length === 0 ? (
-          <View className="bg-card border border-border rounded-2xl p-5 items-center mb-6">
+          <Card className="p-5 items-center mb-6">
             <Ionicons name="business-outline" size={28} color={theme.muted} />
             <Text className="text-sm font-sans text-muted mt-2 text-center">
               No amenities available yet. Ask your admin to add them.
             </Text>
-          </View>
+          </Card>
         ) : (
           <ScrollView
             horizontal
@@ -216,8 +222,9 @@ export default function BookAmenityScreen() {
                   }`}
                 >
                   <View
-                    className="w-10 h-10 rounded-xl items-center justify-center mb-3"
-                    style={{ backgroundColor: active ? `${theme.primary}22` : `${theme.muted}22` }}
+                    className={`w-10 h-10 rounded-xl items-center justify-center mb-3 ${
+                      active ? 'bg-primary/15' : 'bg-surface'
+                    }`}
                   >
                     <Ionicons
                       name="business-outline"
@@ -226,8 +233,9 @@ export default function BookAmenityScreen() {
                     />
                   </View>
                   <Text
-                    className="text-sm font-serif-semibold leading-5"
-                    style={{ color: active ? theme.primary : theme.foreground }}
+                    className={`text-sm font-serif-semibold leading-5 ${
+                      active ? 'text-primary' : 'text-foreground'
+                    }`}
                     numberOfLines={2}
                   >
                     {amenity.name}
@@ -255,9 +263,7 @@ export default function BookAmenityScreen() {
             ) : null}
 
             {/* Date strip */}
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-              Select Date
-            </Text>
+            <SectionLabel className="mb-3">Select Date</SectionLabel>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -298,12 +304,10 @@ export default function BookAmenityScreen() {
             </ScrollView>
 
             {/* Slot grid */}
-            <Text className="text-xs font-sans-bold text-primary uppercase tracking-wider mb-3">
-              Select Time Slot
-            </Text>
+            <SectionLabel className="mb-3">Select Time Slot</SectionLabel>
             {bookingsLoading ? (
               <View className="items-center py-6">
-                <ActivityIndicator size="small" color={theme.primary} />
+                <Spinner />
               </View>
             ) : (
               <>
@@ -373,20 +377,14 @@ export default function BookAmenityScreen() {
             {error ? <Text className="text-sm font-sans text-danger mt-4">{error}</Text> : null}
 
             {/* Confirm button */}
-            <Pressable
+            <Button
+              label="Confirm Booking"
+              size="lg"
+              loading={bookAmenity.isPending}
+              disabled={!canConfirm}
               onPress={handleConfirm}
-              disabled={!canConfirm || bookAmenity.isPending}
-              className="rounded-xl bg-primary px-4 py-4 items-center mt-6"
-              style={{ opacity: canConfirm ? 1 : 0.4 }}
-            >
-              {bookAmenity.isPending ? (
-                <ActivityIndicator size="small" color={theme.primaryForeground} />
-              ) : (
-                <Text className="text-sm font-sans-bold text-primary-foreground">
-                  Confirm Booking
-                </Text>
-              )}
-            </Pressable>
+              className="mt-6"
+            />
           </>
         ) : null}
       </ScrollView>
@@ -396,38 +394,110 @@ export default function BookAmenityScreen() {
         visible={showSuccessModal}
         transparent
         animationType="fade"
-        onRequestClose={() => {
-          setShowSuccessModal(false);
-          setStartSlot(null);
-          setEndSlot(null);
-          router.back();
-        }}
+        onRequestClose={handleSuccessDone}
       >
         <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <View className="bg-card border border-border rounded-3xl p-6 w-full items-center">
-            <View className="w-16 h-16 rounded-full bg-primary/20 items-center justify-center mb-4">
-              <Ionicons name="checkmark-circle" size={40} color={theme.primary} />
-            </View>
+          <Animated.View
+            entering={ZoomIn.duration(350).springify().damping(16)}
+            className="bg-card border border-border rounded-3xl p-6 w-full items-center"
+          >
+            <Animated.View entering={FadeIn.delay(150).duration(300)}>
+              <View className="w-16 h-16 rounded-full bg-success/15 items-center justify-center mb-4">
+                <Ionicons name="checkmark-circle" size={40} color={theme.success} />
+              </View>
+            </Animated.View>
             <Text className="text-xl font-serif-semibold text-foreground text-center mb-2">
               Booking Confirmed!
             </Text>
             <Text className="text-sm font-sans text-muted text-center mb-6 leading-5">
               {selectedAmenity?.name} has been successfully reserved for you.
             </Text>
-            <Pressable
-              onPress={() => {
-                setShowSuccessModal(false);
-                setStartSlot(null);
-                setEndSlot(null);
-                router.back();
-              }}
-              className="w-full bg-primary py-3.5 rounded-xl items-center"
-            >
-              <Text className="text-sm font-sans-bold text-primary-foreground">Done</Text>
-            </Pressable>
-          </View>
+            <Button label="Done" size="lg" onPress={handleSuccessDone} className="w-full" />
+          </Animated.View>
         </View>
       </Modal>
     </Screen>
+  );
+}
+
+function formatBookingRange(start: string, end: string) {
+  const s = new Date(start);
+  const e = new Date(end);
+  const dateStr = s.toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  });
+  const startTime = s.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const endTime = e.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return `${dateStr} · ${startTime} – ${endTime}`;
+}
+
+/**
+ * The resident's own upcoming confirmed bookings, with a cancel action —
+ * closes the loop on the booking lifecycle (the 'cancelled' status existed
+ * in the schema but had no path to reach it).
+ */
+function MyBookingsSection() {
+  const theme = useTheme();
+  const { data: bookings } = useBookings();
+  const cancelBooking = useCancelBooking();
+  const [pendingCancel, setPendingCancel] = useState<AmenityBooking | null>(null);
+  // Captured once at mount (bookings arrive async after it anyway) — calling
+  // Date.now() during render would trip the react-compiler purity rule.
+  const [now] = useState(() => Date.now());
+
+  const upcoming = useMemo(() => {
+    return (bookings ?? [])
+      .filter((b) => b.status === 'confirmed' && new Date(b.endTime).getTime() > now)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [bookings, now]);
+
+  if (upcoming.length === 0) return null;
+
+  return (
+    <View className="mb-6">
+      <SectionLabel className="mb-3">My Upcoming Bookings</SectionLabel>
+      {upcoming.map((booking) => (
+        <Card key={booking.id} className="p-4 mb-2.5 flex-row items-center gap-3">
+          <View className="w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
+            <Ionicons name="calendar-outline" size={18} color={theme.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-sans-semibold text-foreground" numberOfLines={1}>
+              {booking.amenity?.name ?? 'Amenity'}
+            </Text>
+            <Text className="text-[11px] font-sans text-muted mt-0.5">
+              {formatBookingRange(booking.startTime, booking.endTime)}
+            </Text>
+          </View>
+          <Badge label="Confirmed" tone="success" />
+          <Pressable
+            onPress={() => setPendingCancel(booking)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`Cancel booking for ${booking.amenity?.name ?? 'amenity'}`}
+            className="w-9 h-9 rounded-lg bg-danger/10 items-center justify-center active:bg-danger/20"
+          >
+            <Ionicons name="close" size={16} color={theme.danger} />
+          </Pressable>
+        </Card>
+      ))}
+
+      <ConfirmDialog
+        visible={!!pendingCancel}
+        title="Cancel booking"
+        message={`Cancel your booking for ${pendingCancel?.amenity?.name ?? 'this amenity'} on ${
+          pendingCancel ? formatBookingRange(pendingCancel.startTime, pendingCancel.endTime) : ''
+        }? The slot becomes available to others right away.`}
+        confirmLabel="Cancel booking"
+        destructive
+        onConfirm={() => {
+          if (pendingCancel) cancelBooking.mutate(pendingCancel.id);
+          setPendingCancel(null);
+        }}
+        onCancel={() => setPendingCancel(null)}
+      />
+    </View>
   );
 }

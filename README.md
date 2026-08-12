@@ -8,17 +8,18 @@ Built as a multi-tenant platform: one deployment serves any number of independen
 
 ## Stack
 
-| Layer         | Choice                                                  |
-| ------------- | ------------------------------------------------------- |
-| Backend       | Fastify + TypeScript, running on Bun                    |
-| ORM / DB      | Drizzle ORM (v1, relational query API) + Neon Postgres  |
-| Auth          | Better Auth, Google OAuth only                          |
-| Validation    | Zod, via `fastify-type-provider-zod`                    |
-| Realtime      | Socket.IO (Polls only — see below)                      |
-| Image hosting | ImageKit                                                |
-| Mobile client | Expo SDK 57 + Expo Router, React Native                 |
-| Client state  | TanStack Query (server state) + Zustand (UI-only state) |
-| Styling       | Uniwind (Tailwind for React Native)                     |
+| Layer         | Choice                                                                   |
+| ------------- | ------------------------------------------------------------------------ |
+| Backend       | Fastify + TypeScript, running on Bun                                     |
+| ORM / DB      | Drizzle ORM (v1, relational query API) + Postgres (Docker, dev and prod) |
+| Auth          | Better Auth, Google OAuth only                                           |
+| Validation    | Zod, via `fastify-type-provider-zod`                                     |
+| Realtime      | Socket.IO (Polls only — see below)                                       |
+| Image hosting | ImageKit                                                                 |
+| Mobile client | Expo SDK 57 + Expo Router, React Native                                  |
+| Client state  | TanStack Query (server state) + React context (UI-only state)            |
+| Styling       | Uniwind (Tailwind for React Native)                                      |
+| Testing / CI  | `bun test` unit tests + GitHub Actions (`.github/workflows/ci.yml`)      |
 
 ---
 
@@ -157,21 +158,36 @@ Every photo-upload flow (visitor photos, complaint photos, payment screenshots) 
 
 | Role               | Can do                                                                                                                                                                                 |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Resident**       | Approve/reject visitors for their flat, create pre-approvals, view notices, vote in polls, raise complaints, book amenities, view their own gate history, submit payment proof         |
-| **Security Guard** | Register visitors at the gate, log entry/exit for visitors/residents/staff, verify pre-approval passcodes/QR codes, search residents                                                   |
-| **Society Admin**  | Everything above, plus: manage towers/flats, invite residents/guards, create notices/polls, resolve complaints, manage amenities and the staff directory, review payment confirmations |
+| **Resident**       | Approve/reject visitors for their flat, create + share pre-approval passes, view notices, vote in polls, raise complaints, book and cancel amenity slots, view their own gate history, submit payment proof |
+| **Security Guard** | Register visitors at the gate, log entry/exit for visitors/residents/staff, verify pre-approval passcodes/QR codes, search residents, broadcast emergency alerts                                             |
+| **Society Admin**  | Everything above, plus: manage towers/flats, invite residents/guards, create/edit notices, run polls, resolve complaints, manage amenities and the staff directory, review payment confirmations            |
 
 ---
 
 ## Getting started
 
-**Server** (`server/`): copy `.env.example` to `.env`, fill in `DATABASE_URL` (Neon), `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `BETTER_AUTH_URL` (must be a publicly reachable HTTPS URL — see `plan.md`'s Chapter 3 notes on why a plain `localhost`/LAN IP won't work for Google OAuth), `IMAGEKIT_PRIVATE_KEY`. Then:
+**Server** (`server/`): copy `.env.example` to `.env`. The defaults point at the bundled Docker Postgres — only secrets need filling in: `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `BETTER_AUTH_URL` (must be a publicly reachable HTTPS URL — see `plan.md`'s Chapter 3 notes on why a plain `localhost`/LAN IP won't work for Google OAuth), `IMAGEKIT_PRIVATE_KEY`. Then:
 
 ```bash
 bun install
-bun run db:migrate
-bun run dev
+bun run db:up        # start the Postgres container (docker compose)
+bun run db:migrate   # apply migrations
+bun run db:seed      # optional: demo society with all three roles
+bun run dev          # start the API with watch mode
 ```
+
+Other useful scripts: `bun run db:down` / `db:logs` manage the container, `bun test` runs the unit tests, `bun run type-check` and `bun run lint` match CI.
+
+**Seed data**: `bun run db:seed` creates "Green Meadows Society" — two towers, eight flats, an admin, a guard, and two residents, plus amenities, notices, a poll, a complaint, staff, and this month's dues. Sign-in is Google-only, so seed users' emails must be real Google accounts you control: override with `SEED_ADMIN_EMAIL=… SEED_GUARD_EMAIL=… SEED_RESIDENT_EMAIL=…` before running. Safe to re-run — it exits without writing if the demo society already exists.
+
+**Production (fully containerized)**: `docker-compose.prod.yml` runs Postgres (internal-only, no host port), the API (which auto-migrates on boot), and Caddy for TLS:
+
+```bash
+cp .env.example .env   # set strong POSTGRES_PASSWORD + all secrets
+bun run docker:prod    # build & start the whole stack
+```
+
+Set `BETTER_AUTH_URL` to the public HTTPS origin Caddy serves, and point the domain in `server/Caddyfile` at yours.
 
 **Client** (`client/`): copy `.env.example` to `.env`, set `EXPO_PUBLIC_API_URL` to the same reachable URL as the server. Google sign-in requires a **development build**, not Expo Go (custom URL schemes aren't available inside Expo Go's shared shell):
 

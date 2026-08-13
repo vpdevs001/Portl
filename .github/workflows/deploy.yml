@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy.yml'
+
+# Only one deploy at a time
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  # Gate: only deploy if CI passes
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to VPS
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            set -e
+
+            REPO_DIR="/opt/portl"
+
+            # Pull latest code
+            cd "$REPO_DIR"
+            git pull origin main
+
+            # Rebuild and restart only changed containers; Postgres data is
+            # preserved in the named volume (portl-pgdata).
+            cd server
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            # Remove dangling images to keep the VPS clean
+            docker image prune -f
+
+            echo "✅ Deployment complete"

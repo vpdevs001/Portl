@@ -41,6 +41,13 @@
     "dev": "bun --watch index.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "bun src/common/db/seed.ts",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
+    "test": "bun test",
     "format": "prettier --write .",
     "lint": "eslint .",
     "type-check": "npx tsc --noEmit"

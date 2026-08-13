@@ -96,6 +96,42 @@ export async function bookAmenity(caller: Caller, amenityId: string, dto: BookAm
   });
 }
 
+// Cancel rules: a resident can cancel a confirmed booking for their own
+// flat; an admin can cancel any confirmed booking in their society. The
+// status flip is a conditional UPDATE (status = 'confirmed' in the WHERE)
+// so a double-tap or a concurrent cancel can't resurrect or double-flip —
+// the second call simply matches zero rows and 404s/409s cleanly.
+export async function cancelBooking(caller: Caller, bookingId: string) {
+  const booking = await db.query.amenityBookings.findFirst({
+    where: { id: bookingId },
+    with: { amenity: true }
+  });
+
+  if (!booking || !booking.amenity || booking.amenity.societyId !== caller.societyId) {
+    throw AppError.notFound('Booking not found');
+  }
+
+  if (caller.role !== 'society_admin' && booking.flatId !== caller.flatId) {
+    throw AppError.forbidden('You can only cancel your own flat\u2019s bookings');
+  }
+
+  if (booking.status !== 'confirmed') {
+    throw AppError.conflict('This booking is already cancelled', { code: 'BOOKING_NOT_ACTIVE' });
+  }
+
+  const [updated] = await db
+    .update(amenityBookings)
+    .set({ status: 'cancelled' })
+    .where(and(eq(amenityBookings.id, bookingId), eq(amenityBookings.status, 'confirmed')))
+    .returning();
+
+  if (!updated) {
+    throw AppError.conflict('This booking is already cancelled', { code: 'BOOKING_NOT_ACTIVE' });
+  }
+
+  return updated;
+}
+
 // Residents see their own flat's bookings (so the slot-grid can show which
 // slots they've personally reserved); admins see the whole society's
 // calendar for the booking-logs view. Either can narrow to a single

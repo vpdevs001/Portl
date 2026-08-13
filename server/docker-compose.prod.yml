@@ -1,0 +1,38 @@
+# Production stack — Server + Caddy (TLS termination).
+#
+# Database: Neon (external managed Postgres) — DATABASE_URL comes from .env.
+# The server image runs `drizzle-kit migrate` on boot (see Dockerfile), so the
+# schema is always up-to-date before the API starts listening.
+#
+#   cp .env.example .env   # fill in real secrets
+#   bun run docker:prod    # build & start everything
+
+services:
+  server:
+    build: .
+    container_name: portl-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: portl-caddy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - portl-caddy-data:/data
+      - portl-caddy-config:/config
+    environment:
+      # Caddyfile proxies to {$UPSTREAM} — server:8000 inside the network.
+      UPSTREAM: server:8000
+    depends_on:
+      - server
+
+volumes:
+  portl-caddy-data:
+  portl-caddy-config:

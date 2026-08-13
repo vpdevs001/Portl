@@ -3,7 +3,13 @@ import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
 import { assertBelongsToSociety } from '../../common/helpers/tenant.helper';
 import { residentEntryLogs, staffEntryLogs } from '../../common/db/schema';
-import type { Caller, GateLogItem, ListLogsQuery, LogResidentInput, LogStaffInput } from './logs.types';
+import type {
+  Caller,
+  GateLogItem,
+  ListLogsQuery,
+  LogResidentInput,
+  LogStaffInput
+} from './logs.types';
 
 function startOfDay(dateStr: string) {
   return new Date(`${dateStr}T00:00:00.000Z`);
@@ -150,7 +156,10 @@ function mapResidentLog(log: {
   id: string;
   entryTime: Date | null;
   exitTime: Date | null;
-  user: { name: string; flat?: { flatNumber: string; tower?: { name: string } | null } | null } | null;
+  user: {
+    name: string;
+    flat?: { flatNumber: string; tower?: { name: string } | null } | null;
+  } | null;
 }): GateLogItem {
   const flatLabel = log.user?.flat
     ? `${log.user.flat.tower?.name ?? ''} · ${log.user.flat.flatNumber}`.replace(/^ · /, '').trim()
@@ -192,14 +201,12 @@ function mapGuestLog(log: {
   id: string;
   entryTime: Date | null;
   exitTime: Date | null;
-  visitorRequest:
-    | {
-        name: string;
-        visitorType: string;
-        source: string;
-        flat?: { flatNumber: string; tower?: { name: string } | null } | null;
-      }
-    | null;
+  visitorRequest: {
+    name: string;
+    visitorType: string;
+    source: string;
+    flat?: { flatNumber: string; tower?: { name: string } | null } | null;
+  } | null;
 }): GateLogItem {
   const flatLabel = log.visitorRequest?.flat
     ? `${log.visitorRequest.flat.tower?.name ?? ''} · ${log.visitorRequest.flat.flatNumber}`
@@ -227,8 +234,7 @@ function matchesSearch(item: GateLogItem, search?: string) {
   if (!search?.trim()) return true;
   const term = search.trim().toLowerCase();
   return (
-    item.name.toLowerCase().includes(term) ||
-    (item.subtitle?.toLowerCase().includes(term) ?? false)
+    item.name.toLowerCase().includes(term) || (item.subtitle?.toLowerCase().includes(term) ?? false)
   );
 }
 
@@ -381,8 +387,7 @@ export async function listStaffForGate(societyId: string, search?: string) {
   const term = search.trim().toLowerCase();
   return staff.filter(
     (member) =>
-      member.name.toLowerCase().includes(term) ||
-      member.roleTitle.toLowerCase().includes(term)
+      member.name.toLowerCase().includes(term) || member.roleTitle.toLowerCase().includes(term)
   );
 }
 

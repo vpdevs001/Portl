@@ -1,5 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { bookAmenity, createAmenity, listAmenities, listBookings } from './amenities.controllers';
+import {
+  bookAmenity,
+  cancelBooking,
+  createAmenity,
+  listAmenities,
+  listBookings
+} from './amenities.controllers';
 import { requireAuth, requireRole, requireSociety } from '../../common/middleware/auth.middleware';
 
 export async function amenitiesRoutes(app: FastifyInstance) {
@@ -18,4 +24,12 @@ export async function amenitiesRoutes(app: FastifyInstance) {
   );
 
   app.get('/api/amenities/bookings', { preHandler: [requireAuth, requireSociety] }, listBookings);
+
+  // Residents cancel their own flat's bookings; admins cancel any booking in
+  // the society — the split is enforced in the service, not the role list.
+  app.post(
+    '/api/amenities/bookings/:id/cancel',
+    { preHandler: [requireAuth, requireSociety, requireRole('resident', 'society_admin')] },
+    cancelBooking
+  );
 }

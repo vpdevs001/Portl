@@ -33,6 +33,10 @@ export const amenityIdParamsSchema = z.object({
   id: z.string().uuid()
 });
 
+export const bookingIdParamsSchema = z.object({
+  id: z.string().uuid()
+});
+
 export const listBookingsQuerySchema = z.object({
   amenityId: z.string().uuid().optional()
 });

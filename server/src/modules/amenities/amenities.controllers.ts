@@ -5,6 +5,7 @@ import * as service from './amenities.service.ts';
 import {
   amenityIdParamsSchema,
   bookAmenitySchema,
+  bookingIdParamsSchema,
   createAmenitySchema,
   listBookingsQuerySchema
 } from './amenities.schema.ts';
@@ -52,6 +53,14 @@ export async function bookAmenity(request: FastifyRequest, reply: FastifyReply) 
   const booking = await service.bookAmenity(caller, id, dto);
 
   return sendSuccess(reply, 201, booking);
+}
+
+export async function cancelBooking(request: FastifyRequest, reply: FastifyReply) {
+  const caller = requireCaller(request);
+  const { id } = bookingIdParamsSchema.parse(request.params);
+  const cancelled = await service.cancelBooking(caller, id);
+
+  return sendSuccess(reply, 200, cancelled);
 }
 
 export async function listBookings(request: FastifyRequest, reply: FastifyReply) {

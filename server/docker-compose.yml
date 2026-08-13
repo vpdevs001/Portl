@@ -1,0 +1,32 @@
+# Development stack — just Postgres. The API itself runs on the host with
+# `bun run dev` (bun --watch) so code changes reload instantly and drizzle-kit
+# commands run without container indirection.
+#
+#   bun run db:up      # start Postgres
+#   bun run db:migrate # apply migrations
+#   bun run dev        # start the API
+#
+# For the full containerized stack (Postgres + API + Caddy), see
+# docker-compose.prod.yml.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: portl-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portl}
+      POSTGRES_DB: ${POSTGRES_DB:-portl}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - portl-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  portl-pgdata:

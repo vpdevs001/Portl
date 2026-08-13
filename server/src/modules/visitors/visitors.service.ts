@@ -1,7 +1,7 @@
-import { randomInt } from 'node:crypto';
 import { and, eq, isNull, lt } from 'drizzle-orm';
 import { db } from '../../common/db';
 import { AppError } from '../../common/errors/app-error';
+import { generatePassCode } from '../../common/helpers/pass-code.ts';
 import { sendPushToUsers } from '../../common/services/push.service';
 import { uploadToImageKit } from '../../lib/imagekit';
 import {
@@ -388,19 +388,9 @@ export async function uploadVisitorPhoto(input: UploadVisitorPhotoInput) {
 
 // ─── Chapter 8 — Pre-Approvals ──────────────────────────────────────────────
 
-// Excludes 0/O and 1/I/L — a guard reading this off a resident's phone
-// screen at the gate shouldn't have to guess which character it is.
-const PASS_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const PASS_CODE_LENGTH = 6;
-const PASS_CODE_MAX_ATTEMPTS = 5;
+// generatePassCode lives in common/helpers/pass-code.ts (shared + unit-tested).
 
-function generatePassCode(): string {
-  let code = '';
-  for (let i = 0; i < PASS_CODE_LENGTH; i++) {
-    code += PASS_CODE_ALPHABET[randomInt(PASS_CODE_ALPHABET.length)];
-  }
-  return code;
-}
+const PASS_CODE_MAX_ATTEMPTS = 5;
 
 function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505';

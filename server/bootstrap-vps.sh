@@ -70,8 +70,12 @@ else
 PORT="8000"
 NODE_ENV="production"
 
-# External Neon Postgres URL (already managed externally)
-DATABASE_URL=""
+# Self-hosted Postgres, run as the `postgres` service in
+# docker-compose.prod.yml. DATABASE_URL is overridden there to point at
+# that service — these credentials just need to match.
+POSTGRES_USER="portl"
+POSTGRES_PASSWORD=""
+POSTGRES_DB="portl"
 
 BETTER_AUTH_SECRET=""
 BETTER_AUTH_URL="https://portl.vedpandey.in"

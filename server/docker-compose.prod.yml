@@ -1,13 +1,31 @@
-# Production stack — Server + Caddy (TLS termination).
+# Production stack — Postgres + Server + Caddy (TLS termination).
 #
-# Database: Neon (external managed Postgres) — DATABASE_URL comes from .env.
-# The server image runs `drizzle-kit migrate` on boot (see Dockerfile), so the
-# schema is always up-to-date before the API starts listening.
+# Database: self-hosted Postgres in this same compose stack, persisted in the
+# named volume below. The server image runs `drizzle-kit migrate` on boot
+# (see Dockerfile), so the schema is always up-to-date before the API starts
+# listening — it waits for Postgres to report healthy first.
 #
 #   cp .env.example .env   # fill in real secrets
 #   bun run docker:prod    # build & start everything
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: portl-postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portl}
+      POSTGRES_DB: ${POSTGRES_DB:-portl}
+    volumes:
+      - portl-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   server:
     build: .
     container_name: portl-server
@@ -15,6 +33,12 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+      # Overrides whatever DATABASE_URL is set to in .env, pointing at the
+      # `postgres` service on the internal compose network instead.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-portl}:${POSTGRES_PASSWORD:-portl}@postgres:5432/${POSTGRES_DB:-portl}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   caddy:
     image: caddy:2-alpine
@@ -34,5 +58,6 @@ services:
       - server
 
 volumes:
+  portl-pgdata:
   portl-caddy-data:
   portl-caddy-config:
